@@ -6,6 +6,8 @@ import {
   type ReadyHealth,
 } from "@competition-manager/contracts";
 
+export * from "./auth";
+
 export class ApiClientError extends Error {
   readonly status: number;
   readonly code: string;

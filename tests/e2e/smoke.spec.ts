@@ -37,3 +37,21 @@ test("API liveness and readiness contracts are reachable", async ({ request }) =
     checks: { database: "ok", redis: "ok" },
   });
 });
+
+test("registration keeps the authenticated session after a page reload", async ({ page }) => {
+  const email = `browser-${Date.now()}@example.test`;
+
+  await page.goto(frontendUrl);
+  await page.getByRole("heading", { name: "Create your account" }).waitFor();
+  await page.getByLabel("Name").fill("Browser Test User");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct horse battery");
+  await page.getByRole("button", { name: "Create account" }).click();
+
+  const session = page.getByRole("region", { name: "Authenticated session" });
+  await expect(session).toContainText(email);
+  await expect(session).toContainText("Email verification is required");
+
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Authenticated session" })).toContainText(email);
+});

@@ -67,4 +67,18 @@ install Chromium once with `bunx playwright install chromium` (use
 
 The API serves liveness at `/health/live` and readiness at `/health/ready`. Readiness checks PostgreSQL with `SELECT 1` and Redis with `PING`; a 503 response is expected until both services are reachable.
 
+The email/password session boundary is mounted at `/api/auth`. Set
+`BETTER_AUTH_SECRET` to a generated secret outside local development; Better Auth
+uses it to sign sessions and requires it in production. Registration creates an
+authenticated session while leaving `user.emailVerified` false. Email delivery and
+verification enforcement are deliberately deferred to the next auth slice, so
+future sensitive routes must check `emailVerified` explicitly before enabling an
+action.
+
+Staging and production must provide the exact deployed origins through
+`MY_APP_BACKEND_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and
+`MY_APP_ADMIN_URL`. The environment contract resolves these into the runtime
+`BACKEND_URL`, `FRONTEND_URL`, `MANAGER_URL`, and `ADMIN_URL` values used for
+Better Auth base URLs and trusted CORS origins.
+
 Stop local services with `docker compose down`. Add `-v` only when intentionally discarding local database and Redis volumes.

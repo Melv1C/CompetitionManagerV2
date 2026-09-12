@@ -6,11 +6,11 @@ import {
 import { serve } from "@hono/node-server";
 import { ENV } from "varlock/env";
 
-import { createHealthApp } from "./health";
+import { createApiApp } from "./app";
 import { database, probeDatabase } from "./infrastructure/database";
 
 const connections = createInfrastructureConnections(undefined, ENV.REDIS_URL);
-const app = createHealthApp({
+const app = createApiApp({
   database: () => probeDatabase(database),
   redis: () => probeRedis(connections.redis),
 });
