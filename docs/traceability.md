@@ -52,7 +52,7 @@ This matrix is the delivery contract for the approved Competition Manager specif
 | I18N-001 | Complete EN/FR/NL | `packages/ui`, `packages/email`, `apps/*/src/i18n` | `tests/component/translation-completeness.test.ts` | P0 · Unverified · Phase 7 |
 | NTF-001 | Transactional email/outbox | `packages/email`, `apps/api/src/modules/notifications`, `apps/worker` | `tests/integration/notification-outbox.test.ts` | P0 · Unverified · Phase 3 |
 | PRIV-001 | Public minimization and anonymization | `apps/api/src/modules/users/privacy`, `apps/frontend/src/account` | `tests/integration/anonymization-integrity.test.ts` | P0 · Unverified · Phase 7 |
-| OPS-001 | Durable jobs, metrics, logs, alerts, runbooks | `apps/worker`, `apps/api/src/modules/operations`, `docs/runbooks` | `tests/integration/operations-health.test.ts` | P0 · Unverified · Phase 0 |
+| OPS-001 | Durable jobs, queue health, sanitized logs, and runbooks | `apps/worker/src`, `packages/backend-infrastructure/src/jobs.ts`, `apps/api/src/health.ts`, `docs/runbooks` | `packages/backend-infrastructure/src/jobs.integration.test.ts`, `apps/worker/src/handlers.test.ts`, `apps/api/src/health.test.ts` | P0 · Foundation slice · Phase 0 |
 | QA-001 | Full CI quality gates | `.github/workflows/ci.yml`, `docs/ci.md`, `scripts/check-traceability.ts` | `.github/workflows/ci.yml` | P0 · Unverified · Phase 0 |
 | DEP-001 | Docker/Dokploy delivery | `docker`, `deploy/dokploy`, `docs/deployment.md` | `tests/integration/deployment-smoke.test.ts` | P0 · Unverified · Phase 0 |
 

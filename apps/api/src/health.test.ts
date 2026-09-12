@@ -85,6 +85,22 @@ describe("API health endpoints", () => {
     expect(response.headers.get("x-request-id")).toBeTruthy();
   });
 
+  it("reports queue depth and terminal failures without payloads", async () => {
+    const app = createHealthApp({
+      database: () => Promise.resolve(true),
+      redis: () => Promise.resolve(true),
+      queue: () => Promise.resolve({ available: true, depth: 2, failedJobs: 1 }),
+    });
+
+    const response = await app.request("/health/operations");
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      service: "backend",
+      queue: { available: true, depth: 2, failedJobs: 1 },
+    });
+  });
+
   it("does not expose unexpected error details", async () => {
     const app = createHealthApp({
       database: () => Promise.resolve(true),

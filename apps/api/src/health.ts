@@ -1,7 +1,9 @@
 import {
   healthRequestSchema,
   liveHealthSchema,
+  operationsHealthSchema,
   readyHealthSchema,
+  type QueueHealth,
 } from "@competition-manager/contracts";
 import { Hono } from "hono";
 import type { Handler, MiddlewareHandler } from "hono";
@@ -19,6 +21,7 @@ export type DependencyProbe = () => Promise<boolean>;
 export type HealthDependencies = {
   database: DependencyProbe;
   redis: DependencyProbe;
+  queue?: () => Promise<QueueHealth>;
 };
 
 function timestamp(): string {
@@ -63,9 +66,21 @@ export function createHealthApp(dependencies: HealthDependencies): Hono<ApiEnv> 
     return context.json(response, database && redis ? 200 : 503);
   };
 
+  const operations: Handler = async (context) => {
+    const queue = await (dependencies.queue?.() ??
+      Promise.resolve({ available: false, depth: 0, failedJobs: 0 }));
+    const response = operationsHealthSchema.parse({
+      service: "backend",
+      queue,
+      timestamp: timestamp(),
+    });
+    return context.json(response, queue.available ? 200 : 503);
+  };
+
   for (const prefix of ["/health", "/api/v1/health"]) {
     app.get(`${prefix}/live`, validateHealthRequest, live);
     app.get(`${prefix}/ready`, validateHealthRequest, ready);
+    app.get(`${prefix}/operations`, validateHealthRequest, operations);
   }
 
   return app;
