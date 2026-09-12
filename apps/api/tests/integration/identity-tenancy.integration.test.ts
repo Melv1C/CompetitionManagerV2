@@ -27,6 +27,14 @@ describe("identity and tenancy database foundation", () => {
       FROM information_schema.tables
       WHERE table_schema = 'public'
     `;
+    const adminColumns = await database.$queryRaw<
+      Array<{ table_name: string; column_name: string }>
+    >`
+      SELECT table_name, column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name IN ('user', 'session')
+    `;
 
     expect(migrations.map(({ migration_name }) => migration_name)).toContain(
       "20260912111500_identity_tenancy_foundation",
@@ -38,12 +46,25 @@ describe("identity and tenancy database foundation", () => {
         "account",
         "session",
         "verification",
-        "Organization",
+        "organization",
         "member",
         "invitation",
       ]),
     );
-    expect(tableNames).not.toEqual(expect.arrayContaining(["team", "teamMember"]));
+    expect(tableNames).not.toEqual(expect.arrayContaining(["admin", "team", "teamMember"]));
+
+    const adminColumnNames = adminColumns.map(
+      ({ table_name, column_name }) => `${table_name}.${column_name}`,
+    );
+    expect(adminColumnNames).toEqual(
+      expect.arrayContaining([
+        "user.role",
+        "user.banned",
+        "user.banReason",
+        "user.banExpires",
+        "session.impersonatedBy",
+      ]),
+    );
   });
 
   it("rejects duplicate identity email and organization membership records", async () => {
@@ -53,6 +74,7 @@ describe("identity and tenancy database foundation", () => {
     const user = await database.user.create({
       data: { name: "Identity Test User", email },
     });
+    expect(user.banned).toBe(false);
     const organization = await database.organization.create({
       data: { name: "Identity Test Organization", slug },
     });

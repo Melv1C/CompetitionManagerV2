@@ -25,7 +25,12 @@ Do not hand-edit the generated identity or organization models. Update the
 Better Auth configuration, rerun `bun run db:generate`, and create a Prisma
 migration with `bun run db:migrate`. The Member composite uniqueness constraint
 is retained as the application’s database invariant for one membership per
-user and organization.
+user and organization. The configured Better Auth `organization()` and
+`admin()` plugins generate the organization/membership tables plus the admin
+fields on `user` (`role`, `banned`, `banReason`, and `banExpires`) and
+`session` (`impersonatedBy`). The admin plugin keeps its documented defaults:
+new users receive the `user` role and `admin` is the administrative role. No
+separate admin tables are required.
 
 `db:migrate` uses `prisma migrate dev` and is intended for local development. A
 deployment or clean checkout should use `bun run db:deploy`, which applies all
