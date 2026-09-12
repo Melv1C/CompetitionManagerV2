@@ -35,9 +35,11 @@ jobs:
         with:
           bun-version: 1.4.0
       - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
       - run: bun run env:generate
       - run: bun run check
       - run: bun run test
       - run: bun run test:integration
       - run: bun run build
       - run: bun run db:generate
+      - run: bun run e2e
