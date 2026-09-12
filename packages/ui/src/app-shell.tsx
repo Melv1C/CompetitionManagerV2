@@ -185,7 +185,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                 <p className="text-muted-foreground text-sm">{session.user.email}</p>
               </div>
               {!session.user.emailVerified && (
-                <div className="space-y-3" aria-label="Pending email verification">
+                <div className="space-y-3" role="region" aria-label="Pending email verification">
                   <p className="text-muted-foreground text-sm">
                     Check your inbox for a verification link. Sensitive actions stay locked until
                     your email is verified.
