@@ -1,0 +1,14 @@
+node_modules
+.turbo
+dist
+build
+coverage
+.env
+.env.*
+!.env.example
+.env.generated
+*.log
+.DS_Store
+
+# Local database state
+prisma/migrations/*/migration_lock.toml

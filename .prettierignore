@@ -1,0 +1,8 @@
+node_modules
+.turbo
+dist
+build
+coverage
+bun.lock
+docs/competition-manager-rewrite-agent-spec.md
+.env.generated

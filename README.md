@@ -2,15 +2,17 @@
 
 Clean-room rewrite of Competition Manager as a production-ready, multi-tenant SaaS for Belgian athletics competitions.
 
-This repository currently contains the approved product and engineering specification. Application code should be created from scratch by executing the delivery phases in order.
+This repository contains the approved product and engineering specification and the Phase 0 runnable foundation. Product features are added as vertical slices without weakening the documented domain invariants.
 
 ## Start building
 
 1. Read [the complete build specification](docs/competition-manager-rewrite-agent-spec.md).
 2. Read [the domain glossary](CONTEXT.md).
 3. Read the architectural decisions in [docs/adr](docs/adr).
-4. Start with **Phase 0: Foundation** from the specification.
-5. Keep `CONTEXT.md`, ADRs, OpenAPI, and requirement traceability current while implementing.
+4. Start the local dependencies with `docker compose up -d postgres redis`.
+5. Run `bun install`, `bun run env:generate`, `bun run check`, `bun run test`, and `bun run build`.
+6. Run the API with `bun run --cwd apps/backend dev`; liveness is at `http://localhost:3000/health/live` and readiness is at `http://localhost:3000/health/ready`.
+7. Keep `CONTEXT.md`, ADRs, OpenAPI, and requirement traceability current while implementing.
 
 ## Initial application boundaries
 
@@ -30,6 +32,10 @@ The desktop bridge is a later phase and is not part of the initial implementatio
 
 The specification takes precedence over all reference repositories.
 
+## Workspace commands
+
+The root scripts are the supported entry points. `bun run dev` starts all four application boundaries, while `bun run build`, `bun run check`, `bun run test`, and `bun run test:integration` execute through Turborepo. `bun run env:validate` validates the process environment against the shared Zod schema. `bun run db:generate` generates the Prisma client; migration commands require PostgreSQL from the local stack.
+
 ## Status
 
-Documentation approved. Implementation has not started.
+Phase 0 foundation is implemented. Product delivery follows the phases in the specification.

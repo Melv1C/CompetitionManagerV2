@@ -1,0 +1,18 @@
+{
+  "name": "@competition-manager/config-env",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "bun src/cli.ts generate",
+    "validate": "bun src/cli.ts validate",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.1.5"
+  }
+}

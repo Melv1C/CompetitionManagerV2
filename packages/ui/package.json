@@ -1,0 +1,23 @@
+{
+  "name": "@competition-manager/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./app-shell.css": "./dist/app-shell.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp src/app-shell.css dist/app-shell.css",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@competition-manager/api-client": "workspace:*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7"
+  }
+}
