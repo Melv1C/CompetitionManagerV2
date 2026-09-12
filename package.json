@@ -16,6 +16,7 @@
     "db:generate": "bun --filter=@competition-manager/api prisma:generate",
     "db:migrate": "bun --filter=@competition-manager/api prisma:migrate",
     "dev": "bun run env:generate && turbo run dev --ui=stream",
+    "e2e": "bun run build && playwright test",
     "env:generate": "turbo run env:generate",
     "env:validate": "turbo run env:validate",
     "format": "oxfmt --write .",
@@ -28,6 +29,7 @@
     "varlock": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "catalog:",
     "@types/bun": "^1.2.21",
     "@types/node": "catalog:",
