@@ -8,7 +8,9 @@ const traceabilityPath = resolve(repositoryRoot, "docs/traceability.md");
 const specification = await Bun.file(specificationPath).text();
 const traceability = await Bun.file(traceabilityPath).text();
 
-const expectedIds = [...specification.matchAll(/^\|\s*([A-Z]+-\d{3})\s*\|/gm)].map((match) => match[1]);
+const expectedIds = [...specification.matchAll(/^\|\s*([A-Z]+-\d{3})\s*\|/gm)]
+  .map((match) => match[1])
+  .filter((id): id is string => Boolean(id));
 const matrixHeader = "| ID | Requirement | Implementation location | Test evidence | Status |";
 const matrixStart = traceability.indexOf(matrixHeader);
 
@@ -22,7 +24,12 @@ const matrixRows = traceability
   .split("\n")
   .filter((line) => /^\|\s*[A-Z]+-\d{3}\s*\|/.test(line));
 
-const rows = matrixRows.map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+const rows = matrixRows.map((line) =>
+  line
+    .split("|")
+    .slice(1, -1)
+    .map((cell) => cell.trim()),
+);
 const actualIds = rows.map((row) => row[0]).filter((id): id is string => Boolean(id));
 const errors: string[] = [];
 
@@ -74,4 +81,6 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`Traceability check passed: ${actualIds.length} Appendix A requirements mapped${implementationHasStarted ? " with implementation and test references" : " (pre-implementation)"}.`);
+console.log(
+  `Traceability check passed: ${actualIds.length} Appendix A requirements mapped${implementationHasStarted ? " with implementation and test references" : " (pre-implementation)"}.`,
+);
