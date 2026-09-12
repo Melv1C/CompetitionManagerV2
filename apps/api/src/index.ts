@@ -7,9 +7,8 @@ import { serve } from "@hono/node-server";
 import { ENV } from "varlock/env";
 
 import { createHealthApp } from "./health";
-import { createDatabaseClient, probeDatabase } from "./infrastructure/database";
+import { database, probeDatabase } from "./infrastructure/database";
 
-const database = createDatabaseClient(ENV.DATABASE_URL);
 const connections = createInfrastructureConnections(undefined, ENV.REDIS_URL);
 const app = createHealthApp({
   database: () => probeDatabase(database),

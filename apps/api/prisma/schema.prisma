@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,6 +21,7 @@ model User {
   memberships   OrganizationMembership[]
 
   @@index([emailVerified])
+  @@map("user")
 }
 
 model Account {
@@ -40,6 +42,7 @@ model Account {
 
   @@unique([providerId, accountId])
   @@index([userId])
+  @@map("account")
 }
 
 model Session {
@@ -54,6 +57,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@map("session")
 }
 
 model Verification {
@@ -65,6 +69,7 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+  @@map("verification")
 }
 
 model Organization {

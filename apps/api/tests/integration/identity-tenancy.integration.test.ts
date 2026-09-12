@@ -33,10 +33,10 @@ describe("identity and tenancy database foundation", () => {
     );
     expect(tables.map(({ table_name }) => table_name)).toEqual(
       expect.arrayContaining([
-        "User",
-        "Account",
-        "Session",
-        "Verification",
+        "user",
+        "account",
+        "session",
+        "verification",
         "Organization",
         "OrganizationMembership",
       ]),

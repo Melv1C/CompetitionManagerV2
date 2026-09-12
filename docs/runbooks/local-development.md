@@ -11,13 +11,20 @@ Requirements: Bun 1.4 or newer and Docker.
 ## Database migrations
 
 PostgreSQL must be running from the local Compose stack before using Prisma. The
-checked-in schema and migration are applied to the local `competition_manager`
-database with:
+Better Auth configuration in `apps/api/src/lib/auth.ts` is the source for the
+Better Auth Prisma models. `bun run db:generate` runs the Better Auth CLI schema
+generator first, then regenerates Prisma Client. The checked-in schema and
+migration are applied to the local `competition_manager` database with:
 
 ```bash
 bun run db:generate
 bun run db:migrate
 ```
+
+Do not hand-edit the generated User, Account, Session, or Verification models.
+Update the Better Auth configuration, rerun `bun run db:generate`, and create a
+Prisma migration with `bun run db:migrate`. Organization tenancy models remain
+application-owned extensions to that generated schema.
 
 `db:migrate` uses `prisma migrate dev` and is intended for local development. A
 deployment or clean checkout should use `bun run db:deploy`, which applies all

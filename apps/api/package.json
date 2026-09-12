@@ -13,6 +13,7 @@
     "dev": "bun --watch src/index.ts",
     "env:generate": "varlock codegen",
     "env:validate": "varlock load",
+    "better-auth:generate": "DATABASE_URL=\"${DATABASE_URL:-postgresql://competition:competition@localhost:5432/competition_manager}\" auth generate --adapter prisma --dialect postgresql --config ./src/lib/auth.ts --output ./prisma/schema.prisma --yes",
     "prisma:format": "APP_ENV=development prisma format",
     "prisma:generate": "APP_ENV=development DATABASE_URL=\"${DATABASE_URL:-postgresql://competition:competition@localhost:5432/competition_manager}\" prisma generate",
     "prisma:migrate": "APP_ENV=development DATABASE_URL=\"${DATABASE_URL:-postgresql://competition:competition@localhost:5432/competition_manager}\" prisma migrate dev",
@@ -23,16 +24,19 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@better-auth/prisma-adapter": "1.7.4",
     "@competition-manager/backend-infrastructure": "workspace:*",
     "@competition-manager/contracts": "workspace:*",
     "@hono/node-server": "^2.0.4",
     "@prisma/client": "^6.19.3",
+    "better-auth": "1.7.4",
     "hono": "^4.12.23",
     "varlock": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "auth": "1.7.4",
     "prisma": "^6.19.3",
     "tsdown": "catalog:",
     "typescript": "catalog:",
