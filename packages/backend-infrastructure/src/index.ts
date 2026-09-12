@@ -46,3 +46,5 @@ export async function closeInfrastructureConnections(
     connections.redis.isOpen ? connections.redis.quit() : Promise.resolve(),
   ]);
 }
+
+export * from "./jobs";

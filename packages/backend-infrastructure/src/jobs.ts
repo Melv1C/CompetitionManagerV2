@@ -63,6 +63,7 @@ export type EnqueueJobResult = {
 };
 
 export type JobHandler = (job: JobEnvelope) => Promise<void>;
+export type JobHandlers = Readonly<Partial<Record<JobName, JobHandler>>>;
 
 export type JobRecord = {
   job: JobEnvelope;
@@ -87,8 +88,8 @@ export type RedisJobQueue = {
   listFailed(): Promise<FailedJob[]>;
   retryFailed(jobId: string): Promise<boolean>;
   health(): Promise<QueueHealth>;
-  processNext(handlers: Readonly<Record<JobName, JobHandler>>): Promise<boolean>;
-  run(handlers: Readonly<Record<JobName, JobHandler>>): Promise<void>;
+  processNext(handlers: JobHandlers): Promise<boolean>;
+  run(handlers: JobHandlers): Promise<void>;
   stop(): void;
 };
 
@@ -163,10 +164,7 @@ export function createRedisJobQueue(
     });
   }
 
-  async function processJob(
-    jobId: string,
-    handlers: Readonly<Record<JobName, JobHandler>>,
-  ): Promise<void> {
+  async function processJob(jobId: string, handlers: JobHandlers): Promise<void> {
     const record = await readRecord(jobId);
     if (!record || record.status === "completed" || record.status === "failed") {
       await acknowledge(jobId);
@@ -284,7 +282,7 @@ export function createRedisJobQueue(
       };
     },
 
-    async processNext(handlers): Promise<boolean> {
+    async processNext(handlers: JobHandlers): Promise<boolean> {
       await promoteDueJobs();
       const jobId = await client.brPopLPush(keys.queue, keys.processing, blockingTimeoutSeconds);
       if (!jobId) return false;
@@ -292,7 +290,7 @@ export function createRedisJobQueue(
       return true;
     },
 
-    async run(handlers): Promise<void> {
+    async run(handlers: JobHandlers): Promise<void> {
       if (running) throw new Error("Job queue is already running");
       running = true;
       accepting = true;

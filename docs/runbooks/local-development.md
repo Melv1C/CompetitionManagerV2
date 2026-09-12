@@ -81,10 +81,20 @@ Operators should inspect `/api/v1/health/operations` before recovery work. Retry
 The email/password session boundary is mounted at `/api/auth`. Set
 `BETTER_AUTH_SECRET` to a generated secret outside local development; Better Auth
 uses it to sign sessions and requires it in production. Registration creates an
-authenticated session while leaving `user.emailVerified` false. Email delivery and
-verification enforcement are deliberately deferred to the next auth slice, so
-future sensitive routes must check `emailVerified` explicitly before enabling an
-action.
+authenticated session while leaving `user.emailVerified` false. Sensitive actions
+are protected server-side at `/api/v1/registrations`, `/api/v1/payments`,
+`/api/v1/organizations/invitations/accept`, and the manager entry point. The
+server resolves the User from the session cookie; client flags are not trusted.
+Unverified users can sign in and use `/api/auth/send-verification-email`, but
+protected requests return the stable `EMAIL_NOT_VERIFIED` error.
+
+Local and test environments use the deterministic capture email adapter. Its
+messages are available to test fixtures through `capturedVerificationEmails`.
+The API enqueues `auth.email-verification` jobs through the durable Redis queue;
+the worker consumes them with the configured email provider. Verification links
+expire after one hour and are consumed only once. Tokens are stored hashed in
+the Verification table and are never written to application logs or API error
+details.
 
 Staging and production must provide the exact deployed origins through
 `MY_APP_BACKEND_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and

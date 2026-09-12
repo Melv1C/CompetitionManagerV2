@@ -63,4 +63,26 @@ describe("createSessionClient", () => {
       new AuthClientError("Invalid credentials", 401, "INVALID_EMAIL_OR_PASSWORD"),
     );
   });
+
+  it("resends verification for the current session and reports protected access", async () => {
+    const requests: Request[] = [];
+    const client = createSessionClient("http://localhost:3000", async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      if (request.url.endsWith("/get-session")) return new Response(JSON.stringify(session));
+      if (request.url.endsWith("/send-verification-email"))
+        return new Response("{}", { status: 200 });
+      return new Response(JSON.stringify({ error: { code: "EMAIL_NOT_VERIFIED" } }), {
+        status: 403,
+      });
+    });
+
+    await client.sendVerificationEmail();
+    await expect(client.getManagerAccess()).resolves.toBe(false);
+    expect(requests.map((request) => request.url)).toEqual([
+      "http://localhost:3000/api/auth/get-session",
+      "http://localhost:3000/api/auth/send-verification-email",
+      "http://localhost:3000/api/v1/manager",
+    ]);
+  });
 });

@@ -20,6 +20,7 @@
   "dependencies": {
     "@competition-manager/backend-infrastructure": "workspace:*",
     "@competition-manager/contracts": "workspace:*",
+    "@competition-manager/email": "workspace:*",
     "varlock": "catalog:"
   },
   "devDependencies": {

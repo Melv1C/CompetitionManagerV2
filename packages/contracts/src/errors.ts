@@ -4,6 +4,9 @@ export const apiErrorCodeSchema = z.enum([
   "VALIDATION_ERROR",
   "NOT_FOUND",
   "INTERNAL_SERVER_ERROR",
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "EMAIL_NOT_VERIFIED",
 ]);
 
 export const validationIssueSchema = z.object({
