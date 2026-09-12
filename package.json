@@ -10,8 +10,8 @@
   "type": "module",
   "scripts": {
     "docs:check": "bun scripts/check-traceability.ts",
-    "build": "bun run env:generate && turbo run build",
-    "check": "bun run env:generate && turbo run typecheck && bun run lint && bun run format:check",
+    "build": "bun run env:generate && bun run db:generate && turbo run build",
+    "check": "bun run env:generate && bun run db:generate && turbo run typecheck && bun run lint && bun run format:check",
     "db:deploy": "bun --filter=@competition-manager/api prisma:migrate:deploy",
     "db:generate": "bun --filter=@competition-manager/api prisma:generate",
     "db:migrate": "bun --filter=@competition-manager/api prisma:migrate",
@@ -23,7 +23,7 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint --type-aware --type-check --react-plugin --vitest-plugin .",
     "test": "turbo run test",
-    "test:integration": "turbo run test:integration"
+    "test:integration": "bun run db:deploy && turbo run test:integration"
   },
   "dependencies": {
     "varlock": "catalog:"
