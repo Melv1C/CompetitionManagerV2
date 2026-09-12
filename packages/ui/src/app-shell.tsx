@@ -33,6 +33,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   const [status, setStatus] = useState<BackendStatus>("checking");
   const [session, setSession] =
     useState<Awaited<ReturnType<ReturnType<typeof createSessionClient>["getSession"]>>>(null);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
   const [authMode, setAuthMode] = useState<"sign-in" | "sign-up">("sign-up");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
@@ -70,11 +71,13 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       .then((nextSession) => {
         if (active) {
           setSession(nextSession);
+          setSessionHydrated(true);
         }
       })
       .catch(() => {
         if (active) {
           setSession(null);
+          setSessionHydrated(true);
         }
       });
     return () => {
@@ -437,7 +440,11 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                       </p>
                     )}
                     {adminNotice && (
-                      <p className="text-sm" role="status">
+                      <p
+                        className="text-sm"
+                        role="status"
+                        aria-label="Organization creation notice"
+                      >
                         {adminNotice}
                       </p>
                     )}
@@ -510,6 +517,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
             <section
               className="border-border space-y-4 rounded-lg border p-4"
               aria-label="Authentication"
+              data-session-hydrated={sessionHydrated ? "true" : "false"}
             >
               <div>
                 <h2 className="text-xl font-semibold">
