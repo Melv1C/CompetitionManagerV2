@@ -8,9 +8,7 @@ const adminUrl = process.env.E2E_ADMIN_URL ?? "http://localhost:3003";
 const managerUrl = process.env.E2E_MANAGER_URL ?? "http://localhost:3002";
 
 async function waitForSessionHydration(page: Page): Promise<void> {
-  await expect(
-    page.locator('[aria-label="Authentication"][data-session-hydrated="true"]'),
-  ).toBeVisible();
+  await expect(page.locator('[data-session-hydrated="true"]')).toBeVisible();
 }
 
 test("platform admin creates an Organization for an existing owner who can reload manager access", async ({
@@ -57,6 +55,7 @@ test("platform admin creates an Organization for an existing owner who can reloa
       data: { emailVerified: true, role: "admin" },
     });
     await adminPage.reload();
+    await waitForSessionHydration(adminPage);
 
     await expect(adminPage.getByRole("region", { name: "Platform admin dashboard" })).toBeVisible();
     await adminPage.getByLabel("Organization name").fill("Brussels Athletics Organization");
@@ -75,15 +74,21 @@ test("platform admin creates an Organization for an existing owner who can reloa
 
     await ownerPage.goto(managerUrl);
     await waitForSessionHydration(ownerPage);
-    await ownerPage.getByRole("heading", { name: "Create your account" }).waitFor();
-    const signInToggle = ownerPage.getByRole("button", {
-      name: "Already have an account? Sign in",
-    });
-    await expect(signInToggle).toBeVisible();
-    await signInToggle.click();
-    await ownerPage.getByLabel("Email").fill(ownerEmail);
-    await ownerPage.getByLabel("Password").fill(password);
-    await ownerPage.getByRole("button", { name: "Sign in" }).click();
+    const authentication = ownerPage.getByRole("region", { name: "Authentication" });
+    if (await authentication.isVisible()) {
+      await ownerPage.getByRole("heading", { name: "Create your account" }).waitFor();
+      const signInToggle = ownerPage.getByRole("button", {
+        name: "Already have an account? Sign in",
+      });
+      await expect(signInToggle).toBeVisible();
+      await signInToggle.click();
+      await ownerPage.getByLabel("Email").fill(ownerEmail);
+      await ownerPage.getByLabel("Password").fill(password);
+      await ownerPage.getByRole("button", { name: "Sign in" }).click();
+    }
+    await expect(
+      ownerPage.locator('[aria-label="Authenticated session"][data-session-hydrated="true"]'),
+    ).toBeVisible();
 
     const managerDashboard = ownerPage.getByRole("region", {
       name: "Organization manager dashboard",

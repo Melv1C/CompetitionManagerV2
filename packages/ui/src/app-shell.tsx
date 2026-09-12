@@ -327,6 +327,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
             <section
               className="border-border bg-secondary/40 space-y-4 rounded-lg border p-4"
               aria-label="Authenticated session"
+              data-session-hydrated={sessionHydrated ? "true" : "false"}
             >
               <div>
                 <p className="text-sm font-semibold">Signed in as {session.user.name}</p>
