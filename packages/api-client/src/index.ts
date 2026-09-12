@@ -7,6 +7,7 @@ import {
 } from "@competition-manager/contracts";
 
 export * from "./auth";
+export * from "./organizations";
 
 export class ApiClientError extends Error {
   readonly status: number;

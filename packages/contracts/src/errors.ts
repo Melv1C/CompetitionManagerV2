@@ -7,6 +7,10 @@ export const apiErrorCodeSchema = z.enum([
   "UNAUTHORIZED",
   "FORBIDDEN",
   "EMAIL_NOT_VERIFIED",
+  "IDEMPOTENCY_KEY_REUSED",
+  "OWNER_NOT_FOUND",
+  "ORGANIZATION_SLUG_TAKEN",
+  "ORGANIZATION_NOT_FOUND",
 ]);
 
 export const validationIssueSchema = z.object({

@@ -1,4 +1,11 @@
-import { createSessionClient, fetchHealth } from "@competition-manager/api-client";
+import {
+  createAdminOrganizationClient,
+  createOrganizationClient,
+  createSessionClient,
+  fetchHealth,
+  type EligibleUser,
+  type OrganizationResponse,
+} from "@competition-manager/api-client";
 import {
   useCallback,
   useEffect,
@@ -31,7 +38,22 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authPending, setAuthPending] = useState(false);
   const [managerAccess, setManagerAccess] = useState<boolean | null>(null);
+  const [organizations, setOrganizations] = useState<OrganizationResponse[] | null>(null);
+  const [activeOrganization, setActiveOrganization] = useState<OrganizationResponse | null>(null);
+  const [organizationError, setOrganizationError] = useState<string | null>(null);
+  const [organizationPending, setOrganizationPending] = useState(false);
+  const [ownerQuery, setOwnerQuery] = useState("");
+  const [eligibleUsers, setEligibleUsers] = useState<EligibleUser[]>([]);
+  const [selectedOwner, setSelectedOwner] = useState<EligibleUser | null>(null);
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminNotice, setAdminNotice] = useState<string | null>(null);
   const authClient = useMemo(() => createSessionClient(backendUrl), [backendUrl]);
+  const organizationClient = useMemo(() => createOrganizationClient(backendUrl), [backendUrl]);
+  const adminOrganizationClient = useMemo(
+    () => createAdminOrganizationClient(backendUrl),
+    [backendUrl],
+  );
+  const isPlatformAdmin = (session?.user as { role?: string | null } | undefined)?.role === "admin";
 
   const checkBackend = useCallback(() => {
     setStatus("checking");
@@ -78,6 +100,79 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     };
   }, [authClient, session, surface]);
 
+  useEffect(() => {
+    if (surface !== "manager" || managerAccess !== true) {
+      setOrganizations(null);
+      setActiveOrganization(null);
+      return;
+    }
+    let active = true;
+    void organizationClient
+      .listOrganizations()
+      .then(({ organizations: nextOrganizations }) => {
+        if (!active) return;
+        setOrganizations(nextOrganizations);
+        const match = window.location.pathname.match(/^\/organizations\/([^/]+)$/);
+        const organizationId = match ? decodeURIComponent(match[1]!) : null;
+        if (organizationId) {
+          void organizationClient
+            .getOrganization(organizationId)
+            .then((nextOrganization) => {
+              if (active) setActiveOrganization(nextOrganization);
+            })
+            .catch((error: unknown) => {
+              if (active) {
+                setActiveOrganization(null);
+                setOrganizationError(
+                  error instanceof Error ? error.message : "Could not load this Organization",
+                );
+              }
+            });
+        } else if (nextOrganizations.length > 0) {
+          setActiveOrganization(nextOrganizations[0]!);
+          window.history.replaceState(
+            {},
+            "",
+            `/organizations/${encodeURIComponent(nextOrganizations[0]!.organization.id)}`,
+          );
+        } else {
+          setActiveOrganization(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setOrganizations([]);
+          setOrganizationError(
+            error instanceof Error ? error.message : "Could not load your Organizations",
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [managerAccess, organizationClient, surface]);
+
+  useEffect(() => {
+    if (surface !== "admin" || !isPlatformAdmin || ownerQuery.trim().length < 2) {
+      setEligibleUsers([]);
+      return;
+    }
+    let active = true;
+    void adminOrganizationClient
+      .searchEligibleUsers(ownerQuery)
+      .then(({ users }) => {
+        if (active) setEligibleUsers(users);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setAdminError(error instanceof Error ? error.message : "Could not search users");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [adminOrganizationClient, isPlatformAdmin, ownerQuery, surface]);
+
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setAuthError(null);
@@ -97,6 +192,15 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
             })
           : await authClient.signIn({ email, password });
       setSession(nextSession);
+      setManagerAccess(null);
+      setOrganizations(null);
+      setActiveOrganization(null);
+      setOrganizationError(null);
+      setSelectedOwner(null);
+      setOwnerQuery("");
+      setEligibleUsers([]);
+      setAdminError(null);
+      setAdminNotice(null);
       event.currentTarget.reset();
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Authentication request failed");
@@ -112,6 +216,10 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     try {
       await authClient.signOut();
       setSession(null);
+      setManagerAccess(null);
+      setOrganizations(null);
+      setActiveOrganization(null);
+      setSelectedOwner(null);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Sign out failed");
     } finally {
@@ -130,6 +238,37 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       setAuthError(error instanceof Error ? error.message : "Could not send verification email");
     } finally {
       setAuthPending(false);
+    }
+  }
+
+  async function handleOrganizationSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setAdminError(null);
+    setAdminNotice(null);
+    if (!selectedOwner) {
+      setAdminError("Select an eligible existing user as the Organization owner.");
+      return;
+    }
+    setOrganizationPending(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const created = await adminOrganizationClient.createOrganization(
+        {
+          name: formText(form, "organizationName"),
+          slug: formText(form, "organizationSlug"),
+          ownerUserId: selectedOwner.id,
+        },
+        crypto.randomUUID(),
+      );
+      setAdminNotice(`Organization “${created.organization.name}” created successfully.`);
+      setSelectedOwner(null);
+      setOwnerQuery("");
+      setEligibleUsers([]);
+      event.currentTarget.reset();
+    } catch (error) {
+      setAdminError(error instanceof Error ? error.message : "Could not create the Organization");
+    } finally {
+      setOrganizationPending(false);
     }
   }
 
@@ -204,6 +343,104 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                   {authNotice}
                 </p>
               )}
+              {surface === "admin" && session.user.emailVerified && isPlatformAdmin && (
+                <section
+                  aria-label="Platform admin dashboard"
+                  className="border-primary/20 bg-primary/5 space-y-4 rounded-lg border p-4"
+                >
+                  <div>
+                    <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                      Platform administration
+                    </p>
+                    <h2 className="text-2xl font-semibold">Create an Organization</h2>
+                    <p className="text-muted-foreground text-sm">
+                      Choose an existing verified user to receive the initial owner membership.
+                    </p>
+                  </div>
+                  <form
+                    className="space-y-3"
+                    onSubmit={(event) => void handleOrganizationSubmit(event)}
+                  >
+                    <label className="block space-y-1 text-sm font-medium">
+                      Organization name
+                      <input
+                        className="border-input bg-background w-full rounded-md border px-3 py-2"
+                        name="organizationName"
+                        autoComplete="organization"
+                        required
+                        minLength={2}
+                        maxLength={120}
+                      />
+                    </label>
+                    <label className="block space-y-1 text-sm font-medium">
+                      Organization slug
+                      <input
+                        className="border-input bg-background w-full rounded-md border px-3 py-2"
+                        name="organizationSlug"
+                        pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                        required
+                        minLength={2}
+                        maxLength={80}
+                      />
+                    </label>
+                    <label className="block space-y-1 text-sm font-medium">
+                      Search eligible owner
+                      <input
+                        className="border-input bg-background w-full rounded-md border px-3 py-2"
+                        aria-label="Search eligible owner"
+                        value={ownerQuery}
+                        onChange={(event) => {
+                          setOwnerQuery(event.target.value);
+                          setSelectedOwner(null);
+                        }}
+                        placeholder="Name or email"
+                      />
+                    </label>
+                    {eligibleUsers.length > 0 && (
+                      <div aria-label="Eligible owners" className="space-y-2">
+                        {eligibleUsers.map((user) => (
+                          <button
+                            className={`block w-full rounded-md border p-3 text-left text-sm ${
+                              selectedOwner?.id === user.id
+                                ? "border-primary bg-primary/10"
+                                : "border-input"
+                            }`}
+                            key={user.id}
+                            type="button"
+                            onClick={() => setSelectedOwner(user)}
+                          >
+                            <span className="block font-medium">{user.name}</span>
+                            <span className="text-muted-foreground block">{user.email}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedOwner && (
+                      <p className="text-sm" role="status">
+                        Owner selected: {selectedOwner.name} ({selectedOwner.email})
+                      </p>
+                    )}
+                    {adminError && (
+                      <p className="text-destructive text-sm" role="alert">
+                        {adminError}
+                      </p>
+                    )}
+                    {adminNotice && (
+                      <p className="text-sm" role="status">
+                        {adminNotice}
+                      </p>
+                    )}
+                    <Button type="submit" disabled={organizationPending}>
+                      {organizationPending ? "Creating Organization…" : "Create Organization"}
+                    </Button>
+                  </form>
+                </section>
+              )}
+              {surface === "admin" && session.user.emailVerified && !isPlatformAdmin && (
+                <p className="text-destructive text-sm" role="alert">
+                  Platform administrator access is required.
+                </p>
+              )}
               {surface === "manager" && managerAccess && (
                 <div aria-label="Manager tools" className="border-border rounded-md border p-3">
                   <p className="font-semibold">Manager tools</p>
@@ -211,6 +448,48 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                     Your verified session can enter Organization tools.
                   </p>
                 </div>
+              )}
+              {surface === "manager" && managerAccess && (
+                <section
+                  aria-label={
+                    activeOrganization ? "Organization manager dashboard" : "Organization access"
+                  }
+                  className="border-primary/20 bg-primary/5 space-y-4 rounded-lg border p-4"
+                >
+                  {activeOrganization ? (
+                    <div className="space-y-2">
+                      <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                        Organization manager dashboard
+                      </p>
+                      <h2 className="text-2xl font-semibold">
+                        {activeOrganization.organization.name}
+                      </h2>
+                      <p className="text-muted-foreground text-sm">
+                        You have owner access to this Organization.
+                      </p>
+                    </div>
+                  ) : organizations === null ? (
+                    <p className="text-muted-foreground text-sm" role="status">
+                      Loading your Organizations…
+                    </p>
+                  ) : organizations.length === 0 ? (
+                    <div>
+                      <h2 className="text-2xl font-semibold">No Organizations yet</h2>
+                      <p className="text-muted-foreground text-sm">
+                        A platform administrator can assign you as an Organization owner.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-destructive text-sm" role="alert">
+                      {organizationError ?? "Could not load your Organization"}
+                    </p>
+                  )}
+                  {organizationError && activeOrganization && (
+                    <p className="text-destructive text-sm" role="alert">
+                      {organizationError}
+                    </p>
+                  )}
+                </section>
               )}
               <Button variant="outline" onClick={handleSignOut} disabled={authPending}>
                 Sign out

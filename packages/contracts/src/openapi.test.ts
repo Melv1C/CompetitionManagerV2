@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createOpenApiDocument } from "./openapi";
 
 describe("OpenAPI contract document", () => {
-  it("describes the versioned health routes and shared error response", () => {
+  it("describes the versioned product routes and shared error response", () => {
     const document = createOpenApiDocument();
 
     expect(document.openapi).toBe("3.0.3");
@@ -11,6 +11,10 @@ describe("OpenAPI contract document", () => {
       "/api/v1/health/live",
       "/api/v1/health/ready",
       "/api/v1/health/operations",
+      "/api/v1/admin/users",
+      "/api/v1/admin/organizations",
+      "/api/v1/manager/organizations",
+      "/api/v1/manager/organizations/{organizationId}",
     ]);
     expect(
       document.paths["/api/v1/health/live"].get.responses["400"].content["application/json"].schema,

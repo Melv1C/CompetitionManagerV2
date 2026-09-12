@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 
 import { apiErrorMiddleware, handleApiError, notFoundResponse, type ApiEnv } from "./errors";
 import { createHealthApp, type HealthDependencies } from "./health";
+import { database } from "./infrastructure/database";
 import {
   auth,
   createAuth,
@@ -14,6 +15,10 @@ import {
   type VerificationEmailSender,
 } from "./lib/auth";
 import type { VerificationTokenStore } from "./lib/verification";
+import {
+  createOrganizationService,
+  type OrganizationService,
+} from "./modules/organizations/service";
 
 export type ApiDependencies = Partial<HealthDependencies> & {
   authHandler?: (request: Request) => Promise<Response>;
@@ -21,6 +26,7 @@ export type ApiDependencies = Partial<HealthDependencies> & {
   verificationEmailSender?: VerificationEmailSender;
   verificationTokenStore?: VerificationTokenStore;
   sessionResolver?: SessionResolver;
+  organizationService?: OrganizationService;
 };
 
 type AuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
@@ -69,6 +75,26 @@ function guardedResponse(context: Context<ApiEnv>, session: AuthSession) {
   return null;
 }
 
+function adminGuardedResponse(context: Context<ApiEnv>, session: AuthSession) {
+  const denied = guardedResponse(context, session);
+  if (denied) return denied;
+  const role = (session!.user as { role?: string | null }).role;
+  if (role !== "admin") {
+    return context.json(
+      {
+        error: {
+          code: "FORBIDDEN" as const,
+          message: "Platform administrator access is required",
+          requestId: context.get("requestId"),
+          details: {},
+        },
+      },
+      403,
+    );
+  }
+  return null;
+}
+
 const protectedActions = [
   ["GET", "/api/v1/manager"],
   ["POST", "/api/v1/registrations"],
@@ -91,6 +117,8 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
     dependencies.verificationTokenStore ?? defaultVerificationTokenStore;
   const authHandler =
     dependencies.authHandler ?? createAuthHandler(authInstance, verificationTokenStore);
+  const organizationService =
+    dependencies.organizationService ?? createOrganizationService(database);
 
   app.use("*", apiErrorMiddleware());
   app.onError(handleApiError);
@@ -120,6 +148,51 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
       const denied = guardedResponse(context, await resolveSession(context.req.raw));
       if (denied) return denied;
       return context.json({ status: "ready" as const });
+    });
+  }
+
+  for (const [method, path] of [
+    ["GET", "/api/v1/admin/users"],
+    ["POST", "/api/v1/admin/organizations"],
+  ] as const) {
+    app.on(method, path, async (context) => {
+      const session = await resolveSession(context.req.raw);
+      const denied = adminGuardedResponse(context, session);
+      if (denied) return denied;
+
+      if (method === "GET") {
+        return context.json(
+          await organizationService.listEligibleUsers(context.req.query("query") ?? ""),
+        );
+      }
+
+      const body = await context.req.json().catch(() => undefined);
+      const result = await organizationService.createForAdmin(
+        session!.user.id,
+        body,
+        context.req.header("Idempotency-Key")?.trim() || crypto.randomUUID(),
+      );
+      return context.json(result, 201);
+    });
+  }
+
+  for (const [method, path] of [
+    ["GET", "/api/v1/manager/organizations"],
+    ["GET", "/api/v1/manager/organizations/:organizationId"],
+  ] as const) {
+    app.on(method, path, async (context) => {
+      const session = await resolveSession(context.req.raw);
+      const denied = guardedResponse(context, session);
+      if (denied) return denied;
+      if (path.endsWith(":organizationId")) {
+        return context.json(
+          await organizationService.getForUser(
+            session!.user.id,
+            context.req.param("organizationId"),
+          ),
+        );
+      }
+      return context.json(await organizationService.listForUser(session!.user.id));
     });
   }
 

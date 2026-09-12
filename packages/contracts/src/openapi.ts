@@ -5,6 +5,12 @@ import {
   operationsHealthSchema,
   readyHealthSchema,
 } from "./health";
+import {
+  eligibleUserListResponseSchema,
+  organizationCreateRequestSchema,
+  organizationListResponseSchema,
+  organizationResponseSchema,
+} from "./organizations";
 
 type JsonSchema = Record<string, unknown>;
 
@@ -65,6 +71,36 @@ export function createOpenApiDocument() {
           true,
         ),
       },
+      "/api/v1/admin/users": {
+        get: jsonOperation(
+          "adminEligibleUsers",
+          eligibleUserListResponseSchema,
+          "List verified, eligible users for platform administration.",
+        ),
+      },
+      "/api/v1/admin/organizations": {
+        post: jsonOperation(
+          "createOrganization",
+          organizationResponseSchema,
+          "Create an Organization and its initial owner membership.",
+          organizationCreateRequestSchema,
+          201,
+        ),
+      },
+      "/api/v1/manager/organizations": {
+        get: jsonOperation(
+          "listManagerOrganizations",
+          organizationListResponseSchema,
+          "List Organizations owned by the authenticated user.",
+        ),
+      },
+      "/api/v1/manager/organizations/{organizationId}": {
+        get: jsonOperation(
+          "getManagerOrganization",
+          organizationResponseSchema,
+          "Load one Organization owned by the authenticated user.",
+        ),
+      },
     },
     components: {
       schemas: {
@@ -111,6 +147,46 @@ function healthOperation(
             },
           }
         : {}),
+    },
+  };
+}
+
+function jsonOperation(
+  operationId: string,
+  responseSchema: unknown,
+  description: string,
+  requestSchema?: unknown,
+  successStatus = 200,
+) {
+  return {
+    operationId,
+    description,
+    ...(requestSchema
+      ? {
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: schemaFor(requestSchema as Parameters<typeof schemaFor>[0]),
+              },
+            },
+          },
+        }
+      : {}),
+    responses: {
+      [String(successStatus)]: {
+        description: "Successful response.",
+        content: {
+          "application/json": {
+            schema: schemaFor(responseSchema as Parameters<typeof schemaFor>[0]),
+          },
+        },
+      },
+      "400": errorResponse("Malformed request."),
+      "401": errorResponse("Authentication required."),
+      "403": errorResponse("Insufficient permission."),
+      "404": errorResponse("Resource not found."),
+      "409": errorResponse("Request conflicts with existing state."),
     },
   };
 }

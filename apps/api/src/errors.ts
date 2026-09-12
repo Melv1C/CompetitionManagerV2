@@ -25,6 +25,26 @@ export class RequestValidationError extends Error {
   }
 }
 
+export class ApiConflictError extends Error {
+  readonly code: ApiErrorCode;
+
+  constructor(code: ApiErrorCode, message: string) {
+    super(message);
+    this.name = "ApiConflictError";
+    this.code = code;
+  }
+}
+
+export class ApiResourceNotFoundError extends Error {
+  readonly code: ApiErrorCode;
+
+  constructor(code: ApiErrorCode, message: string) {
+    super(message);
+    this.name = "ApiResourceNotFoundError";
+    this.code = code;
+  }
+}
+
 function getRequestId(context: Context<ApiEnv>): string {
   return context.get("requestId");
 }
@@ -85,6 +105,14 @@ export function handleApiError(error: Error, context: Context<ApiEnv>): Response
       envelope(context, "VALIDATION_ERROR", "Request validation failed", { issues }),
       400,
     );
+  }
+
+  if (error instanceof ApiConflictError) {
+    return context.json(envelope(context, error.code, error.message), 409);
+  }
+
+  if (error instanceof ApiResourceNotFoundError) {
+    return context.json(envelope(context, error.code, error.message), 404);
   }
 
   if (error instanceof HTTPException) {
