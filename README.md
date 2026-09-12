@@ -12,7 +12,7 @@ This repository contains the approved product and engineering specification and 
 4. Start the local dependencies with `docker compose up -d postgres redis`.
 5. Run `bun install`, `bun run env:generate`, `bun run check`, `bun run test`, and `bun run build`.
 6. Run the API with `bun run --cwd apps/backend dev`; liveness is at `http://localhost:3000/health/live` and readiness is at `http://localhost:3000/health/ready`.
-7. Keep `CONTEXT.md`, ADRs, OpenAPI, and requirement traceability current while implementing.
+7. Keep `CONTEXT.md`, ADRs, and requirement traceability current while implementing.
 
 ## Initial application boundaries
 
@@ -34,8 +34,8 @@ The specification takes precedence over all reference repositories.
 
 ## Workspace commands
 
-The root scripts are the supported entry points. `bun run dev` starts all four application boundaries, while `bun run build`, `bun run check`, `bun run test`, and `bun run test:integration` execute through Turborepo. `bun run env:validate` validates the process environment against the shared Zod schema. `bun run db:generate` generates the Prisma client; migration commands require PostgreSQL from the local stack.
+The root scripts follow the `fullstack-web-turbo-kit` conventions: Vite Plus provides the oxlint/oxfmt/type-check workflow and tsdown-backed package builds, Varlock owns environment generation/validation, and Turborepo coordinates the workspace. `bun run dev` starts all four application boundaries, while `bun run build`, `bun run check`, `bun run test`, and `bun run test:integration` execute the workspace gates. Database generation and migrations require PostgreSQL from the local stack.
 
 ## Status
 
-Phase 0 foundation is implemented. Product delivery follows the phases in the specification.
+Phase 0 foundation is implemented. Product delivery follows the phases in the specification. UI primitives use Tailwind CSS v4 and shadcn conventions from `packages/ui`.

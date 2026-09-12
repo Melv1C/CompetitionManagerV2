@@ -1,15 +1,11 @@
-import { parseEnvironment } from "@competition-manager/config-env";
+import { ENV } from "varlock/env";
 
 import {
   closeInfrastructureConnections,
   createInfrastructureConnections,
 } from "./infrastructure.js";
 
-const environment = parseEnvironment(Bun.env);
-const connections = createInfrastructureConnections(
-  environment.DATABASE_URL,
-  environment.REDIS_URL,
-);
+const connections = createInfrastructureConnections(ENV.DATABASE_URL, ENV.REDIS_URL);
 
 await connections.redis.connect();
 console.log(JSON.stringify({ event: "worker_started", queue_backend: "redis" }));

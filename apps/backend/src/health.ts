@@ -1,6 +1,5 @@
-import { Hono } from "hono";
-
 import { liveHealthSchema, readyHealthSchema } from "@competition-manager/contracts";
+import { Hono } from "hono";
 
 export type DependencyProbe = () => Promise<boolean>;
 

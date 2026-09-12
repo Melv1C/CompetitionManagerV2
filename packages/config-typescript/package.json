@@ -1,8 +1,0 @@
-{
-  "name": "@competition-manager/config-typescript",
-  "private": true,
-  "version": "0.0.0",
-  "exports": {
-    "./base.json": "./base.json"
-  }
-}

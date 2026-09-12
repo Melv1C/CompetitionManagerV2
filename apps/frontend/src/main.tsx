@@ -1,13 +1,12 @@
+import { AppShell } from "@competition-manager/ui";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ENV } from "varlock/env";
 
-import { AppShell } from "@competition-manager/ui";
-import "@competition-manager/ui/app-shell.css";
-
-const backendUrl = String(import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3000");
+import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AppShell surface="frontend" backendUrl={backendUrl} />
+    <AppShell surface="frontend" backendUrl={ENV.BACKEND_URL} />
   </StrictMode>,
 );

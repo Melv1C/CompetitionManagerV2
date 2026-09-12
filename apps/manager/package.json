@@ -1,23 +1,30 @@
 {
   "name": "@competition-manager/manager",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 3002",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 3002",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "vp build",
+    "dev": "vp dev",
+    "env:generate": "varlock codegen",
+    "env:validate": "varlock load"
   },
   "dependencies": {
     "@competition-manager/ui": "workspace:*",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "varlock": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.2",
-    "vite": "^7.1.3"
+    "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@varlock/vite-integration": "^1.1.2",
+    "@vitejs/plugin-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
   }
 }

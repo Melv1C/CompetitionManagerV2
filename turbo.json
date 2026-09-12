@@ -9,8 +9,12 @@
       "cache": false,
       "persistent": true
     },
-    "typecheck": {
-      "dependsOn": ["^build"]
+    "env:generate": {
+      "cache": false,
+      "outputs": ["env.d.ts"]
+    },
+    "env:validate": {
+      "cache": false
     },
     "test": {
       "dependsOn": ["^build"],

@@ -1,20 +1,15 @@
 import { serve } from "@hono/node-server";
+import { ENV } from "varlock/env";
 
-import { parseEnvironment } from "@competition-manager/config-env";
-
+import { createHealthApp } from "./health.js";
 import {
   closeInfrastructureConnections,
   createInfrastructureConnections,
   probeDatabase,
   probeRedis,
 } from "./infrastructure.js";
-import { createHealthApp } from "./health.js";
 
-const environment = parseEnvironment(Bun.env);
-const connections = createInfrastructureConnections(
-  environment.DATABASE_URL,
-  environment.REDIS_URL,
-);
+const connections = createInfrastructureConnections(ENV.DATABASE_URL, ENV.REDIS_URL);
 const app = createHealthApp({
   database: () => probeDatabase(connections.database),
   redis: () => probeRedis(connections.redis),
@@ -22,10 +17,10 @@ const app = createHealthApp({
 
 const server = serve({
   fetch: app.fetch,
-  port: environment.PORT,
+  port: ENV.BACKEND_PORT,
 });
 
-console.log(JSON.stringify({ event: "api_started", port: environment.PORT }));
+console.log(JSON.stringify({ event: "api_started", port: ENV.BACKEND_PORT }));
 
 async function shutdown(signal: string): Promise<void> {
   console.log(JSON.stringify({ event: "api_shutdown", signal }));

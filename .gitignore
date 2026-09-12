@@ -6,7 +6,9 @@ coverage
 .env
 .env.*
 !.env.example
+!.env.shared
 .env.generated
+env.d.ts
 *.log
 .DS_Store
 

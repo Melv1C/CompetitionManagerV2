@@ -1,23 +1,38 @@
 {
   "name": "@competition-manager/ui",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
+  "types": "./src/index.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./app-shell.css": "./dist/app-shell.css"
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && cp src/app-shell.css dist/app-shell.css",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "build": "vp pack",
+    "dev": "vp pack --watch --no-clean",
+    "test": "vp test --passWithNoTests"
   },
   "dependencies": {
     "@competition-manager/api-client": "workspace:*",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "shadcn": "^4.8.3",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7"
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }
