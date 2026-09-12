@@ -1,13 +1,13 @@
 import { serve } from "@hono/node-server";
 import { ENV } from "varlock/env";
 
-import { createHealthApp } from "./health.js";
+import { createHealthApp } from "./health";
 import {
   closeInfrastructureConnections,
   createInfrastructureConnections,
   probeDatabase,
   probeRedis,
-} from "./infrastructure.js";
+} from "./infrastructure";
 
 const connections = createInfrastructureConnections(ENV.DATABASE_URL, ENV.REDIS_URL);
 const app = createHealthApp({

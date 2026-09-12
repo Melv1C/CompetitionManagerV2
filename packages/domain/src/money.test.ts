@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addMoney, createMoney } from "./money.js";
+import { addMoney, createMoney } from "./money";
 
 describe("money values", () => {
   it.each([

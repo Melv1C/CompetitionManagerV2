@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createHealthApp } from "./health.js";
+import { createHealthApp } from "./health";
 
 describe("backend health endpoints", () => {
   it("reports liveness without depending on infrastructure", async () => {

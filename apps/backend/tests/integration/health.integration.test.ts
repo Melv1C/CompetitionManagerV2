@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createHealthApp } from "../../src/health.js";
+import { createHealthApp } from "../../src/health";
 
 describe("health HTTP contract", () => {
   it("serves a dependency-backed readiness response through the application boundary", async () => {

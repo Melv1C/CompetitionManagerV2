@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fetchHealth } from "./index.js";
+import { fetchHealth } from "./index";
 
 describe("fetchHealth", () => {
   it("normalizes the backend URL and validates both responses", async () => {
