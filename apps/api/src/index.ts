@@ -1,16 +1,17 @@
 import {
   closeInfrastructureConnections,
   createInfrastructureConnections,
-  probeDatabase,
   probeRedis,
 } from "@competition-manager/backend-infrastructure";
 import { serve } from "@hono/node-server";
 import { ENV } from "varlock/env";
 
 import { createHealthApp } from "./health";
-const connections = createInfrastructureConnections(ENV.DATABASE_URL, ENV.REDIS_URL);
+import { database, probeDatabase } from "./infrastructure/database";
+
+const connections = createInfrastructureConnections(undefined, ENV.REDIS_URL);
 const app = createHealthApp({
-  database: () => probeDatabase(connections.database),
+  database: () => probeDatabase(database),
   redis: () => probeRedis(connections.redis),
 });
 
@@ -24,6 +25,7 @@ console.log(JSON.stringify({ event: "api_started", port: ENV.BACKEND_PORT }));
 async function shutdown(signal: string): Promise<void> {
   console.log(JSON.stringify({ event: "api_shutdown", signal }));
   server.close();
+  await database.$disconnect();
   await closeInfrastructureConnections(connections);
 }
 
