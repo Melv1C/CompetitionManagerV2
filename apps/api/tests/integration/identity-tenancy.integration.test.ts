@@ -31,16 +31,19 @@ describe("identity and tenancy database foundation", () => {
     expect(migrations.map(({ migration_name }) => migration_name)).toContain(
       "20260912111500_identity_tenancy_foundation",
     );
-    expect(tables.map(({ table_name }) => table_name)).toEqual(
+    const tableNames = tables.map(({ table_name }) => table_name);
+    expect(tableNames).toEqual(
       expect.arrayContaining([
         "user",
         "account",
         "session",
         "verification",
         "Organization",
-        "OrganizationMembership",
+        "member",
+        "invitation",
       ]),
     );
+    expect(tableNames).not.toEqual(expect.arrayContaining(["team", "teamMember"]));
   });
 
   it("rejects duplicate identity email and organization membership records", async () => {
@@ -61,13 +64,25 @@ describe("identity and tenancy database foundation", () => {
         }),
       ).rejects.toMatchObject({ code: "P2002" });
 
-      await database.organizationMembership.create({
-        data: { organizationId: organization.id, userId: user.id, role: "owner" },
+      await database.member.create({
+        data: {
+          id: crypto.randomUUID(),
+          organizationId: organization.id,
+          userId: user.id,
+          role: "owner",
+          createdAt: new Date(),
+        },
       });
 
       await expect(
-        database.organizationMembership.create({
-          data: { organizationId: organization.id, userId: user.id, role: "viewer" },
+        database.member.create({
+          data: {
+            id: crypto.randomUUID(),
+            organizationId: organization.id,
+            userId: user.id,
+            role: "member",
+            createdAt: new Date(),
+          },
         }),
       ).rejects.toMatchObject({ code: "P2002" });
     } finally {

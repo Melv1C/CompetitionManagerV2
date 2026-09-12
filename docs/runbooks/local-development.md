@@ -21,10 +21,11 @@ bun run db:generate
 bun run db:migrate
 ```
 
-Do not hand-edit the generated User, Account, Session, or Verification models.
-Update the Better Auth configuration, rerun `bun run db:generate`, and create a
-Prisma migration with `bun run db:migrate`. Organization tenancy models remain
-application-owned extensions to that generated schema.
+Do not hand-edit the generated identity or organization models. Update the
+Better Auth configuration, rerun `bun run db:generate`, and create a Prisma
+migration with `bun run db:migrate`. The Member composite uniqueness constraint
+is retained as the application’s database invariant for one membership per
+user and organization.
 
 `db:migrate` uses `prisma migrate dev` and is intended for local development. A
 deployment or clean checkout should use `bun run db:deploy`, which applies all

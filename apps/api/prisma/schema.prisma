@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String                   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String
-  email         String                   @unique
-  emailVerified Boolean                  @default(false)
+  email         String    @unique
+  emailVerified Boolean   @default(false)
   image         String?
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
-  memberships   OrganizationMembership[]
+
+  members     Member[]
+  invitations Invitation[]
 
   @@index([emailVerified])
   @@map("user")
@@ -56,6 +57,8 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  activeOrganizationId String?
+
   @@index([userId])
   @@map("session")
 }
@@ -73,36 +76,47 @@ model Verification {
 }
 
 model Organization {
-  id          String                   @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
-  slug        String                   @unique
+  slug        String       @unique
   logo        String?
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
-  memberships OrganizationMembership[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  metadata    String?
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("organization")
 }
 
-model OrganizationMembership {
-  id              String                       @id @default(cuid())
-  organizationId  String
-  userId          String
-  role            String                       @default("viewer")
-  createdAt       DateTime                     @default(now())
-  updatedAt       DateTime                     @updatedAt
-  organization    Organization                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user            User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roleAssignments OrganizationRoleAssignment[]
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime
 
   @@unique([organizationId, userId])
+  @@index([organizationId])
   @@index([userId])
+  @@map("member")
 }
 
-model OrganizationRoleAssignment {
-  id           String                 @id @default(cuid())
-  membershipId String
-  role         String
-  createdAt    DateTime               @default(now())
-  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
-  @@unique([membershipId, role])
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
 }
