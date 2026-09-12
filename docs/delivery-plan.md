@@ -4,7 +4,7 @@ This plan turns the approved specification into vertical, releasable phases. A l
 
 ## Phase 0 — Foundation
 
-Create the Bun/Turborepo monorepo and the four application boundaries, strict TypeScript/package rules, environment validation, local Docker PostgreSQL/Redis, CI, contracts/OpenAPI, typed client, shared errors/IDs/money/time, audit, transactional outbox, and worker job primitives. The API and worker remain separate commands from one modular backend source.
+Create the Bun/Turborepo monorepo and the API, worker, frontend, manager, and admin application boundaries, strict TypeScript/package rules, environment validation, local Docker PostgreSQL/Redis, CI, contracts/OpenAPI, typed client, shared errors/IDs/money/time, audit, transactional outbox, and worker job primitives. API and worker are separate applications that consume shared domain and contract packages.
 
 Exit: all four apps use real backend health/session seams; database and queue checks are runnable; CI is green; traceability and ADR checks pass.
 

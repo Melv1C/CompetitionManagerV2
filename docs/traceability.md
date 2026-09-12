@@ -13,46 +13,46 @@ This matrix is the delivery contract for the approved Competition Manager specif
 
 | ID | Requirement | Implementation location | Test evidence | Status |
 | --- | --- | --- | --- | --- |
-| ARC-001 | Four initial apps: backend, frontend, manager, admin | `apps/backend`, `apps/frontend`, `apps/manager`, `apps/admin` | `tests/e2e/application-surfaces.spec.ts` | P0 · Unverified · Phase 0 |
-| ARC-002 | Modular monolith with API and worker commands | `apps/backend/src/api`, `apps/backend/src/worker` | `tests/integration/worker-boundary.test.ts` | P0 · Unverified · Phase 0 |
+| ARC-001 | Four initial apps: backend, frontend, manager, admin | `apps/api`, `apps/worker`, `apps/frontend`, `apps/manager`, `apps/admin` | `tests/e2e/application-surfaces.spec.ts` | P0 · Unverified · Phase 0 |
+| ARC-002 | Modular monolith with API and worker commands | `apps/api`, `apps/worker`, shared `packages/domain` and `packages/contracts` | `tests/integration/worker-boundary.test.ts` | P0 · Unverified · Phase 0 |
 | ARC-003 | Typed REST/OpenAPI contracts and client | `packages/contracts`, `packages/api-client`, `docs/api/openapi.yaml` | `tests/contracts/openapi.test.ts` | P0 · Unverified · Phase 0 |
-| TEN-001 | Strict Organization isolation | `apps/backend/src/modules/organizations`, `packages/domain/organizations` | `tests/integration/tenant-isolation.test.ts` | P0 · Unverified · Phase 1 |
-| AUTH-001 | Shared email/password and Google authentication | `apps/backend/src/modules/auth`, `apps/frontend/src/auth` | `tests/e2e/authentication.spec.ts` | P0 · Unverified · Phase 1 |
-| AUTH-002 | Verified email gates sensitive actions | `apps/backend/src/modules/auth/verification` | `tests/integration/verified-user-gates.test.ts` | P0 · Unverified · Phase 1 |
-| RBAC-001 | Multi-role union with Competition assignments | `packages/domain/authorization`, `apps/backend/src/modules/organizations/permissions` | `tests/unit/authorization/role-union.test.ts` | P0 · Unverified · Phase 1 |
-| ADM-001 | Real User/Organization admin without impersonation | `apps/admin`, `apps/backend/src/modules/admin` | `tests/e2e/admin-operations.spec.ts` | P0 · Unverified · Phase 1 |
-| ATH-001 | LBFA provider behind a replaceable port | `packages/domain/athletes`, `apps/backend/src/modules/athletes/providers` | `tests/integration/athlete-provider-sync.test.ts` | P0 · Unverified · Phase 2 |
-| ATH-002 | Athlete has many Athlete Seasons with bib/Club | `packages/domain/athletes`, `apps/backend/src/modules/athletes` | `tests/unit/athletes/athlete-seasons.test.ts` | P0 · Unverified · Phase 2 |
+| TEN-001 | Strict Organization isolation | `apps/api/src/modules/organizations`, `packages/domain/organizations` | `tests/integration/tenant-isolation.test.ts` | P0 · Unverified · Phase 1 |
+| AUTH-001 | Shared email/password and Google authentication | `apps/api/src/modules/auth`, `apps/frontend/src/auth` | `tests/e2e/authentication.spec.ts` | P0 · Unverified · Phase 1 |
+| AUTH-002 | Verified email gates sensitive actions | `apps/api/src/modules/auth/verification` | `tests/integration/verified-user-gates.test.ts` | P0 · Unverified · Phase 1 |
+| RBAC-001 | Multi-role union with Competition assignments | `packages/domain/authorization`, `apps/api/src/modules/organizations/permissions` | `tests/unit/authorization/role-union.test.ts` | P0 · Unverified · Phase 1 |
+| ADM-001 | Real User/Organization admin without impersonation | `apps/admin`, `apps/api/src/modules/admin` | `tests/e2e/admin-operations.spec.ts` | P0 · Unverified · Phase 1 |
+| ATH-001 | LBFA provider behind a replaceable port | `packages/domain/athletes`, `apps/api/src/modules/athletes/providers` | `tests/integration/athlete-provider-sync.test.ts` | P0 · Unverified · Phase 2 |
+| ATH-002 | Athlete has many Athlete Seasons with bib/Club | `packages/domain/athletes`, `apps/api/src/modules/athletes` | `tests/unit/athletes/athlete-seasons.test.ts` | P0 · Unverified · Phase 2 |
 | ATH-003 | Club and Organization have no relation | `packages/domain/athletes`, `packages/domain/organizations` | `tests/unit/athletes/club-independence.test.ts` | P0 · Unverified · Phase 2 |
-| ATH-004 | One-day Athlete and Competition bib | `packages/domain/athletes`, `apps/backend/src/modules/competitions/bibs` | `tests/integration/one-day-bib-concurrency.test.ts` | P0 · Unverified · Phase 2 |
-| CMP-001 | Competition lifecycle and audited overrides | `packages/domain/competitions/lifecycle`, `apps/backend/src/modules/competitions` | `tests/unit/competitions/lifecycle.test.ts` | P0 · Unverified · Phase 2 |
-| CMP-002 | Event/Round/Heat hierarchy and derived status | `packages/domain/results/structure`, `apps/backend/src/modules/competitions/events` | `tests/unit/results/derived-status.test.ts` | P0 · Unverified · Phase 2 |
-| CMP-003 | Combined parent registration and child results | `packages/domain/competitions/combined-events`, `apps/backend/src/modules/competitions` | `tests/unit/competitions/combined-events.test.ts` | P0 · Unverified · Phase 2 |
-| REG-001 | One Athlete Registration and first claim | `packages/domain/registrations/claims`, `apps/backend/src/modules/registrations` | `tests/integration/registration-claim-race.test.ts` | P0 · Unverified · Phase 3 |
+| ATH-004 | One-day Athlete and Competition bib | `packages/domain/athletes`, `apps/api/src/modules/competitions/bibs` | `tests/integration/one-day-bib-concurrency.test.ts` | P0 · Unverified · Phase 2 |
+| CMP-001 | Competition lifecycle and audited overrides | `packages/domain/competitions/lifecycle`, `apps/api/src/modules/competitions` | `tests/unit/competitions/lifecycle.test.ts` | P0 · Unverified · Phase 2 |
+| CMP-002 | Event/Round/Heat hierarchy and derived status | `packages/domain/results/structure`, `apps/api/src/modules/competitions/events` | `tests/unit/results/derived-status.test.ts` | P0 · Unverified · Phase 2 |
+| CMP-003 | Combined parent registration and child results | `packages/domain/competitions/combined-events`, `apps/api/src/modules/competitions` | `tests/unit/competitions/combined-events.test.ts` | P0 · Unverified · Phase 2 |
+| REG-001 | One Athlete Registration and first claim | `packages/domain/registrations/claims`, `apps/api/src/modules/registrations` | `tests/integration/registration-claim-race.test.ts` | P0 · Unverified · Phase 3 |
 | REG-002 | Field-specific edit deadlines and cancellation | `packages/domain/registrations/deadlines`, `apps/manager/src/registrations` | `tests/unit/registrations/deadlines.test.ts` | P0 · Unverified · Phase 3 |
-| REG-003 | Multi-Athlete atomic cart | `packages/domain/registrations/cart`, `apps/backend/src/modules/registrations` | `tests/integration/atomic-cart.test.ts` | P0 · Unverified · Phase 3 |
-| REG-004 | Explained eligibility with staff override | `packages/domain/registrations/eligibility`, `apps/backend/src/modules/registrations` | `tests/unit/registrations/eligibility-errors.test.ts` | P0 · Unverified · Phase 3 |
-| REG-005 | Transactional capacity and FIFO waitlist | `packages/domain/registrations/capacity`, `apps/backend/src/modules/registrations/waitlists` | `tests/integration/capacity-waitlist-race.test.ts` | P0 · Unverified · Phase 3 |
+| REG-003 | Multi-Athlete atomic cart | `packages/domain/registrations/cart`, `apps/api/src/modules/registrations` | `tests/integration/atomic-cart.test.ts` | P0 · Unverified · Phase 3 |
+| REG-004 | Explained eligibility with staff override | `packages/domain/registrations/eligibility`, `apps/api/src/modules/registrations` | `tests/unit/registrations/eligibility-errors.test.ts` | P0 · Unverified · Phase 3 |
+| REG-005 | Transactional capacity and FIFO waitlist | `packages/domain/registrations/capacity`, `apps/api/src/modules/registrations/waitlists` | `tests/integration/capacity-waitlist-race.test.ts` | P0 · Unverified · Phase 3 |
 | REG-006 | Suggested/editable PB until start | `packages/domain/registrations/personal-bests`, `apps/frontend/src/registration` | `tests/unit/registrations/personal-best.test.ts` | P0 · Unverified · Phase 3 |
 | REG-007 | Competition check-in plus Event withdrawal/DNS | `packages/domain/registrations/attendance`, `apps/manager/src/check-in` | `tests/integration/check-in-withdrawal.test.ts` | P0 · Unverified · Phase 3 |
-| PAY-001 | Integer-cent snapshots | `packages/domain/payments/money`, `apps/backend/src/modules/payments` | `tests/unit/payments/money-snapshots.test.ts` | P0 · Unverified · Phase 4 |
-| PAY-002 | Platform Stripe Checkout, EUR/card/Bancontact | `apps/backend/src/modules/payments/stripe`, `packages/contracts/payments` | `tests/integration/stripe-checkout.test.ts` | P0 · Unverified · Phase 4 |
+| PAY-001 | Integer-cent snapshots | `packages/domain/payments/money`, `apps/api/src/modules/payments` | `tests/unit/payments/money-snapshots.test.ts` | P0 · Unverified · Phase 4 |
+| PAY-002 | Platform Stripe Checkout, EUR/card/Bancontact | `apps/api/src/modules/payments/stripe`, `packages/contracts/payments` | `tests/integration/stripe-checkout.test.ts` | P0 · Unverified · Phase 4 |
 | PAY-003 | One fixed-plus-percentage Checkout Fee per paid cart | `packages/domain/payments/checkout-fee` | `tests/unit/payments/checkout-fee.test.ts` | P0 · Unverified · Phase 4 |
-| PAY-004 | Organization receives exact Event revenue | `packages/domain/payments/settlement`, `apps/backend/src/modules/payments/settlements` | `tests/integration/settlement-ledger.test.ts` | P0 · Unverified · Phase 4 |
-| PAY-005 | Platform absorbs costs/disputes/chargebacks | `packages/domain/payments/chargebacks`, `apps/backend/src/modules/payments` | `tests/integration/chargeback-loss.test.ts` | P0 · Unverified · Phase 4 |
+| PAY-004 | Organization receives exact Event revenue | `packages/domain/payments/settlement`, `apps/api/src/modules/payments/settlements` | `tests/integration/settlement-ledger.test.ts` | P0 · Unverified · Phase 4 |
+| PAY-005 | Platform absorbs costs/disputes/chargebacks | `packages/domain/payments/chargebacks`, `apps/api/src/modules/payments` | `tests/integration/chargeback-loss.test.ts` | P0 · Unverified · Phase 4 |
 | PAY-006 | Reimbursements external and untracked | `packages/domain/payments/reimbursements`, `apps/manager/src/registrations` | `tests/unit/payments/external-reimbursements.test.ts` | P0 · Unverified · Phase 4 |
-| RES-001 | One result authority per Competition | `packages/domain/results/authority`, `apps/backend/src/modules/results` | `tests/integration/result-authority.test.ts` | P0 · Unverified · Phase 5 |
+| RES-001 | One result authority per Competition | `packages/domain/results/authority`, `apps/api/src/modules/results` | `tests/integration/result-authority.test.ts` | P0 · Unverified · Phase 5 |
 | RES-002 | Typed results and deterministic ranking | `packages/domain/results/ranking`, `apps/manager/src/results` | `tests/unit/results/ranking.test.ts` | P0 · Unverified · Phase 5 |
-| RES-003 | Public provisional live results | `apps/backend/src/modules/results/realtime`, `apps/frontend/src/results` | `tests/e2e/provisional-live-results.spec.ts` | P0 · Unverified · Phase 5 |
-| RES-004 | Whole-Competition officialization/revisions | `packages/domain/results/officialization`, `apps/backend/src/modules/results` | `tests/integration/official-revisions.test.ts` | P0 · Unverified · Phase 5 |
+| RES-003 | Public provisional live results | `apps/api/src/modules/results/realtime`, `apps/frontend/src/results` | `tests/e2e/provisional-live-results.spec.ts` | P0 · Unverified · Phase 5 |
+| RES-004 | Whole-Competition officialization/revisions | `packages/domain/results/officialization`, `apps/api/src/modules/results` | `tests/integration/official-revisions.test.ts` | P0 · Unverified · Phase 5 |
 | RES-005 | Correction requires revocation | `packages/domain/results/officialization`, `apps/manager/src/results` | `tests/unit/results/revocation-correction.test.ts` | P0 · Unverified · Phase 5 |
-| INT-001 | AthleticsManager and generic participant CSV | `apps/backend/src/modules/interchange/csv`, `apps/manager/src/interchange` | `tests/unit/interchange/csv-golden.test.ts` | P0 · Unverified · Phase 6 |
-| INT-002 | Secure previewed idempotent XML import | `apps/backend/src/modules/interchange/xml`, `apps/manager/src/interchange` | `tests/integration/xml-import-security.test.ts` | P0 · Unverified · Phase 6 |
-| INT-003 | Result-mode reconciliation | `packages/domain/results/reconciliation`, `apps/backend/src/modules/interchange` | `tests/integration/result-reconciliation.test.ts` | P0 · Unverified · Phase 6 |
+| INT-001 | AthleticsManager and generic participant CSV | `apps/api/src/modules/interchange/csv`, `apps/manager/src/interchange` | `tests/unit/interchange/csv-golden.test.ts` | P0 · Unverified · Phase 6 |
+| INT-002 | Secure previewed idempotent XML import | `apps/api/src/modules/interchange/xml`, `apps/manager/src/interchange` | `tests/integration/xml-import-security.test.ts` | P0 · Unverified · Phase 6 |
+| INT-003 | Result-mode reconciliation | `packages/domain/results/reconciliation`, `apps/api/src/modules/interchange` | `tests/integration/result-reconciliation.test.ts` | P0 · Unverified · Phase 6 |
 | I18N-001 | Complete EN/FR/NL | `packages/ui`, `packages/email`, `apps/*/src/i18n` | `tests/component/translation-completeness.test.ts` | P0 · Unverified · Phase 7 |
-| NTF-001 | Transactional email/outbox | `packages/email`, `apps/backend/src/modules/notifications` | `tests/integration/notification-outbox.test.ts` | P0 · Unverified · Phase 3 |
-| PRIV-001 | Public minimization and anonymization | `apps/backend/src/modules/users/privacy`, `apps/frontend/src/account` | `tests/integration/anonymization-integrity.test.ts` | P0 · Unverified · Phase 7 |
-| OPS-001 | Durable jobs, metrics, logs, alerts, runbooks | `apps/backend/src/worker`, `apps/backend/src/modules/operations`, `docs/runbooks` | `tests/integration/operations-health.test.ts` | P0 · Unverified · Phase 0 |
+| NTF-001 | Transactional email/outbox | `packages/email`, `apps/api/src/modules/notifications`, `apps/worker` | `tests/integration/notification-outbox.test.ts` | P0 · Unverified · Phase 3 |
+| PRIV-001 | Public minimization and anonymization | `apps/api/src/modules/users/privacy`, `apps/frontend/src/account` | `tests/integration/anonymization-integrity.test.ts` | P0 · Unverified · Phase 7 |
+| OPS-001 | Durable jobs, metrics, logs, alerts, runbooks | `apps/worker`, `apps/api/src/modules/operations`, `docs/runbooks` | `tests/integration/operations-health.test.ts` | P0 · Unverified · Phase 0 |
 | QA-001 | Full CI quality gates | `.github/workflows/ci.yml`, `docs/ci.md`, `scripts/check-traceability.ts` | `.github/workflows/ci.yml` | P0 · Unverified · Phase 0 |
 | DEP-001 | Docker/Dokploy delivery | `docker`, `deploy/dokploy`, `docs/deployment.md` | `tests/integration/deployment-smoke.test.ts` | P0 · Unverified · Phase 0 |
 
