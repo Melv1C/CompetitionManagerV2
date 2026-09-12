@@ -1,0 +1,7 @@
+{
+  "name": "competition-manager-v2",
+  "private": true,
+  "scripts": {
+    "docs:check": "bun scripts/check-traceability.ts"
+  }
+}
