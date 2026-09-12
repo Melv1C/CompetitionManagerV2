@@ -23,6 +23,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --type-aware --type-check --react-plugin --vitest-plugin .",
+    "openapi:generate": "bun --cwd packages/contracts build && bun scripts/generate-openapi.ts && bunx oxfmt --write docs/api/openapi.yaml",
     "test": "turbo run test",
     "test:integration": "bun run db:deploy && turbo run test:integration"
   },

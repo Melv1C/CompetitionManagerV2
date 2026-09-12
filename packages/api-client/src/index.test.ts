@@ -26,9 +26,43 @@ describe("fetchHealth", () => {
     try {
       await fetchHealth("http://localhost:3000/");
       expect(requests).toEqual([
-        "http://localhost:3000/health/live",
-        "http://localhost:3000/health/ready",
+        "http://localhost:3000/api/v1/health/live",
+        "http://localhost:3000/api/v1/health/ready",
       ]);
+    } finally {
+      Object.defineProperty(globalThis, "fetch", { configurable: true, value: originalFetch });
+    }
+  });
+
+  it("exposes the shared error contract for unexpected responses", async () => {
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(globalThis, "fetch", {
+      configurable: true,
+      value: () =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An unexpected error occurred",
+                requestId: "request-123",
+                details: {},
+              },
+            }),
+            { status: 500 },
+          ),
+        ),
+    });
+
+    try {
+      await expect(fetchHealth("http://localhost:3000")).rejects.toEqual(
+        expect.objectContaining({
+          name: "ApiClientError",
+          status: 500,
+          code: "INTERNAL_SERVER_ERROR",
+          requestId: "request-123",
+        }),
+      );
     } finally {
       Object.defineProperty(globalThis, "fetch", { configurable: true, value: originalFetch });
     }

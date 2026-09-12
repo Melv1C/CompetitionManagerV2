@@ -31,7 +31,8 @@
     "@prisma/client": "^6.19.3",
     "better-auth": "1.7.4",
     "hono": "^4.12.23",
-    "varlock": "catalog:"
+    "varlock": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

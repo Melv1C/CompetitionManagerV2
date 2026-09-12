@@ -1,0 +1,322 @@
+{
+  "openapi": "3.0.3",
+  "info":
+    {
+      "title": "Competition Manager API",
+      "version": "1.0.0",
+      "description": "Versioned HTTP contracts for the Competition Manager backend.",
+    },
+  "paths":
+    {
+      "/api/v1/health/live":
+        {
+          "get":
+            {
+              "operationId": "liveHealth",
+              "description": "Liveness response.",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Successful response.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "status": { "type": "string", "enum": ["ok"] },
+                                      "service": { "type": "string", "enum": ["backend"] },
+                                      "timestamp":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                    },
+                                  "required": ["status", "service", "timestamp"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Malformed request.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Route not found.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Unexpected server failure.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                },
+            },
+        },
+      "/api/v1/health/ready":
+        {
+          "get":
+            {
+              "operationId": "readyHealth",
+              "description": "Readiness response.",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Successful response.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "status":
+                                        { "type": "string", "enum": ["ready", "not_ready"] },
+                                      "service": { "type": "string", "enum": ["backend"] },
+                                      "checks":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "database":
+                                                { "type": "string", "enum": ["ok", "unavailable"] },
+                                              "redis":
+                                                { "type": "string", "enum": ["ok", "unavailable"] },
+                                            },
+                                          "required": ["database", "redis"],
+                                          "additionalProperties": false,
+                                        },
+                                      "timestamp":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                    },
+                                  "required": ["status", "service", "checks", "timestamp"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Malformed request.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Route not found.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Unexpected server failure.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "503":
+                    {
+                      "description": "Dependencies unavailable.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "status":
+                                        { "type": "string", "enum": ["ready", "not_ready"] },
+                                      "service": { "type": "string", "enum": ["backend"] },
+                                      "checks":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "database":
+                                                { "type": "string", "enum": ["ok", "unavailable"] },
+                                              "redis":
+                                                { "type": "string", "enum": ["ok", "unavailable"] },
+                                            },
+                                          "required": ["database", "redis"],
+                                          "additionalProperties": false,
+                                        },
+                                      "timestamp":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                    },
+                                  "required": ["status", "service", "checks", "timestamp"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+  "components":
+    {
+      "schemas":
+        {
+          "HealthRequest": { "type": "object", "properties": {}, "additionalProperties": false },
+          "LiveHealth":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "status": { "type": "string", "enum": ["ok"] },
+                  "service": { "type": "string", "enum": ["backend"] },
+                  "timestamp":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    },
+                },
+              "required": ["status", "service", "timestamp"],
+              "additionalProperties": false,
+            },
+          "ReadyHealth":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "status": { "type": "string", "enum": ["ready", "not_ready"] },
+                  "service": { "type": "string", "enum": ["backend"] },
+                  "checks":
+                    {
+                      "type": "object",
+                      "properties":
+                        {
+                          "database": { "type": "string", "enum": ["ok", "unavailable"] },
+                          "redis": { "type": "string", "enum": ["ok", "unavailable"] },
+                        },
+                      "required": ["database", "redis"],
+                      "additionalProperties": false,
+                    },
+                  "timestamp":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    },
+                },
+              "required": ["status", "service", "checks", "timestamp"],
+              "additionalProperties": false,
+            },
+          "ApiErrorEnvelope":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "error":
+                    {
+                      "type": "object",
+                      "properties":
+                        {
+                          "code":
+                            {
+                              "type": "string",
+                              "enum": ["VALIDATION_ERROR", "NOT_FOUND", "INTERNAL_SERVER_ERROR"],
+                            },
+                          "message": { "type": "string" },
+                          "fieldErrors":
+                            {
+                              "type": "object",
+                              "additionalProperties":
+                                { "type": "array", "items": { "type": "string" } },
+                            },
+                          "requestId": { "type": "string" },
+                          "details":
+                            {
+                              "anyOf":
+                                [
+                                  {
+                                    "type": "object",
+                                    "properties":
+                                      {
+                                        "issues":
+                                          {
+                                            "type": "array",
+                                            "items":
+                                              {
+                                                "type": "object",
+                                                "properties":
+                                                  {
+                                                    "code": { "type": "string" },
+                                                    "path":
+                                                      {
+                                                        "type": "array",
+                                                        "items":
+                                                          {
+                                                            "oneOf":
+                                                              [
+                                                                { "type": "string" },
+                                                                { "type": "number" },
+                                                              ],
+                                                          },
+                                                      },
+                                                    "message": { "type": "string" },
+                                                  },
+                                                "required": ["code", "path", "message"],
+                                                "additionalProperties": false,
+                                              },
+                                          },
+                                      },
+                                    "required": ["issues"],
+                                    "additionalProperties": false,
+                                  },
+                                  { "type": "object", "additionalProperties": {} },
+                                ],
+                            },
+                        },
+                      "required": ["code", "message", "requestId", "details"],
+                      "additionalProperties": false,
+                    },
+                },
+              "required": ["error"],
+              "additionalProperties": false,
+            },
+        },
+    },
+}
