@@ -1,12 +1,11 @@
 {
-  "name": "@competition-manager/backend",
+  "name": "@competition-manager/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
-    "./worker": "./dist/worker.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -21,22 +20,19 @@
     "start": "bun dist/index.mjs",
     "test": "vitest run",
     "test:integration": "vitest run tests/integration",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "worker": "bun dist/worker.mjs"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@competition-manager/backend-infrastructure": "workspace:*",
     "@competition-manager/contracts": "workspace:*",
     "@hono/node-server": "^2.0.4",
     "@prisma/client": "^6.19.3",
     "hono": "^4.12.23",
-    "pg": "^8.21.0",
-    "redis": "^5.8.2",
     "varlock": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/pg": "^8.20.0",
     "prisma": "^6.19.3",
     "tsdown": "catalog:",
     "typescript": "catalog:",

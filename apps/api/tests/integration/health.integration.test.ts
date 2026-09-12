@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createHealthApp } from "../../src/health";
 
-describe("health HTTP contract", () => {
+describe("API health HTTP contract", () => {
   it("serves a dependency-backed readiness response through the application boundary", async () => {
     const app = createHealthApp({
       database: () => Promise.resolve(true),

@@ -1,6 +1,8 @@
+import {
+  closeInfrastructureConnections,
+  createInfrastructureConnections,
+} from "@competition-manager/backend-infrastructure";
 import { ENV } from "varlock/env";
-
-import { closeInfrastructureConnections, createInfrastructureConnections } from "./infrastructure";
 
 const connections = createInfrastructureConnections(ENV.DATABASE_URL, ENV.REDIS_URL);
 

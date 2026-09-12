@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createHealthApp } from "./health";
 
-describe("backend health endpoints", () => {
+describe("API health endpoints", () => {
   it("reports liveness without depending on infrastructure", async () => {
     const app = createHealthApp({
       database: () => Promise.resolve(false),

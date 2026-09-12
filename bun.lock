@@ -51,22 +51,20 @@
         "vite": "catalog:",
       },
     },
-    "apps/backend": {
-      "name": "@competition-manager/backend",
+    "apps/api": {
+      "name": "@competition-manager/api",
       "version": "0.0.0",
       "dependencies": {
+        "@competition-manager/backend-infrastructure": "workspace:*",
         "@competition-manager/contracts": "workspace:*",
         "@hono/node-server": "^2.0.4",
         "@prisma/client": "^6.19.3",
         "hono": "^4.12.23",
-        "pg": "^8.21.0",
-        "redis": "^5.8.2",
         "varlock": "catalog:",
       },
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
         "@types/node": "catalog:",
-        "@types/pg": "^8.20.0",
         "prisma": "^6.19.3",
         "tsdown": "catalog:",
         "typescript": "catalog:",
@@ -119,6 +117,20 @@
         "vite": "catalog:",
       },
     },
+    "apps/worker": {
+      "name": "@competition-manager/worker",
+      "version": "0.0.0",
+      "dependencies": {
+        "@competition-manager/backend-infrastructure": "workspace:*",
+        "varlock": "catalog:",
+      },
+      "devDependencies": {
+        "@repo/typescript-config": "workspace:*",
+        "@types/node": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/api-client": {
       "name": "@competition-manager/api-client",
       "version": "0.0.0",
@@ -130,6 +142,21 @@
         "tsdown": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
+      },
+    },
+    "packages/backend-infrastructure": {
+      "name": "@competition-manager/backend-infrastructure",
+      "version": "0.0.0",
+      "dependencies": {
+        "pg": "^8.21.0",
+        "redis": "^5.8.2",
+      },
+      "devDependencies": {
+        "@repo/typescript-config": "workspace:*",
+        "@types/node": "catalog:",
+        "@types/pg": "^8.20.0",
+        "tsdown": "catalog:",
+        "typescript": "catalog:",
       },
     },
     "packages/contracts": {
@@ -283,9 +310,11 @@
 
     "@competition-manager/admin": ["@competition-manager/admin@workspace:apps/admin"],
 
+    "@competition-manager/api": ["@competition-manager/api@workspace:apps/api"],
+
     "@competition-manager/api-client": ["@competition-manager/api-client@workspace:packages/api-client"],
 
-    "@competition-manager/backend": ["@competition-manager/backend@workspace:apps/backend"],
+    "@competition-manager/backend-infrastructure": ["@competition-manager/backend-infrastructure@workspace:packages/backend-infrastructure"],
 
     "@competition-manager/contracts": ["@competition-manager/contracts@workspace:packages/contracts"],
 
@@ -300,6 +329,8 @@
     "@competition-manager/ui": ["@competition-manager/ui@workspace:packages/ui"],
 
     "@competition-manager/utils": ["@competition-manager/utils@workspace:packages/utils"],
+
+    "@competition-manager/worker": ["@competition-manager/worker@workspace:apps/worker"],
 
     "@dotenvx/dotenvx": ["@dotenvx/dotenvx@1.75.1", "", { "dependencies": { "@dotenvx/primitives": "^0.8.0", "commander": "^11.1.0", "conf": "^10.2.0", "dotenv": "^17.2.1", "enquirer": "^2.4.1", "env-paths": "^2.2.1", "execa": "^5.1.1", "fdir": "^6.2.0", "ignore": "^5.3.0", "object-treeify": "1.1.33", "open": "^8.4.2", "picomatch": "^4.0.4", "systeminformation": "^5.22.11", "undici": "^7.11.0", "which": "^4.0.0", "yocto-spinner": "^1.1.0" }, "bin": { "dotenvx": "src/cli/dotenvx.js" } }, "sha512-/BITOC9dmS/edY2zQwZNicQ059O6RKabtQfyEafV0nGtfYRNHYy1DIPiYVcov40+tob9hfmBnbR963dS+EQ1DQ=="],
 
