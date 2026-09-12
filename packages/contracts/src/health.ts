@@ -3,6 +3,8 @@ import { z } from "zod";
 export const healthStatusSchema = z.enum(["ok", "ready", "not_ready"]);
 export const dependencyStatusSchema = z.enum(["ok", "unavailable"]);
 
+export const healthRequestSchema = z.object({}).strict();
+
 export const liveHealthSchema = z.object({
   status: z.literal("ok"),
   service: z.literal("backend"),

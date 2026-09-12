@@ -2,6 +2,21 @@
 
 CI is intentionally small while the repository is documentation-only. It runs the traceability check on every push and pull request. As implementation lands, the same workflow grows to include the approved specification's frozen install, environment validation, Prisma checks, formatting/lint/boundary/dead-code/type checks, unit/component/integration tests, builds, containerized Playwright, migration checks, OpenAPI diff, translation completeness, and security scans.
 
+## Contract generation workflow
+
+The API contract is defined once in `packages/contracts` and used by the
+runtime validators and OpenAPI generator. Regenerate the deterministic artifact
+after changing a contract:
+
+```sh
+bun run openapi:generate
+```
+
+The command builds the contracts package first, then writes and formats
+`docs/api/openapi.yaml`. The file is JSON-formatted YAML so it can be consumed
+by OpenAPI tooling without a YAML serializer dependency. Review generated
+changes together with the Zod contract and its tests.
+
 ## Traceability gate
 
 Run:

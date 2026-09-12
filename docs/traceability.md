@@ -15,7 +15,7 @@ This matrix is the delivery contract for the approved Competition Manager specif
 | --- | --- | --- | --- | --- |
 | ARC-001 | Four product surfaces plus a separate backend worker: API, frontend, manager, admin, worker | `apps/api`, `apps/worker`, `apps/frontend`, `apps/manager`, `apps/admin` | `tests/e2e/smoke.spec.ts:17-21` | P0 · Unverified · Phase 0 |
 | ARC-002 | Modular monolith with API and worker commands | `apps/api`, `apps/worker`, shared `packages/domain` and `packages/contracts` | `tests/e2e/smoke.spec.ts:24-38` | P0 · Unverified · Phase 0 |
-| ARC-003 | Typed REST/OpenAPI contracts and client | `packages/contracts`, `packages/api-client`, `docs/api/openapi.yaml` | `tests/contracts/openapi.test.ts` | P0 · Unverified · Phase 0 |
+| ARC-003 | Typed REST/OpenAPI contracts and client | `packages/contracts`, `packages/api-client`, `apps/api/src/health.ts`, `docs/api/openapi.yaml` | `packages/contracts/src/openapi.test.ts`, `apps/api/src/health.test.ts` | P0 · Verified · Phase 0 |
 | TEN-001 | Strict Organization isolation | `apps/api/src/modules/organizations`, `packages/domain/organizations` | `tests/integration/tenant-isolation.test.ts` | P0 · Unverified · Phase 1 |
 | AUTH-001 | Shared email/password and Google authentication | `apps/api/src/modules/auth`, `apps/frontend/src/auth` | `tests/e2e/authentication.spec.ts` | P0 · Unverified · Phase 1 |
 | AUTH-002 | Verified email gates sensitive actions | `apps/api/src/modules/auth/verification` | `tests/integration/verified-user-gates.test.ts` | P0 · Unverified · Phase 1 |
