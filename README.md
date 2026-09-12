@@ -34,7 +34,7 @@ The specification takes precedence over all reference repositories.
 
 ## Workspace commands
 
-The root scripts follow the `fullstack-web-turbo-kit` conventions: Vite Plus provides the oxlint/oxfmt/type-check workflow and tsdown-backed package builds, Varlock owns environment generation/validation, and Turborepo coordinates the workspace. `bun run dev` starts all four application boundaries, while `bun run build`, `bun run check`, `bun run test`, and `bun run test:integration` execute the workspace gates. Database generation and migrations require PostgreSQL from the local stack.
+The root scripts follow the `fullstack-web-turbo-kit` conventions: Vite serves the applications, tsdown builds the packages, and oxlint/oxfmt provide the type-aware lint and formatting workflow. Varlock owns environment generation/validation, and Turborepo coordinates the workspace. `bun run dev` starts all four application boundaries, while `bun run build`, `bun run check`, `bun run test`, and `bun run test:integration` execute the workspace gates. Database generation and migrations require PostgreSQL from the local stack.
 
 ## Status
 

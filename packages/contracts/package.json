@@ -3,29 +3,30 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
     "./health": {
-      "types": "./src/health.ts",
+      "types": "./dist/health.d.mts",
       "import": "./dist/health.mjs",
       "default": "./dist/health.mjs"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "vp pack"
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typescript": "catalog:",
-    "vite-plus": "catalog:"
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   }
 }
