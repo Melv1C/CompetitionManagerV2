@@ -13,6 +13,8 @@ const connections = createInfrastructureConnections(undefined, ENV.REDIS_URL);
 const app = createApiApp({
   database: () => probeDatabase(database),
   redis: () => probeRedis(connections.redis),
+  queue: () =>
+    connections.queue.health().catch(() => ({ available: false, depth: 0, failedJobs: 0 })),
 });
 
 const server = serve({

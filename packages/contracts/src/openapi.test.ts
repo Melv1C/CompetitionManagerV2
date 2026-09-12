@@ -7,7 +7,11 @@ describe("OpenAPI contract document", () => {
     const document = createOpenApiDocument();
 
     expect(document.openapi).toBe("3.0.3");
-    expect(Object.keys(document.paths)).toEqual(["/api/v1/health/live", "/api/v1/health/ready"]);
+    expect(Object.keys(document.paths)).toEqual([
+      "/api/v1/health/live",
+      "/api/v1/health/ready",
+      "/api/v1/health/operations",
+    ]);
     expect(
       document.paths["/api/v1/health/live"].get.responses["400"].content["application/json"].schema,
     ).toEqual({

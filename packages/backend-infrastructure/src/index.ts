@@ -1,18 +1,25 @@
 import { Pool } from "pg";
-import { createClient, type RedisClientType } from "redis";
+import { createClient } from "redis";
+
+import { createRedisJobQueue, type RedisJobQueue } from "./jobs";
 
 export type InfrastructureConnections = {
   database?: Pool;
-  redis: RedisClientType;
+  redis: ReturnType<typeof createClient>;
+  queue: RedisJobQueue;
 };
+
+export * from "./jobs";
 
 export function createInfrastructureConnections(
   databaseUrl: string | undefined,
   redisUrl: string,
 ): InfrastructureConnections {
+  const redis = createClient({ url: redisUrl });
   return {
     database: databaseUrl ? new Pool({ connectionString: databaseUrl, max: 5 }) : undefined,
-    redis: createClient({ url: redisUrl }),
+    redis,
+    queue: createRedisJobQueue(redis),
   };
 }
 
@@ -24,7 +31,7 @@ export async function probeDatabase(pool: Pool | undefined): Promise<boolean> {
   return result.rows[0]?.ok === 1;
 }
 
-export async function probeRedis(client: RedisClientType): Promise<boolean> {
+export async function probeRedis(client: ReturnType<typeof createClient>): Promise<boolean> {
   if (!client.isOpen) {
     await client.connect();
   }

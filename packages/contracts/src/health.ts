@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { queueHealthSchema } from "./jobs";
+
 export const healthStatusSchema = z.enum(["ok", "ready", "not_ready"]);
 export const dependencyStatusSchema = z.enum(["ok", "unavailable"]);
 
@@ -21,5 +23,12 @@ export const readyHealthSchema = z.object({
   timestamp: z.string().datetime(),
 });
 
+export const operationsHealthSchema = z.object({
+  service: z.literal("backend"),
+  queue: queueHealthSchema,
+  timestamp: z.string().datetime(),
+});
+
 export type LiveHealth = z.infer<typeof liveHealthSchema>;
 export type ReadyHealth = z.infer<typeof readyHealthSchema>;
+export type OperationsHealth = z.infer<typeof operationsHealthSchema>;

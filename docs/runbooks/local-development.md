@@ -65,7 +65,18 @@ waits for API readiness before running. PostgreSQL and Redis must be running;
 install Chromium once with `bunx playwright install chromium` (use
 `bunx playwright install --with-deps chromium` on CI or a fresh Linux host).
 
-The API serves liveness at `/health/live` and readiness at `/health/ready`. Readiness checks PostgreSQL with `SELECT 1` and Redis with `PING`; a 503 response is expected until both services are reachable.
+The API serves liveness at `/health/live`, readiness at `/health/ready`, and queue operations health at `/health/operations` (the versioned `/api/v1/health/*` paths are also available). Readiness checks PostgreSQL with `SELECT 1` and Redis with `PING`; a 503 response is expected until both services are reachable. Operations health reports only queue availability, queued/delayed depth, and the count of terminal failures; job payloads are never returned.
+
+The worker uses the same `REDIS_URL` and can be started independently with `bun run --cwd apps/worker dev`. Jobs are stored in Redis lists and sorted sets, so a worker restart recovers processing entries and delayed retries without relying on process timers. A job's idempotency key (by default, its name and business key) is claimed atomically at enqueue time. Transient failures use bounded exponential backoff with jitter and become visible terminal failures after the configured attempt limit.
+
+For a real Redis integration pass, start the local stack and run:
+
+```bash
+docker compose up -d redis
+REDIS_INTEGRATION=1 bun run --cwd packages/backend-infrastructure test:integration
+```
+
+Operators should inspect `/api/v1/health/operations` before recovery work. Retry a terminal job through the infrastructure queue's `retryFailed(jobId)` operation using its stable job id; this resets only that failed record and enqueues the same idempotent job, so it cannot create a second business job. Do not delete Redis keys to recover work.
 
 The email/password session boundary is mounted at `/api/auth`. Set
 `BETTER_AUTH_SECRET` to a generated secret outside local development; Better Auth

@@ -1,5 +1,10 @@
 import { apiErrorEnvelopeSchema } from "./errors";
-import { healthRequestSchema, liveHealthSchema, readyHealthSchema } from "./health";
+import {
+  healthRequestSchema,
+  liveHealthSchema,
+  operationsHealthSchema,
+  readyHealthSchema,
+} from "./health";
 
 type JsonSchema = Record<string, unknown>;
 
@@ -52,12 +57,21 @@ export function createOpenApiDocument() {
       "/api/v1/health/ready": {
         get: healthOperation("readyHealth", readyHealthSchema, "Readiness response.", true),
       },
+      "/api/v1/health/operations": {
+        get: healthOperation(
+          "operationsHealth",
+          operationsHealthSchema,
+          "Queue operations health.",
+          true,
+        ),
+      },
     },
     components: {
       schemas: {
         HealthRequest: schemaFor(healthRequestSchema),
         LiveHealth: schemaFor(liveHealthSchema),
         ReadyHealth: schemaFor(readyHealthSchema),
+        OperationsHealth: schemaFor(operationsHealthSchema),
         ApiErrorEnvelope: schemaFor(apiErrorEnvelopeSchema),
       },
     },
