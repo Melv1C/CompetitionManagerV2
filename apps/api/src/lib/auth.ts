@@ -70,6 +70,22 @@ export type VerificationEmailSender = (input: {
   token: string;
 }) => Promise<void>;
 
+export type VerificationLink = {
+  url: string;
+  token: string;
+};
+
+export function createVerificationLink(input: { url: string; token: string }): VerificationLink {
+  const deliveryToken = crypto.randomUUID();
+  const url = new URL(input.url);
+  url.searchParams.set("verification", deliveryToken);
+  url.searchParams.delete("callbackURL");
+  return {
+    url: url.toString(),
+    token: `${deliveryToken}.${input.token}`,
+  };
+}
+
 export type AuthConfiguration = {
   verificationEmailSender?: VerificationEmailSender;
   verificationTokenStore?: VerificationTokenStore;
@@ -107,12 +123,13 @@ export function createAuth(configuration: AuthConfiguration = {}) {
       expiresIn: verificationExpiresIn,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url, token }) => {
+        const verificationLink = createVerificationLink({ url, token });
         await tokenStore.issue(
           user.email,
-          token,
+          verificationLink.token,
           new Date(Date.now() + verificationExpiresIn * 1000),
         );
-        await sender({ user, url, token });
+        await sender({ user, url: verificationLink.url, token: verificationLink.token });
       },
     },
     ...(authSecret ? { secret: authSecret } : {}),
@@ -135,16 +152,21 @@ export function createAuthHandler(
     const url = new URL(request.url);
     if (url.pathname === "/api/auth/verify-email") {
       const token = url.searchParams.get("token") ?? "";
-      // Better Auth validates the signed token and resolves its email. The
-      // database-backed token record is consumed in its verification callback.
-      // This wrapper only ensures the endpoint is explicitly part of our auth
-      // surface; token consumption is performed by the callback below.
-      if (!token || !(await tokenStore.consume(token))) {
+      const deliveryToken = url.searchParams.get("verification") ?? "";
+      const storedToken = `${deliveryToken}.${token}`;
+      if (!deliveryToken || !token || !(await tokenStore.consume(storedToken))) {
         return new Response(JSON.stringify({ code: "INVALID_TOKEN", message: "Invalid token" }), {
           status: 401,
           headers: { "Content-Type": "application/json" },
         });
       }
+
+      // Better Auth adds callbackURL=/ to generated links and redirects when
+      // it is present. The API contract returns its JSON verification result;
+      // preserve the signed token while removing the transport-only fields.
+      url.searchParams.delete("verification");
+      url.searchParams.delete("callbackURL");
+      return authInstance.handler(new Request(url, request));
     }
     return authInstance.handler(request);
   };

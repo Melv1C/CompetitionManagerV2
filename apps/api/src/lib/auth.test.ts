@@ -1,7 +1,13 @@
 import { admin } from "better-auth/plugins";
 import { describe, expect, it } from "vitest";
 
-import { auth, getTrustedOrigins, isVerifiedUser, requireAuthSecret } from "./auth";
+import {
+  auth,
+  createVerificationLink,
+  getTrustedOrigins,
+  isVerifiedUser,
+  requireAuthSecret,
+} from "./auth";
 
 describe("Better Auth configuration", () => {
   it("exposes the session API from the configured auth instance", () => {
@@ -77,5 +83,22 @@ describe("Better Auth configuration", () => {
   it("keeps email verification as the explicit sensitive-action gate", () => {
     expect(isVerifiedUser({ emailVerified: false })).toBe(false);
     expect(isVerifiedUser({ emailVerified: true })).toBe(true);
+  });
+
+  it("makes verification links one-time and JSON-oriented", () => {
+    const first = createVerificationLink({
+      url: "http://localhost:3000/api/auth/verify-email?token=signed-token&callbackURL=%2F",
+      token: "signed-token",
+    });
+    const second = createVerificationLink({
+      url: "http://localhost:3000/api/auth/verify-email?token=signed-token&callbackURL=%2F",
+      token: "signed-token",
+    });
+
+    expect(first.url).not.toBe(second.url);
+    expect(new URL(first.url).searchParams.get("callbackURL")).toBeNull();
+    expect(new URL(first.url).searchParams.get("verification")).toBeTruthy();
+    expect(first.token).not.toBe(second.token);
+    expect(first.token).toContain("signed-token");
   });
 });
