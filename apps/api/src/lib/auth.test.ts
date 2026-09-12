@@ -1,7 +1,7 @@
 import { admin } from "better-auth/plugins";
 import { describe, expect, it } from "vitest";
 
-import { auth } from "./auth";
+import { auth, getTrustedOrigins, isVerifiedUser, requireAuthSecret } from "./auth";
 
 describe("Better Auth configuration", () => {
   it("exposes the session API from the configured auth instance", () => {
@@ -34,5 +34,48 @@ describe("Better Auth configuration", () => {
 
   it("does not enable the optional Better Auth teams feature", () => {
     expect(auth.api.createTeam).toBeUndefined();
+  });
+
+  it("enables email/password sessions without silently treating an email as verified", () => {
+    expect(auth.options.emailAndPassword).toMatchObject({
+      enabled: true,
+      requireEmailVerification: false,
+    });
+    expect(auth.options.emailVerification).toMatchObject({
+      sendOnSignIn: false,
+      sendOnSignUp: false,
+    });
+  });
+
+  it("requires a secret in production and staging before Better Auth starts", () => {
+    expect(() => requireAuthSecret("production", undefined)).toThrow(
+      "BETTER_AUTH_SECRET is required in production and staging",
+    );
+    expect(() => requireAuthSecret("staging", "")).toThrow(
+      "BETTER_AUTH_SECRET is required in production and staging",
+    );
+    expect(requireAuthSecret("development", undefined)).toBeUndefined();
+  });
+
+  it("uses the exact configured origins for deployed surfaces", () => {
+    expect(
+      getTrustedOrigins({
+        APP_ENV: "production",
+        BACKEND_URL: "https://api.example.test",
+        FRONTEND_URL: "https://frontend.example.test",
+        MANAGER_URL: "https://manager.example.test",
+        ADMIN_URL: "https://admin.example.test",
+      }),
+    ).toEqual([
+      "https://api.example.test",
+      "https://frontend.example.test",
+      "https://manager.example.test",
+      "https://admin.example.test",
+    ]);
+  });
+
+  it("keeps email verification as the explicit sensitive-action gate", () => {
+    expect(isVerifiedUser({ emailVerified: false })).toBe(false);
+    expect(isVerifiedUser({ emailVerified: true })).toBe(true);
   });
 });
