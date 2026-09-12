@@ -89,11 +89,12 @@ Unverified users can sign in and use `/api/auth/send-verification-email`, but
 protected requests return the stable `EMAIL_NOT_VERIFIED` error.
 
 Local and test environments use the deterministic capture email adapter. Its
-messages are available to test fixtures through `capturedVerificationEmails`;
-production wiring should provide the durable job enqueuer from the worker
-infrastructure. Verification links expire after one hour and are consumed only
-once. Tokens are stored hashed in the Verification table and are never written
-to application logs or API error details.
+messages are available to test fixtures through `capturedVerificationEmails`.
+The API enqueues `auth.email-verification` jobs through the durable Redis queue;
+the worker consumes them with the configured email provider. Verification links
+expire after one hour and are consumed only once. Tokens are stored hashed in
+the Verification table and are never written to application logs or API error
+details.
 
 Staging and production must provide the exact deployed origins through
 `MY_APP_BACKEND_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and
