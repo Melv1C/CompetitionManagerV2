@@ -32,6 +32,8 @@ export type SessionClient = {
   getSession(): Promise<AuthSessionResponse | null>;
   signIn(credentials: AuthCredentials): Promise<AuthSessionResponse | null>;
   signUp(registration: AuthRegistration): Promise<AuthSessionResponse | null>;
+  sendVerificationEmail(): Promise<void>;
+  getManagerAccess(): Promise<boolean>;
   signOut(): Promise<void>;
 };
 
@@ -94,6 +96,25 @@ export function createSessionClient(baseUrl: string, fetcher: AuthFetch = fetch)
         body: JSON.stringify({ name, email, password }),
       });
       return getSession();
+    },
+    async sendVerificationEmail() {
+      const session = await getSession();
+      if (!session) {
+        throw new AuthClientError("Authentication is required", 401, "UNAUTHORIZED");
+      }
+      await request("/send-verification-email", {
+        method: "POST",
+        body: JSON.stringify({ email: session.user.email }),
+      });
+    },
+    async getManagerAccess() {
+      const response = await fetcher(`${baseUrl.replace(/\/$/, "")}/api/v1/manager`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) return true;
+      if (response.status === 401 || response.status === 403) return false;
+      throw await responseError(response);
     },
     async signOut() {
       await request("/sign-out", { method: "POST" });

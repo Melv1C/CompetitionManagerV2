@@ -1,10 +1,18 @@
 import { z } from "zod";
 
-export const jobNameSchema = z.enum(["fixture.record"]);
+export const jobNameSchema = z.enum(["fixture.record", "auth.email-verification"]);
 export const jobStatusSchema = z.enum(["queued", "processing", "completed", "failed"]);
 
 export const fixtureRecordPayloadSchema = z.object({
   message: z.string().min(1),
+});
+
+export const verificationEmailJobPayloadSchema = z.object({
+  to: z.string().email(),
+  subject: z.string().min(1),
+  text: z.string().min(1),
+  locale: z.enum(["en", "fr", "nl"]),
+  verificationUrl: z.string().url(),
 });
 
 export const jobEnvelopeSchema = z.object({

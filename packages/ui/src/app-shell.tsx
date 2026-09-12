@@ -28,7 +28,9 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     useState<Awaited<ReturnType<ReturnType<typeof createSessionClient>["getSession"]>>>(null);
   const [authMode, setAuthMode] = useState<"sign-in" | "sign-up">("sign-up");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authPending, setAuthPending] = useState(false);
+  const [managerAccess, setManagerAccess] = useState<boolean | null>(null);
   const authClient = useMemo(() => createSessionClient(backendUrl), [backendUrl]);
 
   const checkBackend = useCallback(() => {
@@ -57,9 +59,29 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     };
   }, [authClient]);
 
+  useEffect(() => {
+    if (surface !== "manager" || !session) {
+      setManagerAccess(null);
+      return;
+    }
+    let active = true;
+    void authClient
+      .getManagerAccess()
+      .then((allowed) => {
+        if (active) setManagerAccess(allowed);
+      })
+      .catch(() => {
+        if (active) setManagerAccess(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authClient, session, surface]);
+
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setAuthError(null);
+    setAuthNotice(null);
     setAuthPending(true);
     const form = new FormData(event.currentTarget);
     const email = formText(form, "email");
@@ -86,11 +108,26 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   async function handleSignOut(): Promise<void> {
     setAuthPending(true);
     setAuthError(null);
+    setAuthNotice(null);
     try {
       await authClient.signOut();
       setSession(null);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Sign out failed");
+    } finally {
+      setAuthPending(false);
+    }
+  }
+
+  async function handleResendVerification(): Promise<void> {
+    setAuthPending(true);
+    setAuthError(null);
+    setAuthNotice(null);
+    try {
+      await authClient.sendVerificationEmail();
+      setAuthNotice("Verification email sent. Check your inbox to continue.");
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Could not send verification email");
     } finally {
       setAuthPending(false);
     }
@@ -148,9 +185,32 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                 <p className="text-muted-foreground text-sm">{session.user.email}</p>
               </div>
               {!session.user.emailVerified && (
-                <p className="text-muted-foreground text-sm">
-                  Email verification is required before sensitive actions are enabled.
+                <div className="space-y-3" aria-label="Pending email verification">
+                  <p className="text-muted-foreground text-sm">
+                    Check your inbox for a verification link. Sensitive actions stay locked until
+                    your email is verified.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => void handleResendVerification()}
+                    disabled={authPending}
+                  >
+                    Resend verification email
+                  </Button>
+                </div>
+              )}
+              {authNotice && (
+                <p className="text-sm" role="status">
+                  {authNotice}
                 </p>
+              )}
+              {surface === "manager" && managerAccess && (
+                <div aria-label="Manager tools" className="border-border rounded-md border p-3">
+                  <p className="font-semibold">Manager tools</p>
+                  <p className="text-muted-foreground text-sm">
+                    Your verified session can enter Organization tools.
+                  </p>
+                </div>
               )}
               <Button variant="outline" onClick={handleSignOut} disabled={authPending}>
                 Sign out

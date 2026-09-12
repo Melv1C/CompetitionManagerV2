@@ -1,8 +1,15 @@
+import {
+  createCaptureEmailProvider,
+  createCaptureJobQueue,
+  createQueuedVerificationEmailSender,
+  type VerificationEmail,
+} from "@competition-manager/email";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin, organization } from "better-auth/plugins";
 
 import { database } from "../infrastructure/database";
+import { createDatabaseVerificationTokenStore, type VerificationTokenStore } from "./verification";
 
 const localOrigins = [
   "http://localhost:3000",
@@ -21,7 +28,9 @@ type AuthEnvironment = Partial<
   >
 >;
 
-export function getTrustedOrigins(environment: AuthEnvironment = process.env): string[] {
+export function getTrustedOrigins(
+  environment: AuthEnvironment = process.env as AuthEnvironment,
+): string[] {
   const local =
     environment.APP_ENV === undefined ||
     environment.APP_ENV === "development" ||
@@ -51,30 +60,92 @@ export function requireAuthSecret(
 const authSecret = requireAuthSecret();
 const trustedOrigins = getTrustedOrigins();
 
-export const auth = betterAuth({
-  appName: "Competition Manager",
-  basePath: "/api/auth",
-  baseURL: backendUrl,
-  database: prismaAdapter(database, {
-    provider: "postgresql",
-  }),
-  emailAndPassword: {
-    enabled: true,
-    // Email delivery and verification gating belong to the next auth slice.
-    requireEmailVerification: false,
-  },
-  emailVerification: {
-    sendOnSignIn: false,
-    sendOnSignUp: false,
-  },
-  ...(authSecret ? { secret: authSecret } : {}),
-  trustedOrigins,
-  advanced: {
-    useSecureCookies: process.env.APP_ENV === "production" || process.env.APP_ENV === "staging",
-  },
-  plugins: [organization(), admin()],
-});
-
 export function isVerifiedUser(user: { emailVerified: boolean }): boolean {
   return user.emailVerified;
+}
+
+export type VerificationEmailSender = (input: {
+  user: { email: string };
+  url: string;
+  token: string;
+}) => Promise<void>;
+
+export type AuthConfiguration = {
+  verificationEmailSender?: VerificationEmailSender;
+  verificationTokenStore?: VerificationTokenStore;
+  verificationExpiresIn?: number;
+};
+
+const captureProvider = createCaptureEmailProvider();
+const captureJobQueue = createCaptureJobQueue(captureProvider);
+
+export const capturedVerificationEmails: VerificationEmail[] = captureProvider.messages;
+
+export function createAuth(configuration: AuthConfiguration = {}) {
+  const verificationExpiresIn = configuration.verificationExpiresIn ?? 60 * 60;
+  const tokenStore =
+    configuration.verificationTokenStore ?? createDatabaseVerificationTokenStore(database);
+  const sender =
+    configuration.verificationEmailSender ??
+    createQueuedVerificationEmailSender({ queue: captureJobQueue });
+
+  return betterAuth({
+    appName: "Competition Manager",
+    basePath: "/api/auth",
+    baseURL: backendUrl,
+    database: prismaAdapter(database, {
+      provider: "postgresql",
+    }),
+    emailAndPassword: {
+      enabled: true,
+      // Unverified users retain sign-in access so the client can show resend state.
+      requireEmailVerification: false,
+    },
+    emailVerification: {
+      sendOnSignIn: true,
+      sendOnSignUp: true,
+      expiresIn: verificationExpiresIn,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url, token }) => {
+        await tokenStore.issue(
+          user.email,
+          token,
+          new Date(Date.now() + verificationExpiresIn * 1000),
+        );
+        await sender({ user, url, token });
+      },
+    },
+    ...(authSecret ? { secret: authSecret } : {}),
+    trustedOrigins,
+    advanced: {
+      useSecureCookies: process.env.APP_ENV === "production" || process.env.APP_ENV === "staging",
+    },
+    plugins: [organization(), admin()],
+  });
+}
+
+export const defaultVerificationTokenStore = createDatabaseVerificationTokenStore(database);
+export const auth = createAuth({ verificationTokenStore: defaultVerificationTokenStore });
+
+export function createAuthHandler(
+  authInstance: ReturnType<typeof createAuth>,
+  tokenStore: VerificationTokenStore = defaultVerificationTokenStore,
+): (request: Request) => Promise<Response> {
+  return async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname === "/api/auth/verify-email") {
+      const token = url.searchParams.get("token") ?? "";
+      // Better Auth validates the signed token and resolves its email. The
+      // database-backed token record is consumed in its verification callback.
+      // This wrapper only ensures the endpoint is explicitly part of our auth
+      // surface; token consumption is performed by the callback below.
+      if (!token || !(await tokenStore.consume(token))) {
+        return new Response(JSON.stringify({ code: "INVALID_TOKEN", message: "Invalid token" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+    return authInstance.handler(request);
+  };
 }

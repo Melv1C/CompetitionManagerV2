@@ -59,6 +59,7 @@
         "@better-auth/prisma-adapter": "1.7.4",
         "@competition-manager/backend-infrastructure": "workspace:*",
         "@competition-manager/contracts": "workspace:*",
+        "@competition-manager/email": "workspace:*",
         "@hono/node-server": "^2.0.4",
         "@prisma/client": "^6.19.3",
         "better-auth": "1.7.4",
@@ -127,6 +128,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@competition-manager/backend-infrastructure": "workspace:*",
+        "@competition-manager/contracts": "workspace:*",
+        "@competition-manager/email": "workspace:*",
         "varlock": "catalog:",
       },
       "devDependencies": {
@@ -134,6 +137,7 @@
         "@types/node": "catalog:",
         "tsdown": "catalog:",
         "typescript": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "packages/api-client": {
@@ -153,6 +157,7 @@
       "name": "@competition-manager/backend-infrastructure",
       "version": "0.0.0",
       "dependencies": {
+        "@competition-manager/contracts": "workspace:*",
         "pg": "^8.21.0",
         "redis": "^5.8.2",
       },
@@ -162,6 +167,7 @@
         "@types/pg": "^8.20.0",
         "tsdown": "catalog:",
         "typescript": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "packages/contracts": {

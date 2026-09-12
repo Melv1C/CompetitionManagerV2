@@ -50,8 +50,14 @@ test("registration keeps the authenticated session after a page reload", async (
 
   const session = page.getByRole("region", { name: "Authenticated session" });
   await expect(session).toContainText(email);
-  await expect(session).toContainText("Email verification is required");
+  await expect(session).toContainText("Sensitive actions stay locked");
+  await page.getByRole("button", { name: "Resend verification email" }).click();
+  await expect(session).toContainText("Verification email sent");
 
   await page.reload();
   await expect(page.getByRole("region", { name: "Authenticated session" })).toContainText(email);
+
+  await page.goto(managerUrl);
+  await expect(page.getByRole("region", { name: "Authenticated session" })).toContainText(email);
+  await expect(page.getByRole("region", { name: "Pending email verification" })).toBeVisible();
 });

@@ -42,8 +42,8 @@ describe("Better Auth configuration", () => {
       requireEmailVerification: false,
     });
     expect(auth.options.emailVerification).toMatchObject({
-      sendOnSignIn: false,
-      sendOnSignUp: false,
+      sendOnSignIn: true,
+      sendOnSignUp: true,
     });
   });
 

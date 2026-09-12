@@ -27,6 +27,7 @@
     "@better-auth/prisma-adapter": "1.7.4",
     "@competition-manager/backend-infrastructure": "workspace:*",
     "@competition-manager/contracts": "workspace:*",
+    "@competition-manager/email": "workspace:*",
     "@hono/node-server": "^2.0.4",
     "@prisma/client": "^6.19.3",
     "better-auth": "1.7.4",
