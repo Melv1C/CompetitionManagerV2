@@ -12,9 +12,13 @@ Requirements: Bun 1.4 or newer and Docker.
 
 PostgreSQL must be running from the local Compose stack before using Prisma. The
 Better Auth configuration in `apps/api/src/lib/auth.ts` is the source for the
-Better Auth Prisma models. `bun run db:generate` runs the Better Auth CLI schema
-generator first, then regenerates Prisma Client. The checked-in schema and
-migration are applied to the local `competition_manager` database with:
+Better Auth Prisma models. `bun run db:generate` is the explicit auth-schema
+workflow: it runs the Better Auth CLI schema generator first, then regenerates
+Prisma Client. Use it after an intentional auth configuration or plugin change.
+Routine `bun run build` and `bun run check` use `bun run db:client` instead;
+that command only regenerates Prisma Client and does not overwrite the checked-in
+Better Auth schema. The checked-in schema and migration are applied to the local
+`competition_manager` database with:
 
 ```bash
 bun run db:generate
