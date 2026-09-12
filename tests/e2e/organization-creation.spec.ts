@@ -53,7 +53,12 @@ test("platform admin creates an Organization for an existing owner who can reloa
     await expect(adminPage.getByRole("region", { name: "Platform admin dashboard" })).toBeVisible();
     await adminPage.getByLabel("Organization name").fill("Brussels Athletics Organization");
     await adminPage.getByLabel("Organization slug").fill("brussels-athletics-organization");
+    await adminPage.route("**/api/v1/admin/users?query=*", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await route.continue();
+    });
     await adminPage.getByLabel("Search eligible owner").fill(ownerEmail);
+    await expect(adminPage.getByText("Searching eligible owners…")).toBeVisible();
     await adminPage.getByRole("button", { name: "Organization Owner" }).click();
     await adminPage.getByRole("button", { name: "Create Organization" }).click();
     await expect(adminPage.getByRole("status")).toContainText(

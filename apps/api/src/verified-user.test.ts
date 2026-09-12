@@ -34,10 +34,18 @@ describe("verified-user sensitive action guard", () => {
     ["/api/v1/payments", "POST"],
     ["/api/v1/organizations/invitations/accept", "POST"],
   ] as const)("allows verified access to %s", async (path, method) => {
-    const app = createApiApp({
+    const dependencies = {
       sessionResolver: async () =>
         ({ user: { id: "user-1", email: "user@example.test", emailVerified: true } }) as never,
-    });
+    };
+    const app = createApiApp(
+      path === "/api/v1/manager"
+        ? {
+            ...dependencies,
+            organizationService: { listForUser: async () => ({ organizations: [{}] }) } as never,
+          }
+        : dependencies,
+    );
     const response = await app.request(`http://localhost:3000${path}`, { method });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: "ready" });

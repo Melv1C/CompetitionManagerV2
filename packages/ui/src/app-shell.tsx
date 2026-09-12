@@ -44,6 +44,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   const [organizationPending, setOrganizationPending] = useState(false);
   const [ownerQuery, setOwnerQuery] = useState("");
   const [eligibleUsers, setEligibleUsers] = useState<EligibleUser[]>([]);
+  const [ownerSearchPending, setOwnerSearchPending] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<EligibleUser | null>(null);
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminNotice, setAdminNotice] = useState<string | null>(null);
@@ -155,9 +156,11 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   useEffect(() => {
     if (surface !== "admin" || !isPlatformAdmin || ownerQuery.trim().length < 2) {
       setEligibleUsers([]);
+      setOwnerSearchPending(false);
       return;
     }
     let active = true;
+    setOwnerSearchPending(true);
     void adminOrganizationClient
       .searchEligibleUsers(ownerQuery)
       .then(({ users }) => {
@@ -167,6 +170,9 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
         if (active) {
           setAdminError(error instanceof Error ? error.message : "Could not search users");
         }
+      })
+      .finally(() => {
+        if (active) setOwnerSearchPending(false);
       });
     return () => {
       active = false;
@@ -197,6 +203,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       setActiveOrganization(null);
       setOrganizationError(null);
       setSelectedOwner(null);
+      setOwnerSearchPending(false);
       setOwnerQuery("");
       setEligibleUsers([]);
       setAdminError(null);
@@ -220,6 +227,7 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       setOrganizations(null);
       setActiveOrganization(null);
       setSelectedOwner(null);
+      setOwnerSearchPending(false);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Sign out failed");
     } finally {
@@ -252,18 +260,16 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     setOrganizationPending(true);
     const form = new FormData(event.currentTarget);
     try {
-      const created = await adminOrganizationClient.createOrganization(
-        {
-          name: formText(form, "organizationName"),
-          slug: formText(form, "organizationSlug"),
-          ownerUserId: selectedOwner.id,
-        },
-        crypto.randomUUID(),
-      );
+      const created = await adminOrganizationClient.createOrganization({
+        name: formText(form, "organizationName"),
+        slug: formText(form, "organizationSlug"),
+        ownerUserId: selectedOwner.id,
+      });
       setAdminNotice(`Organization “${created.organization.name}” created successfully.`);
       setSelectedOwner(null);
       setOwnerQuery("");
       setEligibleUsers([]);
+      setOwnerSearchPending(false);
       event.currentTarget.reset();
     } catch (error) {
       setAdminError(error instanceof Error ? error.message : "Could not create the Organization");
@@ -396,6 +402,11 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                         placeholder="Name or email"
                       />
                     </label>
+                    {ownerSearchPending && (
+                      <p className="text-muted-foreground text-sm" role="status">
+                        Searching eligible owners…
+                      </p>
+                    )}
                     {eligibleUsers.length > 0 && (
                       <div aria-label="Eligible owners" className="space-y-2">
                         {eligibleUsers.map((user) => (

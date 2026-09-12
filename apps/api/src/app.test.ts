@@ -59,4 +59,27 @@ describe("API application boundary", () => {
       });
     }
   });
+
+  it("applies credentialed trusted CORS to versioned API preflight requests", async () => {
+    const app = createApiApp();
+    const response = await app.request("http://localhost:3000/api/v1/admin/users", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://localhost:3003",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type,idempotency-key",
+      },
+    });
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:3003");
+    expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+    expect(response.headers.get("access-control-allow-headers")).toContain("Idempotency-Key");
+
+    const rejected = await app.request("http://localhost:3000/api/v1/admin/users", {
+      method: "OPTIONS",
+      headers: { Origin: "https://attacker.example.test" },
+    });
+    expect(rejected.headers.get("access-control-allow-origin")).toBeNull();
+  });
 });

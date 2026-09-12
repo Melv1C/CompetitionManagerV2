@@ -89,4 +89,19 @@ describe("Organization API authorization boundary", () => {
     expect((await nonAdmin.request("http://localhost:3000/api/v1/admin/users")).status).toBe(403);
     expect(calls.users).toBe(0);
   });
+
+  it("denies the manager entry point when the verified user owns no Organization", async () => {
+    const service = serviceForTest();
+    service.listForUser = async () => ({ organizations: [] });
+    const app = createApiApp({
+      organizationService: service,
+      sessionResolver: async () =>
+        ({ user: { id: "non-owner-1", emailVerified: true, role: "member" } }) as never,
+    });
+
+    const response = await app.request("http://localhost:3000/api/v1/manager");
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: { code: "FORBIDDEN" } });
+  });
 });

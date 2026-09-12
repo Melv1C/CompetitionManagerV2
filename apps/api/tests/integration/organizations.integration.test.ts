@@ -173,6 +173,8 @@ describe("Organization creation and manager access API", () => {
     );
     const ownerResult = await ownerList.json();
     expect(ownerResult.organizations).toHaveLength(2);
+    const ownerEntry = await appFor(users[1]!).request("http://localhost:3000/api/v1/manager");
+    expect(ownerEntry.status).toBe(200);
     const organizationId = ownerResult.organizations[0].organization.id as string;
     const ownerOrganization = await appFor(users[1]!).request(
       `http://localhost:3000/api/v1/manager/organizations/${organizationId}`,
@@ -187,6 +189,9 @@ describe("Organization creation and manager access API", () => {
       "http://localhost:3000/api/v1/manager/organizations",
     );
     expect(await otherList.json()).toEqual({ organizations: [] });
+    const otherEntry = await appFor(users[2]!).request("http://localhost:3000/api/v1/manager");
+    expect(otherEntry.status).toBe(403);
+    expect(await otherEntry.json()).toMatchObject({ error: { code: "FORBIDDEN" } });
     const crossTenant = await appFor(users[2]!).request(
       `http://localhost:3000/api/v1/manager/organizations/${organizationId}`,
     );

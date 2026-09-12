@@ -13,6 +13,10 @@ import { ApiClientError } from "./index";
 
 type OrganizationFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
+function requestFingerprint(input: OrganizationCreateRequest): string {
+  return JSON.stringify(input);
+}
+
 export type OrganizationClient = {
   listOrganizations(): Promise<OrganizationListResponse>;
   getOrganization(organizationId: string): Promise<OrganizationResponse>;
@@ -90,6 +94,7 @@ export function createAdminOrganizationClient(
   fetcher: OrganizationFetch = fetch,
 ): AdminOrganizationClient {
   const endpoint = "/api/v1/admin";
+  let pendingCreation: { fingerprint: string; idempotencyKey: string } | null = null;
   return {
     async searchEligibleUsers(query) {
       return parseResponse(
@@ -102,15 +107,28 @@ export function createAdminOrganizationClient(
         eligibleUserListResponseSchema,
       );
     },
-    async createOrganization(input, idempotencyKey = crypto.randomUUID()) {
-      return parseResponse(
-        await createRequest(baseUrl, fetcher, endpoint, "/organizations", {
-          method: "POST",
-          headers: { "Idempotency-Key": idempotencyKey },
-          body: JSON.stringify(input),
-        }),
-        organizationResponseSchema,
-      );
+    async createOrganization(input, idempotencyKey) {
+      const fingerprint = requestFingerprint(input);
+      const key =
+        pendingCreation?.fingerprint === fingerprint
+          ? pendingCreation.idempotencyKey
+          : (idempotencyKey ?? crypto.randomUUID());
+      pendingCreation = { fingerprint, idempotencyKey: key };
+      try {
+        const result = await parseResponse(
+          await createRequest(baseUrl, fetcher, endpoint, "/organizations", {
+            method: "POST",
+            headers: { "Idempotency-Key": key },
+            body: JSON.stringify(input),
+          }),
+          organizationResponseSchema,
+        );
+        pendingCreation = null;
+        return result;
+      } catch (error) {
+        // Retain the key so a lost or recoverable response can be retried safely.
+        throw error;
+      }
     },
   };
 }

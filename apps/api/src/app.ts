@@ -36,6 +36,17 @@ function configuredOrigins(): string[] {
   return getTrustedOrigins();
 }
 
+function trustedCors() {
+  const origins = configuredOrigins();
+  return cors({
+    allowHeaders: ["Content-Type", "Authorization", "Idempotency-Key"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+    maxAge: 600,
+    origin: (origin) => (origins.includes(origin) ? origin : undefined),
+  });
+}
+
 const authRoutes = [
   ["GET", "/api/auth/get-session"],
   ["POST", "/api/auth/sign-up/email"],
@@ -96,7 +107,6 @@ function adminGuardedResponse(context: Context<ApiEnv>, session: AuthSession) {
 }
 
 const protectedActions = [
-  ["GET", "/api/v1/manager"],
   ["POST", "/api/v1/registrations"],
   ["POST", "/api/v1/payments"],
   ["POST", "/api/v1/organizations/invitations/accept"],
@@ -104,7 +114,6 @@ const protectedActions = [
 
 export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
   const app = new Hono<ApiEnv>();
-  const origins = configuredOrigins();
   const authInstance =
     dependencies.authInstance ??
     (dependencies.verificationEmailSender
@@ -124,16 +133,8 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
   app.onError(handleApiError);
   app.notFound(notFoundResponse);
 
-  app.use(
-    "/api/auth/*",
-    cors({
-      allowHeaders: ["Content-Type", "Authorization"],
-      allowMethods: ["GET", "POST", "OPTIONS"],
-      credentials: true,
-      maxAge: 600,
-      origin: (origin) => (origins.includes(origin) ? origin : undefined),
-    }),
-  );
+  app.use("/api/auth/*", trustedCors());
+  app.use("/api/v1/*", trustedCors());
 
   const resolveSession =
     dependencies.sessionResolver ??
@@ -150,6 +151,28 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
       return context.json({ status: "ready" as const });
     });
   }
+
+  app.on("GET", "/api/v1/manager", async (context) => {
+    const session = await resolveSession(context.req.raw);
+    const denied = guardedResponse(context, session);
+    if (denied) return denied;
+
+    const organizations = await organizationService.listForUser(session!.user.id);
+    if (organizations.organizations.length === 0) {
+      return context.json(
+        {
+          error: {
+            code: "FORBIDDEN" as const,
+            message: "Organization owner access is required",
+            requestId: context.get("requestId"),
+            details: {},
+          },
+        },
+        403,
+      );
+    }
+    return context.json({ status: "ready" as const });
+  });
 
   for (const [method, path] of [
     ["GET", "/api/v1/admin/users"],

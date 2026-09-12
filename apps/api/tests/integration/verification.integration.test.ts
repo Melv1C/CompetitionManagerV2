@@ -56,7 +56,8 @@ describe("email verification flow", () => {
     const allowed = await app.request("http://localhost:3000/api/v1/manager", {
       headers: { cookie },
     });
-    expect(allowed.status).toBe(200);
+    expect(allowed.status).toBe(403);
+    expect(await allowed.json()).toMatchObject({ error: { code: "FORBIDDEN" } });
   });
 
   it("resends only for the signed-in unverified account", async () => {
