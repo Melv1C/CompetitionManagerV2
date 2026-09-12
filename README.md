@@ -14,7 +14,8 @@ This repository currently contains the approved product and engineering specific
 
 ## Initial application boundaries
 
-- `apps/backend`: API, authentication, realtime gateway, worker entrypoint
+- `apps/api`: HTTP API, authentication, and realtime gateway
+- `apps/worker`: background jobs and scheduled work
 - `apps/frontend`: public results, registrations, and User account
 - `apps/manager`: Organization competition management
 - `apps/admin`: platform administration
