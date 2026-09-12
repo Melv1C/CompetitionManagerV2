@@ -18,8 +18,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  members     Member[]
-  invitations Invitation[]
+  members                   Member[]
+  invitations               Invitation[]
+  clubMemberships           ClubMembership[]
+  clubCreationIdempotencies ClubCreationIdempotency[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -126,4 +128,44 @@ model Invitation {
   @@index([organizationId])
   @@index([email])
   @@map("invitation")
+}
+
+model Club {
+  id          String                    @id @default(cuid())
+  name        String
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  memberships ClubMembership[]
+  creations   ClubCreationIdempotency[]
+
+  @@map("club")
+}
+
+model ClubMembership {
+  id        String   @id @default(cuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("manager")
+  createdAt DateTime @default(now())
+
+  @@unique([clubId, userId])
+  @@index([userId])
+  @@map("club_membership")
+}
+
+model ClubCreationIdempotency {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idempotencyKey String
+  requestHash    String
+  clubId         String
+  club           Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, idempotencyKey])
+  @@index([clubId])
+  @@map("club_creation_idempotency")
 }

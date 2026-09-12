@@ -1,4 +1,9 @@
-import { createSessionClient, fetchHealth } from "@competition-manager/api-client";
+import {
+  createClubClient,
+  createSessionClient,
+  fetchHealth,
+  type ClubResponse,
+} from "@competition-manager/api-client";
 import {
   useCallback,
   useEffect,
@@ -31,7 +36,12 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authPending, setAuthPending] = useState(false);
   const [managerAccess, setManagerAccess] = useState<boolean | null>(null);
+  const [clubs, setClubs] = useState<ClubResponse[] | null>(null);
+  const [activeClub, setActiveClub] = useState<ClubResponse | null>(null);
+  const [clubError, setClubError] = useState<string | null>(null);
+  const [clubPending, setClubPending] = useState(false);
   const authClient = useMemo(() => createSessionClient(backendUrl), [backendUrl]);
+  const clubClient = useMemo(() => createClubClient(backendUrl), [backendUrl]);
 
   const checkBackend = useCallback(() => {
     setStatus("checking");
@@ -61,7 +71,6 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
 
   useEffect(() => {
     if (surface !== "manager" || !session) {
-      setManagerAccess(null);
       return;
     }
     let active = true;
@@ -77,6 +86,45 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       active = false;
     };
   }, [authClient, session, surface]);
+
+  useEffect(() => {
+    if (surface !== "manager" || managerAccess !== true) return;
+    let active = true;
+    void clubClient
+      .listClubs()
+      .then(({ clubs: nextClubs }) => {
+        if (!active) return;
+        setClubs(nextClubs);
+        const match = window.location.pathname.match(/^\/clubs\/([^/]+)$/);
+        const clubId = match ? decodeURIComponent(match[1]!) : null;
+        if (clubId) {
+          void clubClient
+            .getClub(clubId)
+            .then((nextClub) => {
+              if (active) setActiveClub(nextClub);
+            })
+            .catch((error: unknown) => {
+              if (active) {
+                setActiveClub(null);
+                setClubError(error instanceof Error ? error.message : "Could not load this Club");
+              }
+            });
+        } else if (nextClubs.length === 1) {
+          setActiveClub(nextClubs[0]!);
+        } else {
+          setActiveClub(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setClubs([]);
+          setClubError(error instanceof Error ? error.message : "Could not load your Clubs");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [clubClient, managerAccess, surface]);
 
   async function handleAuthSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -97,6 +145,10 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
             })
           : await authClient.signIn({ email, password });
       setSession(nextSession);
+      setManagerAccess(null);
+      setClubs(null);
+      setActiveClub(null);
+      setClubError(null);
       event.currentTarget.reset();
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Authentication request failed");
@@ -112,6 +164,10 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
     try {
       await authClient.signOut();
       setSession(null);
+      setManagerAccess(null);
+      setClubs(null);
+      setActiveClub(null);
+      setClubError(null);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Sign out failed");
     } finally {
@@ -130,6 +186,27 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
       setAuthError(error instanceof Error ? error.message : "Could not send verification email");
     } finally {
       setAuthPending(false);
+    }
+  }
+
+  async function handleClubSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setClubError(null);
+    setClubPending(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const created = await clubClient.createClub(
+        { name: formText(form, "clubName") },
+        crypto.randomUUID(),
+      );
+      setClubs((current) => [...(current ?? []), created]);
+      setActiveClub(created);
+      window.history.pushState({}, "", `/clubs/${encodeURIComponent(created.club.id)}`);
+      event.currentTarget.reset();
+    } catch (error) {
+      setClubError(error instanceof Error ? error.message : "Could not create your Club");
+    } finally {
+      setClubPending(false);
     }
   }
 
@@ -208,9 +285,73 @@ export function AppShell({ surface, backendUrl }: AppShellProps): ReactElement {
                 <div aria-label="Manager tools" className="border-border rounded-md border p-3">
                   <p className="font-semibold">Manager tools</p>
                   <p className="text-muted-foreground text-sm">
-                    Your verified session can enter Organization tools.
+                    Your verified session can enter manager tools.
                   </p>
                 </div>
+              )}
+              {surface === "manager" && managerAccess && (
+                <section
+                  aria-label={activeClub ? "Club manager dashboard" : "Club setup"}
+                  className="border-primary/20 bg-primary/5 space-y-4 rounded-lg border p-4"
+                >
+                  {activeClub ? (
+                    <div className="space-y-2">
+                      <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                        Club manager dashboard
+                      </p>
+                      <h2 className="text-2xl font-semibold">{activeClub.club.name}</h2>
+                      <p className="text-muted-foreground text-sm">
+                        Your Club is ready. This is the starting point for managing athletes and
+                        competitions.
+                      </p>
+                    </div>
+                  ) : clubs === null ? (
+                    <p className="text-muted-foreground text-sm" role="status">
+                      Loading your Club workspace…
+                    </p>
+                  ) : (
+                    <>
+                      <div>
+                        <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                          First step
+                        </p>
+                        <h2 className="text-2xl font-semibold">Create your Club</h2>
+                        <p className="text-muted-foreground text-sm">
+                          Set up the Club you manage to open its workspace.
+                        </p>
+                      </div>
+                      <form
+                        className="space-y-3"
+                        onSubmit={(event) => void handleClubSubmit(event)}
+                      >
+                        <label className="block space-y-1 text-sm font-medium">
+                          Club name
+                          <input
+                            className="border-input bg-background w-full rounded-md border px-3 py-2"
+                            name="clubName"
+                            autoComplete="organization"
+                            required
+                            minLength={2}
+                            maxLength={120}
+                          />
+                        </label>
+                        {clubError && (
+                          <p className="text-destructive text-sm" role="alert">
+                            {clubError}
+                          </p>
+                        )}
+                        <Button type="submit" disabled={clubPending}>
+                          {clubPending ? "Creating Club…" : "Create Club"}
+                        </Button>
+                      </form>
+                    </>
+                  )}
+                  {activeClub && clubError && (
+                    <p className="text-destructive text-sm" role="alert">
+                      {clubError}
+                    </p>
+                  )}
+                </section>
               )}
               <Button variant="outline" onClick={handleSignOut} disabled={authPending}>
                 Sign out

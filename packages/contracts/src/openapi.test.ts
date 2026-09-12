@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createOpenApiDocument } from "./openapi";
 
 describe("OpenAPI contract document", () => {
-  it("describes the versioned health routes and shared error response", () => {
+  it("describes versioned health and Club routes with shared error responses", () => {
     const document = createOpenApiDocument();
 
     expect(document.openapi).toBe("3.0.3");
@@ -11,6 +11,8 @@ describe("OpenAPI contract document", () => {
       "/api/v1/health/live",
       "/api/v1/health/ready",
       "/api/v1/health/operations",
+      "/api/v1/clubs",
+      "/api/v1/clubs/{clubId}",
     ]);
     expect(
       document.paths["/api/v1/health/live"].get.responses["400"].content["application/json"].schema,
@@ -25,6 +27,8 @@ describe("OpenAPI contract document", () => {
       type: "object",
       required: ["status", "service", "timestamp"],
     });
+    expect(document.paths["/api/v1/clubs"].post.responses["201"]).toBeDefined();
+    expect(document.components.schemas.ClubResponse).toMatchObject({ type: "object" });
   });
 
   it("is deterministic for reproducible generated artifacts", () => {

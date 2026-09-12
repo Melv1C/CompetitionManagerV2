@@ -327,6 +327,399 @@
                 },
             },
         },
+      "/api/v1/clubs":
+        {
+          "get":
+            {
+              "operationId": "listClubs",
+              "description": "List Clubs managed by the user.",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Successful response.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "clubs":
+                                        {
+                                          "type": "array",
+                                          "items":
+                                            {
+                                              "type": "object",
+                                              "properties":
+                                                {
+                                                  "club":
+                                                    {
+                                                      "type": "object",
+                                                      "properties":
+                                                        {
+                                                          "id": { "type": "string" },
+                                                          "name": { "type": "string" },
+                                                          "createdAt":
+                                                            {
+                                                              "type": "string",
+                                                              "format": "date-time",
+                                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                            },
+                                                          "updatedAt":
+                                                            {
+                                                              "type": "string",
+                                                              "format": "date-time",
+                                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                            },
+                                                        },
+                                                      "required":
+                                                        ["id", "name", "createdAt", "updatedAt"],
+                                                      "additionalProperties": false,
+                                                    },
+                                                  "membership":
+                                                    {
+                                                      "type": "object",
+                                                      "properties":
+                                                        {
+                                                          "id": { "type": "string" },
+                                                          "clubId": { "type": "string" },
+                                                          "userId": { "type": "string" },
+                                                          "role":
+                                                            {
+                                                              "type": "string",
+                                                              "enum": ["manager"],
+                                                            },
+                                                          "createdAt":
+                                                            {
+                                                              "type": "string",
+                                                              "format": "date-time",
+                                                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                            },
+                                                        },
+                                                      "required":
+                                                        [
+                                                          "id",
+                                                          "clubId",
+                                                          "userId",
+                                                          "role",
+                                                          "createdAt",
+                                                        ],
+                                                      "additionalProperties": false,
+                                                    },
+                                                },
+                                              "required": ["club", "membership"],
+                                              "additionalProperties": false,
+                                            },
+                                        },
+                                    },
+                                  "required": ["clubs"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "Authentication is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "403":
+                    {
+                      "description": "Email verification is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Club not found.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Unexpected server failure.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                },
+            },
+          "post":
+            {
+              "operationId": "createClub",
+              "description": "Create a Club and its initial manager membership atomically.",
+              "parameters":
+                [
+                  {
+                    "name": "Idempotency-Key",
+                    "in": "header",
+                    "required": false,
+                    "schema": { "type": "string" },
+                  },
+                ],
+              "requestBody":
+                {
+                  "required": true,
+                  "content":
+                    {
+                      "application/json":
+                        {
+                          "schema":
+                            {
+                              "type": "object",
+                              "properties":
+                                { "name": { "type": "string", "minLength": 2, "maxLength": 120 } },
+                              "required": ["name"],
+                              "additionalProperties": false,
+                            },
+                        },
+                    },
+                },
+              "responses":
+                {
+                  "201":
+                    {
+                      "description": "Club created.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "club":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "id": { "type": "string" },
+                                              "name": { "type": "string" },
+                                              "createdAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                              "updatedAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                            },
+                                          "required": ["id", "name", "createdAt", "updatedAt"],
+                                          "additionalProperties": false,
+                                        },
+                                      "membership":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "id": { "type": "string" },
+                                              "clubId": { "type": "string" },
+                                              "userId": { "type": "string" },
+                                              "role": { "type": "string", "enum": ["manager"] },
+                                              "createdAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                            },
+                                          "required":
+                                            ["id", "clubId", "userId", "role", "createdAt"],
+                                          "additionalProperties": false,
+                                        },
+                                    },
+                                  "required": ["club", "membership"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                  "400":
+                    {
+                      "description": "Invalid Club profile.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "Authentication is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "403":
+                    {
+                      "description": "Email verification is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "409":
+                    {
+                      "description": "Idempotency key was already used for another request.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Unexpected server failure.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                },
+            },
+        },
+      "/api/v1/clubs/{clubId}":
+        {
+          "get":
+            {
+              "operationId": "getClub",
+              "description": "Retrieve a manager's Club.",
+              "responses":
+                {
+                  "200":
+                    {
+                      "description": "Successful response.",
+                      "content":
+                        {
+                          "application/json":
+                            {
+                              "schema":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "club":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "id": { "type": "string" },
+                                              "name": { "type": "string" },
+                                              "createdAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                              "updatedAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                            },
+                                          "required": ["id", "name", "createdAt", "updatedAt"],
+                                          "additionalProperties": false,
+                                        },
+                                      "membership":
+                                        {
+                                          "type": "object",
+                                          "properties":
+                                            {
+                                              "id": { "type": "string" },
+                                              "clubId": { "type": "string" },
+                                              "userId": { "type": "string" },
+                                              "role": { "type": "string", "enum": ["manager"] },
+                                              "createdAt":
+                                                {
+                                                  "type": "string",
+                                                  "format": "date-time",
+                                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                                },
+                                            },
+                                          "required":
+                                            ["id", "clubId", "userId", "role", "createdAt"],
+                                          "additionalProperties": false,
+                                        },
+                                    },
+                                  "required": ["club", "membership"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                        },
+                    },
+                  "401":
+                    {
+                      "description": "Authentication is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "403":
+                    {
+                      "description": "Email verification is required.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "404":
+                    {
+                      "description": "Club not found.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                  "500":
+                    {
+                      "description": "Unexpected server failure.",
+                      "content":
+                        {
+                          "application/json":
+                            { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } },
+                        },
+                    },
+                },
+              "parameters":
+                [
+                  {
+                    "name": "clubId",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" },
+                  },
+                ],
+            },
+        },
     },
   "components":
     {
@@ -420,7 +813,17 @@
                           "code":
                             {
                               "type": "string",
-                              "enum": ["VALIDATION_ERROR", "NOT_FOUND", "INTERNAL_SERVER_ERROR"],
+                              "enum":
+                                [
+                                  "VALIDATION_ERROR",
+                                  "NOT_FOUND",
+                                  "INTERNAL_SERVER_ERROR",
+                                  "UNAUTHORIZED",
+                                  "FORBIDDEN",
+                                  "EMAIL_NOT_VERIFIED",
+                                  "IDEMPOTENCY_KEY_REUSED",
+                                  "CLUB_NOT_FOUND",
+                                ],
                             },
                           "message": { "type": "string" },
                           "fieldErrors":
@@ -478,6 +881,170 @@
                     },
                 },
               "required": ["error"],
+              "additionalProperties": false,
+            },
+          "ClubCreateRequest":
+            {
+              "type": "object",
+              "properties": { "name": { "type": "string", "minLength": 2, "maxLength": 120 } },
+              "required": ["name"],
+              "additionalProperties": false,
+            },
+          "Club":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "createdAt":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    },
+                  "updatedAt":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    },
+                },
+              "required": ["id", "name", "createdAt", "updatedAt"],
+              "additionalProperties": false,
+            },
+          "ClubMembership":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "id": { "type": "string" },
+                  "clubId": { "type": "string" },
+                  "userId": { "type": "string" },
+                  "role": { "type": "string", "enum": ["manager"] },
+                  "createdAt":
+                    {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    },
+                },
+              "required": ["id", "clubId", "userId", "role", "createdAt"],
+              "additionalProperties": false,
+            },
+          "ClubResponse":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "club":
+                    {
+                      "type": "object",
+                      "properties":
+                        {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "createdAt":
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                            },
+                          "updatedAt":
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                            },
+                        },
+                      "required": ["id", "name", "createdAt", "updatedAt"],
+                      "additionalProperties": false,
+                    },
+                  "membership":
+                    {
+                      "type": "object",
+                      "properties":
+                        {
+                          "id": { "type": "string" },
+                          "clubId": { "type": "string" },
+                          "userId": { "type": "string" },
+                          "role": { "type": "string", "enum": ["manager"] },
+                          "createdAt":
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                            },
+                        },
+                      "required": ["id", "clubId", "userId", "role", "createdAt"],
+                      "additionalProperties": false,
+                    },
+                },
+              "required": ["club", "membership"],
+              "additionalProperties": false,
+            },
+          "ClubListResponse":
+            {
+              "type": "object",
+              "properties":
+                {
+                  "clubs":
+                    {
+                      "type": "array",
+                      "items":
+                        {
+                          "type": "object",
+                          "properties":
+                            {
+                              "club":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "id": { "type": "string" },
+                                      "name": { "type": "string" },
+                                      "createdAt":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                      "updatedAt":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                    },
+                                  "required": ["id", "name", "createdAt", "updatedAt"],
+                                  "additionalProperties": false,
+                                },
+                              "membership":
+                                {
+                                  "type": "object",
+                                  "properties":
+                                    {
+                                      "id": { "type": "string" },
+                                      "clubId": { "type": "string" },
+                                      "userId": { "type": "string" },
+                                      "role": { "type": "string", "enum": ["manager"] },
+                                      "createdAt":
+                                        {
+                                          "type": "string",
+                                          "format": "date-time",
+                                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                                        },
+                                    },
+                                  "required": ["id", "clubId", "userId", "role", "createdAt"],
+                                  "additionalProperties": false,
+                                },
+                            },
+                          "required": ["club", "membership"],
+                          "additionalProperties": false,
+                        },
+                    },
+                },
+              "required": ["clubs"],
               "additionalProperties": false,
             },
         },

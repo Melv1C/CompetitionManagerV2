@@ -15,15 +15,15 @@ This matrix is the delivery contract for the approved Competition Manager specif
 | --- | --- | --- | --- | --- |
 | ARC-001 | Four product surfaces plus a separate backend worker: API, frontend, manager, admin, worker | `apps/api`, `apps/worker`, `apps/frontend`, `apps/manager`, `apps/admin` | `tests/e2e/smoke.spec.ts:17-21` | P0 · Unverified · Phase 0 |
 | ARC-002 | Modular monolith with API and worker commands | `apps/api`, `apps/worker`, shared `packages/domain` and `packages/contracts` | `tests/e2e/smoke.spec.ts:24-38` | P0 · Unverified · Phase 0 |
-| ARC-003 | Typed REST/OpenAPI contracts and client | `packages/contracts`, `packages/api-client`, `apps/api/src/health.ts`, `docs/api/openapi.yaml` | `packages/contracts/src/openapi.test.ts`, `apps/api/src/health.test.ts` | P0 · Verified · Phase 0 |
+| ARC-003 | Typed REST/OpenAPI contracts and client | `packages/contracts`, `packages/api-client`, `apps/api/src/health.ts`, `apps/api/src/modules/clubs`, `docs/api/openapi.yaml` | `packages/contracts/src/openapi.test.ts`, `apps/api/src/health.test.ts`, `packages/contracts/src/clubs.test.ts`, `packages/api-client/src/clubs.test.ts` | P0 · Verified · Phase 0 |
 | TEN-001 | Strict Organization isolation | `apps/api/src/modules/organizations`, `packages/domain/organizations` | `tests/integration/tenant-isolation.test.ts` | P0 · Unverified · Phase 1 |
-| AUTH-001 | Shared email/password and Google authentication | `apps/api/src/lib/auth.ts`, `packages/api-client/src/auth.ts`, `packages/ui/src/app-shell.tsx` | `apps/api/src/lib/auth.test.ts`, `apps/api/tests/integration/auth.integration.test.ts`, `tests/e2e/smoke.spec.ts` | P0 · In progress · Phase 1 |
-| AUTH-002 | Verified email gates sensitive actions | `apps/api/src/lib/verification.ts`, `apps/api/src/app.ts`, `packages/email/src/index.ts` | `apps/api/src/verified-user.test.ts`, `apps/api/src/lib/verification.test.ts`, `apps/api/tests/integration/verification.integration.test.ts`, `tests/e2e/smoke.spec.ts` | P0 · In progress · Phase 1 |
+| AUTH-001 | Shared email/password and Google authentication | `apps/api/src/lib/auth.ts`, `packages/api-client/src/auth.ts`, `packages/ui/src/app-shell.tsx` | `apps/api/src/lib/auth.test.ts`, `apps/api/tests/integration/auth.integration.test.ts`, `tests/e2e/smoke.spec.ts`, `tests/e2e/club-creation.spec.ts` | P0 · In progress · Phase 1 |
+| AUTH-002 | Verified email gates sensitive actions | `apps/api/src/lib/verification.ts`, `apps/api/src/app.ts`, `apps/api/src/modules/clubs`, `packages/email/src/index.ts` | `apps/api/src/verified-user.test.ts`, `apps/api/src/lib/verification.test.ts`, `apps/api/tests/integration/verification.integration.test.ts`, `apps/api/tests/integration/clubs.integration.test.ts`, `tests/e2e/smoke.spec.ts`, `tests/e2e/club-creation.spec.ts` | P0 · In progress · Phase 1 |
 | RBAC-001 | Multi-role union with Competition assignments | `packages/domain/authorization`, `apps/api/src/modules/organizations/permissions` | `tests/unit/authorization/role-union.test.ts` | P0 · Unverified · Phase 1 |
 | ADM-001 | Real User/Organization admin without impersonation | `apps/admin`, `apps/api/src/modules/admin` | `tests/e2e/admin-operations.spec.ts` | P0 · Unverified · Phase 1 |
 | ATH-001 | LBFA provider behind a replaceable port | `packages/domain/athletes`, `apps/api/src/modules/athletes/providers` | `tests/integration/athlete-provider-sync.test.ts` | P0 · Unverified · Phase 2 |
 | ATH-002 | Athlete has many Athlete Seasons with bib/Club | `packages/domain/athletes`, `apps/api/src/modules/athletes` | `tests/unit/athletes/athlete-seasons.test.ts` | P0 · Unverified · Phase 2 |
-| ATH-003 | Club and Organization have no relation | `packages/domain/athletes`, `packages/domain/organizations` | `tests/unit/athletes/club-independence.test.ts` | P0 · Unverified · Phase 2 |
+| ATH-003 | Club and Organization have no relation | `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20260912210000_clubs`, `apps/api/src/modules/clubs` | `apps/api/tests/integration/clubs.integration.test.ts` | P0 · In progress · Phase 2 |
 | ATH-004 | One-day Athlete and Competition bib | `packages/domain/athletes`, `apps/api/src/modules/competitions/bibs` | `tests/integration/one-day-bib-concurrency.test.ts` | P0 · Unverified · Phase 2 |
 | CMP-001 | Competition lifecycle and audited overrides | `packages/domain/competitions/lifecycle`, `apps/api/src/modules/competitions` | `tests/unit/competitions/lifecycle.test.ts` | P0 · Unverified · Phase 2 |
 | CMP-002 | Event/Round/Heat hierarchy and derived status | `packages/domain/results/structure`, `apps/api/src/modules/competitions/events` | `tests/unit/results/derived-status.test.ts` | P0 · Unverified · Phase 2 |
@@ -58,7 +58,7 @@ This matrix is the delivery contract for the approved Competition Manager specif
 
 ## Explicitly unverified P0 criteria
 
-All 41 Appendix A requirements above are P0 scope and remain unverified. In particular, no application, API, worker, database, queue, authentication flow, payment flow, result flow, interchange flow, localization bundle, deployment image, or end-to-end journey has been implemented or tested in this repository yet. The planned paths and test seams are delivery targets, not evidence of completion.
+Most Appendix A requirements remain unverified. This Club slice adds implementation and test evidence for the typed API/client contract, shared verified-session manager entry, and Club/Organization independence; the database-backed integration and browser journey still require the PostgreSQL/Redis test environment before those rows can move to Verified. The remaining planned paths and test seams are delivery targets, not evidence of completion.
 
 ## Dependency-ordered phase plan
 

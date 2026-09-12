@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 
 import { apiErrorMiddleware, handleApiError, notFoundResponse, type ApiEnv } from "./errors";
 import { createHealthApp, type HealthDependencies } from "./health";
+import { database } from "./infrastructure/database";
 import {
   auth,
   createAuth,
@@ -14,6 +15,7 @@ import {
   type VerificationEmailSender,
 } from "./lib/auth";
 import type { VerificationTokenStore } from "./lib/verification";
+import { createClubService, type ClubService } from "./modules/clubs/service";
 
 export type ApiDependencies = Partial<HealthDependencies> & {
   authHandler?: (request: Request) => Promise<Response>;
@@ -21,6 +23,7 @@ export type ApiDependencies = Partial<HealthDependencies> & {
   verificationEmailSender?: VerificationEmailSender;
   verificationTokenStore?: VerificationTokenStore;
   sessionResolver?: SessionResolver;
+  clubService?: ClubService;
 };
 
 type AuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
@@ -91,6 +94,7 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
     dependencies.verificationTokenStore ?? defaultVerificationTokenStore;
   const authHandler =
     dependencies.authHandler ?? createAuthHandler(authInstance, verificationTokenStore);
+  const clubService = dependencies.clubService ?? createClubService(database);
 
   app.use("*", apiErrorMiddleware());
   app.onError(handleApiError);
@@ -120,6 +124,35 @@ export function createApiApp(dependencies: ApiDependencies = {}): Hono<ApiEnv> {
       const denied = guardedResponse(context, await resolveSession(context.req.raw));
       if (denied) return denied;
       return context.json({ status: "ready" as const });
+    });
+  }
+
+  for (const [method, path] of [
+    ["GET", "/api/v1/clubs"],
+    ["GET", "/api/v1/clubs/:clubId"],
+    ["POST", "/api/v1/clubs"],
+  ] as const) {
+    app.on(method, path, async (context) => {
+      const session = await resolveSession(context.req.raw);
+      const denied = guardedResponse(context, session);
+      if (denied) return denied;
+
+      if (method === "GET" && path === "/api/v1/clubs") {
+        return context.json(await clubService.listForUser(session!.user.id));
+      }
+      if (method === "GET") {
+        return context.json(
+          await clubService.getForUser(session!.user.id, context.req.param("clubId")),
+        );
+      }
+
+      const body = await context.req.json().catch(() => undefined);
+      const result = await clubService.createForUser(
+        session!.user.id,
+        body,
+        context.req.header("Idempotency-Key")?.trim() || crypto.randomUUID(),
+      );
+      return context.json(result, 201);
     });
   }
 

@@ -1,3 +1,10 @@
+import {
+  clubCreateRequestSchema,
+  clubListResponseSchema,
+  clubMembershipSchema,
+  clubResponseSchema,
+  clubSchema,
+} from "./clubs";
 import { apiErrorEnvelopeSchema } from "./errors";
 import {
   healthRequestSchema,
@@ -65,6 +72,23 @@ export function createOpenApiDocument() {
           true,
         ),
       },
+      "/api/v1/clubs": {
+        get: clubOperation("listClubs", clubListResponseSchema, "List Clubs managed by the user."),
+        post: clubCreateOperation(),
+      },
+      "/api/v1/clubs/{clubId}": {
+        get: {
+          ...clubOperation("getClub", clubResponseSchema, "Retrieve a manager's Club."),
+          parameters: [
+            {
+              name: "clubId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+        },
+      },
     },
     components: {
       schemas: {
@@ -73,6 +97,63 @@ export function createOpenApiDocument() {
         ReadyHealth: schemaFor(readyHealthSchema),
         OperationsHealth: schemaFor(operationsHealthSchema),
         ApiErrorEnvelope: schemaFor(apiErrorEnvelopeSchema),
+        ClubCreateRequest: schemaFor(clubCreateRequestSchema),
+        Club: schemaFor(clubSchema),
+        ClubMembership: schemaFor(clubMembershipSchema),
+        ClubResponse: schemaFor(clubResponseSchema),
+        ClubListResponse: schemaFor(clubListResponseSchema),
+      },
+    },
+  };
+}
+
+function clubOperation(operationId: string, responseSchema: unknown, description: string) {
+  return {
+    operationId,
+    description,
+    responses: {
+      "200": jsonResponse(responseSchema, "Successful response."),
+      "401": errorResponse("Authentication is required."),
+      "403": errorResponse("Email verification is required."),
+      "404": errorResponse("Club not found."),
+      "500": errorResponse("Unexpected server failure."),
+    },
+  };
+}
+
+function clubCreateOperation() {
+  return {
+    operationId: "createClub",
+    description: "Create a Club and its initial manager membership atomically.",
+    parameters: [
+      {
+        name: "Idempotency-Key",
+        in: "header",
+        required: false,
+        schema: { type: "string" },
+      },
+    ],
+    requestBody: {
+      required: true,
+      content: { "application/json": { schema: schemaFor(clubCreateRequestSchema) } },
+    },
+    responses: {
+      "201": jsonResponse(clubResponseSchema, "Club created."),
+      "400": errorResponse("Invalid Club profile."),
+      "401": errorResponse("Authentication is required."),
+      "403": errorResponse("Email verification is required."),
+      "409": errorResponse("Idempotency key was already used for another request."),
+      "500": errorResponse("Unexpected server failure."),
+    },
+  };
+}
+
+function jsonResponse(schema: unknown, description: string) {
+  return {
+    description,
+    content: {
+      "application/json": {
+        schema: schemaFor(schema as Parameters<typeof schemaFor>[0]),
       },
     },
   };
