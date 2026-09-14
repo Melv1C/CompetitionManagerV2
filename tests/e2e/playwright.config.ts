@@ -54,7 +54,7 @@ export default defineConfig({
     command: "docker compose -f ../../docker-compose.e2e.yml up --build",
     url: E2E_URLS.frontend,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Give Docker plenty of time to build images
+    timeout: 300000, // Cold CI builds create three images before the frontend is reachable.
     // Gracefully shut down the docker container
     gracefulShutdown: {
       signal: "SIGTERM",
