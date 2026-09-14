@@ -1,5 +1,5 @@
 export const E2E_URLS = {
-  backend: "http://localhost:3000",
+  api: "http://localhost:3000",
   frontend: "http://localhost:5173",
   admin: "http://localhost:5174",
 } as const;

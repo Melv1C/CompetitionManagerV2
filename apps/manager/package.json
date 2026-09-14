@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "manager",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -7,7 +7,7 @@
     "dev": "vite",
     "env:generate": "varlock codegen",
     "env:validate": "varlock load",
-    "test": "vitest run"
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

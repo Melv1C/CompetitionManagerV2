@@ -4,8 +4,10 @@ on:
   push:
     tags:
       - "admin@*"
-      - "backend@*"
+      - "api@*"
       - "frontend@*"
+      - "manager@*"
+      - "worker@*"
 
 jobs:
   detect-app:
@@ -49,8 +51,8 @@ jobs:
           APP_NAME=$(jq -r '.name' ./package.json)
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
 
-      - name: Build and push backend production image
-        if: needs.detect-app.outputs.app == 'backend'
+      - name: Build and push service production image
+        if: needs.detect-app.outputs.app == 'api' || needs.detect-app.outputs.app == 'worker'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -64,7 +66,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push web production image
-        if: needs.detect-app.outputs.app == 'admin' || needs.detect-app.outputs.app == 'frontend'
+        if: needs.detect-app.outputs.app == 'admin' || needs.detect-app.outputs.app == 'frontend' || needs.detect-app.outputs.app == 'manager'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -93,11 +95,17 @@ jobs:
             admin)
               APP_ID="${{ secrets.DOKPLOY_PROD_ADMIN_APP_ID }}"
               ;;
-            backend)
-              APP_ID="${{ secrets.DOKPLOY_PROD_BACKEND_APP_ID }}"
+            api)
+              APP_ID="${{ secrets.DOKPLOY_PROD_API_APP_ID }}"
               ;;
             frontend)
               APP_ID="${{ secrets.DOKPLOY_PROD_FRONTEND_APP_ID }}"
+              ;;
+            manager)
+              APP_ID="${{ secrets.DOKPLOY_PROD_MANAGER_APP_ID }}"
+              ;;
+            worker)
+              APP_ID="${{ secrets.DOKPLOY_PROD_WORKER_APP_ID }}"
               ;;
           esac
 

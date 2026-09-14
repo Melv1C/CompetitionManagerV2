@@ -1,6 +1,6 @@
 {
   "workspaces": {
-    "apps/backend": {
+    "apps/api": {
       "entry": "scripts/**/*.ts",
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
       "ignoreDependencies": ["@prisma/studio-core"],
