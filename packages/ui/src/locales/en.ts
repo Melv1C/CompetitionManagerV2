@@ -23,6 +23,28 @@ const en = {
       passwordRequired: "Password is required.",
     },
   },
+  signUpForm: {
+    title: "Create your account",
+    description: "Use your email and a password to get started.",
+    name: "Name",
+    email: "Email",
+    emailPlaceholder: "name@example.com",
+    password: "Password",
+    confirmPassword: "Confirm password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    createAccount: "Create account",
+    creatingAccount: "Creating account...",
+    hasAccount: "Already have an account?",
+    login: "Log in",
+    errors: {
+      nameRequired: "Name is required.",
+      invalidEmail: "Enter a valid email address.",
+      passwordLength: "Password must be at least 8 characters.",
+      confirmPasswordRequired: "Confirm your password.",
+      passwordMismatch: "Passwords do not match.",
+    },
+  },
 } as const;
 
 type WidenTranslationValues<T> = {

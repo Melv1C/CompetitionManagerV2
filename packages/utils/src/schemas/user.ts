@@ -30,5 +30,6 @@ export const Session$ = z.object({
   userAgent: z.string().trim().nullish(),
   userId: BetterAuthId$,
   impersonatedBy: BetterAuthId$.nullish(),
+  activeOrganizationId: BetterAuthId$.nullish(),
 });
 export type Session = z.infer<typeof Session$>;

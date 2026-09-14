@@ -13,27 +13,23 @@ function LoginPage() {
   const handleSubmit = async (email: string, password: string) => {
     const result = await signIn.email({ email, password });
     if (result.error) {
-      throw new Error(result.error.message);
+      throw new Error(result.error.message ?? "We couldn't log you in with those details.");
     }
     await navigate({ to: "/" });
   };
 
-  // const handleProviderLogin = async (provider: LoginProvider) => {
-  //   await signIn.social({ provider });
-  // };
-
   return (
     <AuthShell
-      eyebrow="Platform administration"
-      title="Keep the platform in order."
-      description="Admin access is limited to approved accounts."
+      eyebrow="Competition access"
+      title="Your competitions, one clear view."
+      description="Sign in to return to your competitions, schedules, and results."
     >
       <LoginForm
-        title="Admin login"
-        description="Enter the email and password for your admin account."
+        title="Welcome back"
+        description="Enter the email and password for your account."
         onSubmit={handleSubmit}
+        onSignUp={() => navigate({ to: "/sign-up" })}
         showForgotPassword={false}
-        showSignUp={false}
       />
     </AuthShell>
   );
