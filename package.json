@@ -32,7 +32,7 @@
     "release:push": "./scripts/release-push.sh",
     "release:version": "./scripts/release-version.sh",
     "test": "turbo run test",
-    "test:integration": "bun run --filter api test:integration"
+    "test:integration": "bun run --filter @repo/jobs test:integration"
   },
   "dependencies": {
     "varlock": "^1.19.0"

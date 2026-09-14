@@ -8,7 +8,7 @@ import {
   type JobQueue,
   type JobWorker,
   type TerminalJobFailure,
-} from "./job-queue";
+} from "./index";
 
 const redisUrl = process.env.REDIS_URL;
 

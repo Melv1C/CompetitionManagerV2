@@ -44,6 +44,22 @@ services:
     networks:
       - competition-manager-v2-network
     restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: competition-manager-v2-worker
+    depends_on:
+      test-redis:
+        condition: service_healthy
+    environment:
+      - APP_ENV=test
+      - REDIS_URL=redis://test-redis:6379
+    networks:
+      - competition-manager-v2-network
+    restart: unless-stopped
+
   frontend:
     build:
       context: .

@@ -15,6 +15,7 @@ A production-ready [Turborepo](https://turbo.build/repo) monorepo starter with f
 ### Packages
 
 - **@repo/utils** — Shared utility functions, Zod schemas, and Socket.IO types
+- **@repo/jobs** — Shared BullMQ queue and worker contract
 - **@repo/typescript-config** — TypeScript configurations
 - **@repo/ui** — Shared UI components and design system
 
