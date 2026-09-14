@@ -9,6 +9,7 @@ import { requestId } from "hono/request-id";
 import "varlock/auto-load";
 import { ENV } from "varlock/env";
 
+import { createApiShutdown, registerApiShutdown } from "@/lib/api-shutdown";
 import { createApiJobProducer } from "@/lib/job-producer";
 import { logger } from "@/lib/logger";
 import { initializeSocketIO } from "@/lib/socket";
@@ -48,14 +49,13 @@ const httpServer = serve(
 // Initialize Socket.IO with the HTTP server
 initializeSocketIO(httpServer as HTTPServer);
 
-let stopping = false;
+const shutdown = createApiShutdown({ jobProducer, httpServer });
 
-async function shutdown() {
-  if (stopping) return;
-  stopping = true;
-  await jobProducer.close();
-  httpServer.close();
-}
-
-process.once("SIGTERM", () => void shutdown());
-process.once("SIGINT", () => void shutdown());
+registerApiShutdown({
+  shutdown,
+  logger: {
+    error(message, error) {
+      logger.error(message, { metadata: { error } });
+    },
+  },
+});
