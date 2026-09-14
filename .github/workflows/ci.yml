@@ -9,6 +9,16 @@ jobs:
   ci:
     name: Build & Check
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -55,6 +65,11 @@ jobs:
 
       - name: Run tests
         run: bun run test
+
+      - name: Run Redis integration tests
+        run: bun run test:integration
+        env:
+          REDIS_URL: redis://127.0.0.1:6379/15
 
       - name: Install Playwright browsers
         run: bun run --filter e2e e2e:install

@@ -6,6 +6,14 @@ const defaultJobOptions: JobsOptions = {
     type: "exponential",
     delay: 1_000,
   },
+  removeOnComplete: {
+    age: 24 * 60 * 60,
+    count: 1_000,
+  },
+  removeOnFail: {
+    age: 7 * 24 * 60 * 60,
+    count: 5_000,
+  },
 };
 
 export interface JobMessage<Data> {
@@ -13,6 +21,11 @@ export interface JobMessage<Data> {
   readonly name: string;
   readonly data: Data;
   readonly attemptsMade: number;
+}
+
+export interface TerminalJobFailure<Data> {
+  readonly job: JobMessage<Data> | undefined;
+  readonly error: Error;
 }
 
 export interface JobQueue<Data = unknown> {
@@ -33,6 +46,7 @@ interface QueueConfiguration {
 interface WorkerConfiguration<Data, Result> extends QueueConfiguration {
   processor: (job: JobMessage<Data>) => Promise<Result>;
   onError: (error: Error) => void;
+  onFailed: (failure: TerminalJobFailure<Data>) => void;
 }
 
 export function createJobQueue<Data = unknown>({
@@ -65,6 +79,7 @@ export function createJobWorker<Data = unknown, Result = void>({
   redisUrl,
   processor,
   onError,
+  onFailed,
 }: WorkerConfiguration<Data, Result>): JobWorker {
   const worker = new Worker<Data, Result, string>(
     queueName,
@@ -90,6 +105,29 @@ export function createJobWorker<Data = unknown, Result = void>({
 
   worker.on("error", (error) => {
     onError(error);
+  });
+
+  worker.on("failed", (job, error) => {
+    const attempts = job?.opts.attempts ?? 1;
+    const retriesExhausted = job === undefined || job.attemptsMade >= attempts;
+    const cannotRetry = error.name === "UnrecoverableError";
+
+    if (!retriesExhausted && !cannotRetry) {
+      return;
+    }
+
+    onFailed({
+      job:
+        job?.id === undefined
+          ? undefined
+          : {
+              id: job.id,
+              name: job.name,
+              data: job.data,
+              attemptsMade: job.attemptsMade,
+            },
+      error,
+    });
   });
 
   return {

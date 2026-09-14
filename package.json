@@ -31,7 +31,8 @@
     "release:prepare": "changeset",
     "release:push": "./scripts/release-push.sh",
     "release:version": "./scripts/release-version.sh",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "test:integration": "bun run --filter api test:integration"
   },
   "dependencies": {
     "varlock": "^1.19.0"
