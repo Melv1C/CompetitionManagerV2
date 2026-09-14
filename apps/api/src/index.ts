@@ -9,11 +9,14 @@ import { requestId } from "hono/request-id";
 import "varlock/auto-load";
 import { ENV } from "varlock/env";
 
+import { createApiShutdown, registerApiShutdown } from "@/lib/api-shutdown";
+import { createApiJobProducer } from "@/lib/job-producer";
 import { logger } from "@/lib/logger";
 import { initializeSocketIO } from "@/lib/socket";
 import { routes } from "@/routes";
 
 const { printMetrics, registerMetrics } = prometheus();
+const jobProducer = createApiJobProducer();
 
 const app = new Hono()
   .use(
@@ -37,8 +40,22 @@ const httpServer = serve(
   },
   (info) => {
     logger.info(`🚀 API server running on port ${info.port}`);
+    void jobProducer.serverReady().catch((error) => {
+      logger.error("Could not enqueue API-started job", { metadata: { error } });
+    });
   },
 );
 
 // Initialize Socket.IO with the HTTP server
 initializeSocketIO(httpServer as HTTPServer);
+
+const shutdown = createApiShutdown({ jobProducer, httpServer });
+
+registerApiShutdown({
+  shutdown,
+  logger: {
+    error(message, error) {
+      logger.error(message, { metadata: { error } });
+    },
+  },
+});

@@ -15,6 +15,16 @@ services:
     networks:
       - competition-manager-v2-network
 
+  test-redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - competition-manager-v2-network
+
   api:
     build:
       context: .
@@ -23,14 +33,34 @@ services:
     depends_on:
       test-db:
         condition: service_healthy
+      test-redis:
+        condition: service_healthy
     ports:
       - "3000:3000"
     environment:
       - APP_ENV=test
       - DATABASE_URL=postgresql://postgres:postgres@test-db:5432/postgres
+      - REDIS_URL=redis://test-redis:6379
     networks:
       - competition-manager-v2-network
     restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: competition-manager-v2-worker
+    depends_on:
+      test-redis:
+        condition: service_healthy
+    environment:
+      - APP_ENV=test
+      - REDIS_URL=redis://test-redis:6379
+    networks:
+      - competition-manager-v2-network
+    restart: unless-stopped
+    stop_grace_period: 30s
+
   frontend:
     build:
       context: .

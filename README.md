@@ -15,6 +15,7 @@ A production-ready [Turborepo](https://turbo.build/repo) monorepo starter with f
 ### Packages
 
 - **@repo/utils** — Shared utility functions, Zod schemas, and Socket.IO types
+- **@repo/jobs** — Shared BullMQ queue and worker contract
 - **@repo/typescript-config** — TypeScript configurations
 - **@repo/ui** — Shared UI components and design system
 
@@ -36,6 +37,8 @@ flowchart LR
   end
 
   DB[(PostgreSQL)]
+  REDIS[(Redis)]
+  WORKER[worker process]
 
   FE -->|HTTP + cookies| HONO
   FE -->|auth| AUTH
@@ -46,6 +49,8 @@ flowchart LR
   HONO --> DB
   AUTH --> DB
   SIO --> AUTH
+  HONO -->|enqueue BullMQ jobs| REDIS
+  REDIS -->|deliver BullMQ jobs| WORKER
 ```
 
 | Connection                       | Protocol              | Purpose                           |
@@ -54,6 +59,8 @@ flowchart LR
 | frontend / admin / manager → api | HTTP (Better Auth)    | Sign-in, sessions, cookies        |
 | admin → api                      | WebSocket (Socket.IO) | Real-time admin rooms (e.g. logs) |
 | api → PostgreSQL                 | Prisma                | Persistence                       |
+| api → Redis                      | BullMQ                | Enqueue durable background jobs   |
+| worker → Redis                   | BullMQ                | Consume durable background jobs   |
 
 In development, apps run separately via Turbo (`bun run dev`). The API listens on `API_PORT` (default `3000`); frontend, manager, and admin use Vite dev servers. Socket.IO shares the API HTTP server and allows CORS from `FRONTEND_URL`, `MANAGER_URL`, and `ADMIN_URL`.
 
@@ -73,11 +80,21 @@ Check that your environment variables are set up correctly:
 bun run env:validate
 ```
 
-Start the development database (PostgreSQL):
+Start the development infrastructure (PostgreSQL and Redis):
 
 ```bash
 bun run docker:db
 ```
+
+Run the Redis-backed BullMQ integration suite:
+
+```bash
+REDIS_URL=redis://127.0.0.1:6379/15 bun run test:integration
+```
+
+CI starts an isolated Redis service and runs this command after the regular workspace tests.
+
+The API enqueues a typed `api.started` delivery event after it begins listening. The worker consumes and logs that event, waits for Redis before reporting ready, and closes its BullMQ consumer on `SIGTERM` or `SIGINT`. Future domain jobs use the same `@repo/jobs` contract.
 
 Migrate the database:
 
@@ -113,7 +130,8 @@ Configuration is managed with [Varlock](https://varlock.dev/). Schemas are the s
 | File                                                     | Scope                                                                                     |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [.env.shared](./.env.shared)                             | Ports, `APP_ENV`, and public URLs (`API_URL`, `FRONTEND_URL`, `MANAGER_URL`, `ADMIN_URL`) |
-| [apps/api/.env.schema](./apps/api/.env.schema)           | `DATABASE_URL`, `BETTER_AUTH_SECRET`                                                      |
+| [apps/api/.env.schema](./apps/api/.env.schema)           | `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`                                         |
+| [apps/worker/.env.schema](./apps/worker/.env.schema)     | `REDIS_URL`                                                                               |
 | [apps/frontend/.env.schema](./apps/frontend/.env.schema) | Imports shared schema only                                                                |
 | [apps/manager/.env.schema](./apps/manager/.env.schema)   | Imports shared schema only                                                                |
 | [apps/admin/.env.schema](./apps/admin/.env.schema)       | Imports shared schema only                                                                |
