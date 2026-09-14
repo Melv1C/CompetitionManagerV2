@@ -1,14 +1,14 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 # Bun/Vite+ need a system CA bundle in Docker so the workspace build can initialize HTTPS clients.
-# Also, we need curl to be able to add cron calling the backend inside the container.
+# Also, we need curl to be able to add cron calling the API inside the container.
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 # ---
 FROM base AS prepare
 COPY . .
-# Prune the monorepo for the backend app
-RUN bunx turbo prune backend --docker
+# Prune the monorepo for the API app
+RUN bunx turbo prune api --docker
 
 # ---
 FROM base AS dev-deps
@@ -27,8 +27,8 @@ COPY .env.shared ./.env.shared
 
 # Generate Prisma client
 RUN bun run prisma:generate
-# Build shared workspace package needed by backend at runtime
-RUN bun run build --filter=backend
+# Build the API application
+RUN bun run build --filter=api
 
 # ---
 FROM base AS prod-deps
@@ -56,4 +56,4 @@ COPY --from=builder --chown=user:group /app/.env.shared /app/.env.shared
 COPY --from=prod-deps --chown=user:group /app/node_modules /app/node_modules
 COPY --from=prod-deps --chown=user:group /app/bun.lock /app/
 
-CMD ["bun", "--filter=backend", "run", "start"]
+CMD ["bun", "--filter=api", "run", "start"]

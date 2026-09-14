@@ -18,7 +18,7 @@ const { printMetrics, registerMetrics } = prometheus();
 const app = new Hono()
   .use(
     cors({
-      origin: [ENV.FRONTEND_URL, ENV.ADMIN_URL],
+      origin: [ENV.FRONTEND_URL, ENV.ADMIN_URL, ENV.MANAGER_URL],
       credentials: true,
     }),
   )
@@ -33,10 +33,10 @@ export type AppType = typeof app;
 const httpServer = serve(
   {
     fetch: app.fetch,
-    port: ENV.BACKEND_PORT,
+    port: ENV.API_PORT,
   },
   (info) => {
-    logger.info(`🚀 Backend server running on port ${info.port}`);
+    logger.info(`🚀 API server running on port ${info.port}`);
   },
 );
 

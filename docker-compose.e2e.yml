@@ -15,11 +15,11 @@ services:
     networks:
       - competition-manager-v2-network
 
-  backend:
+  api:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
-    container_name: competition-manager-v2-backend
+      dockerfile: apps/api/Dockerfile
+    container_name: competition-manager-v2-api
     depends_on:
       test-db:
         condition: service_healthy
@@ -39,7 +39,7 @@ services:
         - APP_ENV=test
     container_name: competition-manager-v2-frontend
     depends_on:
-      - backend
+      - api
     ports:
       - "5173:80"
     networks:
@@ -54,7 +54,7 @@ services:
         - APP_ENV=test
     container_name: competition-manager-v2-admin
     depends_on:
-      - backend
+      - api
     ports:
       - "5174:80"
     networks:

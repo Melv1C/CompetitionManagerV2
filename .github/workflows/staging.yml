@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [admin, backend, frontend]
+        app: [admin, api, frontend, manager, worker]
 
     steps:
       - name: Checkout code
@@ -58,14 +58,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [admin, backend, frontend]
+        app: [admin, api, frontend, manager, worker]
         include:
           - app: admin
             app_id_secret: DOKPLOY_STAGING_ADMIN_APP_ID
-          - app: backend
-            app_id_secret: DOKPLOY_STAGING_BACKEND_APP_ID
+          - app: api
+            app_id_secret: DOKPLOY_STAGING_API_APP_ID
           - app: frontend
             app_id_secret: DOKPLOY_STAGING_FRONTEND_APP_ID
+          - app: manager
+            app_id_secret: DOKPLOY_STAGING_MANAGER_APP_ID
+          - app: worker
+            app_id_secret: DOKPLOY_STAGING_WORKER_APP_ID
 
     steps:
       - name: Trigger Dokploy Staging ${{ matrix.app }} Deployment

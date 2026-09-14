@@ -1,36 +1,28 @@
 {
-  "name": "frontend",
+  "name": "manager",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
     "env:generate": "varlock codegen",
-    "env:validate": "varlock load",
-    "test": "vitest run"
+    "env:validate": "varlock load"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "api": "workspace:*",
-    "better-auth": "catalog:",
     "hono": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shadcn": "^4.21.0",
     "tailwindcss": "catalog:",
-    "tw-animate-css": "catalog:",
-    "varlock": "catalog:",
-    "zod": "catalog:"
+    "varlock": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@tanstack/react-query-devtools": "catalog:",
-    "@tanstack/react-router-devtools": "catalog:",
     "@tanstack/router-plugin": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

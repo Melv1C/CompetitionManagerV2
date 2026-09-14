@@ -17,7 +17,7 @@
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
-    "backend": "workspace:*",
+    "api": "workspace:*",
     "better-auth": "catalog:",
     "hono": "catalog:",
     "lucide-react": "catalog:",

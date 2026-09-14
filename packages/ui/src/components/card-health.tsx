@@ -12,7 +12,7 @@ export const CardHealth = ({ isPending, isError, refetch, ...props }: CardHealth
   return (
     <Card {...props}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Backend Status</CardTitle>
+        <CardTitle className="text-sm font-medium">API Status</CardTitle>
         <Server className="text-muted-foreground h-4 w-4" />
       </CardHeader>
       <CardContent>

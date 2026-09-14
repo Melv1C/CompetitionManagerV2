@@ -3,7 +3,7 @@ import { createAuthClient } from "better-auth/react";
 import { ENV } from "varlock/env";
 
 export const authClient = createAuthClient({
-  baseURL: ENV.BACKEND_URL,
+  baseURL: ENV.API_URL,
   plugins: [adminClient()],
 });
 

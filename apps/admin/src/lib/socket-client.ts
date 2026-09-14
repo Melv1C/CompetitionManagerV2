@@ -13,7 +13,7 @@ let socket: TypedSocket | null = null;
  */
 export function getSocket(): TypedSocket {
   if (!socket) {
-    socket = io(ENV.BACKEND_URL, {
+    socket = io(ENV.API_URL, {
       autoConnect: false,
       withCredentials: true,
       reconnectionAttempts: 5,

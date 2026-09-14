@@ -14,12 +14,12 @@ import { E2E_AUTH_FILES, E2E_URLS, E2E_USERS } from "./constants";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
-async function waitForBackend(request: APIRequestContext) {
+async function waitForApi(request: APIRequestContext) {
   await expect
     .poll(
       async () => {
         try {
-          const response = await request.get(`${E2E_URLS.backend}/api/health`);
+          const response = await request.get(`${E2E_URLS.api}/api/health`);
           return response.status();
         } catch {
           return 0;
@@ -34,7 +34,7 @@ async function authenticate(email: string, password: string, authFile: string) {
   mkdirSync(dirname(authFile), { recursive: true });
 
   const context = await playwrightRequest.newContext({
-    baseURL: E2E_URLS.backend,
+    baseURL: E2E_URLS.api,
     storageState: undefined,
   });
 
@@ -63,7 +63,7 @@ async function ensureUser(request: APIRequestContext) {
     // User does not exist yet, create it below.
   }
 
-  const response = await request.post(`${E2E_URLS.backend}/api/auth/sign-up/email`, {
+  const response = await request.post(`${E2E_URLS.api}/api/auth/sign-up/email`, {
     data: E2E_USERS.user,
   });
 
@@ -75,7 +75,7 @@ async function ensureUser(request: APIRequestContext) {
 }
 
 test("seed and authenticate e2e users", async ({ request }) => {
-  await waitForBackend(request);
+  await waitForApi(request);
 
   execFileSync(
     "docker",
@@ -85,9 +85,9 @@ test("seed and authenticate e2e users", async ({ request }) => {
       "docker-compose.e2e.yml",
       "exec",
       "-T",
-      "backend",
+      "api",
       "bun",
-      "--filter=backend",
+      "--filter=api",
       "run",
       "add-admin",
       "--",
@@ -101,7 +101,7 @@ test("seed and authenticate e2e users", async ({ request }) => {
     },
   );
 
-  await waitForBackend(request);
+  await waitForApi(request);
   await ensureUser(request);
   await authenticate(E2E_USERS.admin.email, E2E_USERS.admin.password, E2E_AUTH_FILES.admin);
 });
