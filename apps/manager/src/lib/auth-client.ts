@@ -1,0 +1,10 @@
+import { adminClient } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
+import { ENV } from "varlock/env";
+
+export const authClient = createAuthClient({
+  baseURL: ENV.API_URL,
+  plugins: [adminClient()],
+});
+
+export const { signIn, signUp, signOut, useSession } = authClient;

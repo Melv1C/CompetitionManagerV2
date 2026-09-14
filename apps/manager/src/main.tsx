@@ -1,15 +1,24 @@
-import "@fontsource-variable/geist";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
-import "./styles.css";
+import "./index.css";
+import { routeTree } from "./routeTree.gen";
 
-function App() {
-  return (
-    <main>
-      <h1>Competition Manager</h1>
-      <p>Organization management workspace.</p>
-    </main>
-  );
+const router = createRouter({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root")!;
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  );
+}

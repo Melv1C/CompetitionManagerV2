@@ -14,6 +14,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  trustedOrigins: [ENV.FRONTEND_URL, ENV.ADMIN_URL],
+  trustedOrigins: [ENV.FRONTEND_URL, ENV.MANAGER_URL, ENV.ADMIN_URL],
   plugins: [admin()],
 });
