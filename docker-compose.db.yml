@@ -17,8 +17,23 @@ services:
     networks:
       - competition-manager-v2-network
 
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - competition-manager-v2-network
+
 volumes:
   db-data:
+  redis-data:
 
 networks:
   competition-manager-v2-network:
