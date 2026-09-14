@@ -7,6 +7,10 @@ import { isAdmin, useAuth } from "@/middlewares/use-auth";
 import { useLogger } from "@/middlewares/use-logger";
 
 import { healthRoutes } from "./health";
+import { organizationRepository } from "./organization-repository";
+import { createOrganizationRoutes } from "./organizations";
+
+const organizationRoutes = createOrganizationRoutes(organizationRepository);
 
 export const routes = new Hono()
   .use(useAuth)
@@ -23,6 +27,7 @@ export const routes = new Hono()
   //////////////////////////////////////////////////
   // Add routes with logging middleware applied here
   .route("/health", healthRoutes)
+  .route("/organizations", organizationRoutes)
 
   //////////////////////////////////////////////////
   // Global error handler

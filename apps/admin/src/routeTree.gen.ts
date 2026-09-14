@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OrganizationsRouteImport } from './routes/organizations'
 import { Route as PrismaStudioRouteImport } from './routes/prisma-studio'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as UsersRouteImport } from './routes/users'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsRoute = OrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrismaStudioRoute = PrismaStudioRouteImport.update({
@@ -44,6 +50,7 @@ const UsersRoute = UsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/organizations': typeof OrganizationsRoute
   '/prisma-studio': typeof PrismaStudioRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/users': typeof UsersRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/organizations': typeof OrganizationsRoute
   '/prisma-studio': typeof PrismaStudioRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/users': typeof UsersRoute
@@ -59,22 +67,42 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/organizations': typeof OrganizationsRoute
   '/prisma-studio': typeof PrismaStudioRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/users': typeof UsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/prisma-studio' | '/unauthorized' | '/users'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/organizations'
+    | '/prisma-studio'
+    | '/unauthorized'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/prisma-studio' | '/unauthorized' | '/users'
+  to:
+    | '/'
+    | '/login'
+    | '/organizations'
+    | '/prisma-studio'
+    | '/unauthorized'
+    | '/users'
   id:
-    '__root__' | '/' | '/login' | '/prisma-studio' | '/unauthorized' | '/users'
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/organizations'
+    | '/prisma-studio'
+    | '/unauthorized'
+    | '/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  OrganizationsRoute: typeof OrganizationsRoute
   PrismaStudioRoute: typeof PrismaStudioRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   UsersRoute: typeof UsersRoute
@@ -94,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations': {
+      id: '/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof OrganizationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prisma-studio': {
@@ -123,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  OrganizationsRoute: OrganizationsRoute,
   PrismaStudioRoute: PrismaStudioRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   UsersRoute: UsersRoute,
