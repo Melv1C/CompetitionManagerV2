@@ -1,0 +1,11 @@
+{
+  "extends": "@repo/typescript-config/node.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@generated/*": ["./generated/*"]
+    }
+  },
+  "include": ["src", "scripts", "env.d.ts"]
+}

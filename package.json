@@ -1,7 +1,81 @@
 {
   "name": "competition-manager-v2",
-  "private": true,
+  "version": "0.0.0",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "tests/*"
+    ]
+  },
+  "type": "module",
   "scripts": {
-    "docs:check": "bun scripts/check-traceability.ts"
+    "build": "turbo run build",
+    "check": "bun run format --check && bun run lint",
+    "deps": "ncu",
+    "dev": "turbo run dev --ui=tui",
+    "docker:db": "docker compose -f docker-compose.db.yml up -d",
+    "docker:db:down": "docker compose -f docker-compose.db.yml down",
+    "e2e": "bun run --filter e2e e2e",
+    "env:generate": "turbo run env:generate",
+    "env:validate": "turbo run env:validate",
+    "format": "oxfmt",
+    "knip": "bunx knip",
+    "lint": "oxlint",
+    "lockfile:sync": "bun scripts/sync-bun-lock.ts",
+    "prisma:format": "bun --filter backend prisma:format",
+    "prisma:generate": "bun --filter backend prisma:generate",
+    "prisma:migrate": "bun --filter backend prisma:migrate",
+    "prisma:migrate:deploy": "bun --filter backend prisma:migrate:deploy",
+    "prisma:validate": "bun --filter backend prisma:validate",
+    "release:prepare": "changeset",
+    "release:push": "./scripts/release-push.sh",
+    "release:version": "./scripts/release-version.sh",
+    "test": "turbo run test"
+  },
+  "dependencies": {
+    "varlock": "^1.19.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.2",
+    "@repo/typescript-config": "workspace:*",
+    "eslint-plugin-zod": "^4.12.1",
+    "npm-check-updates": "^23.1.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "turbo": "^2.10.12",
+    "typescript": "7.0.2"
+  },
+  "packageManager": "bun@1.4.2",
+  "catalog": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query-devtools": "^5.102.8",
+    "@tanstack/react-router": "^1.170.35",
+    "@tanstack/react-router-devtools": "^1.167.1",
+    "@tanstack/router-plugin": "^1.168.37",
+    "@types/node": "^26.5.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@varlock/vite-integration": "^1.5.2",
+    "@vitejs/plugin-react": "^6.1.1",
+    "better-auth": "^1.7.4",
+    "hono": "^4.13.7",
+    "i18next": "^26.4.2",
+    "lucide-react": "^1.45.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "socket.io-client": "^4.8.3",
+    "sonner": "^2.0.8",
+    "tailwindcss": "^4.3.3",
+    "tw-animate-css": "^1.4.0",
+    "tsdown": "^0.23.0",
+    "typescript": "7.0.2",
+    "varlock": "^1.19.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0",
+    "zod": "^4.6.4",
+    "zustand": "^5.0.15"
   }
 }

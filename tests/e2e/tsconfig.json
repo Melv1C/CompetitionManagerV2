@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./tests/*"]
+    }
+  },
+  "include": ["tests", "playwright.config.ts"]
+}

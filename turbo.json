@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "envMode": "strict",
+  "globalEnv": ["APP_ENV"],
+  "globalDependencies": [".env.shared"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["dist/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "env:generate": {
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["env.d.ts"]
+    },
+    "env:validate": {
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

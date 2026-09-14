@@ -1,0 +1,53 @@
+{
+  "name": "backend",
+  "version": "0.0.0",
+  "type": "module",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "add-admin": "bun ./scripts/add-admin.ts",
+    "build": "tsdown",
+    "dev": "concurrently \"tsdown --watch\" \"bun --watch src/index.ts\"",
+    "env:generate": "varlock codegen",
+    "env:validate": "varlock load",
+    "prisma:format": "APP_ENV=development prisma format",
+    "prisma:generate": "APP_ENV=development prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:validate": "APP_ENV=development prisma validate",
+    "start": "bun run prisma:migrate:deploy && bun src/index.ts",
+    "sync-json-data": "bun ./scripts/sync-json-data.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@hono/prometheus": "^1.0.3",
+    "@hono/zod-validator": "^0.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/studio-core": "^0.33.0",
+    "@repo/utils": "workspace:*",
+    "better-auth": "catalog:",
+    "hono": "catalog:",
+    "pg": "^8.23.0",
+    "prom-client": "^15.1.3",
+    "socket.io": "^4.8.3",
+    "varlock": "catalog:",
+    "winston": "^3.19.0",
+    "winston-loki": "^6.1.7",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.5",
+    "prisma": "^7.10.0",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

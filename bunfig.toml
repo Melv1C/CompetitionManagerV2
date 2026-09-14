@@ -1,0 +1,2 @@
+# Disable Bun's automatic .env loading (varlock handles env loading)
+env = false

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+# Varlock generated types
+env.d.ts
+
+# Build outputs
+build/
+dist/
+out/
+web-build/
+
+# Testing
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE and Editor
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.pem
+
+# Turbo
+.turbo/
+
+# Generated files
+generated/
+
+# Vite
+.vite/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
