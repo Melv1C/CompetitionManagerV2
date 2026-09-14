@@ -59,6 +59,7 @@ services:
     networks:
       - competition-manager-v2-network
     restart: unless-stopped
+    stop_grace_period: 30s
 
   frontend:
     build:

@@ -16,20 +16,20 @@ const defaultJobOptions: JobsOptions = {
   },
 };
 
-export interface JobMessage<Data> {
+export interface JobMessage<Data, Name extends string = string> {
   readonly id: string;
-  readonly name: string;
+  readonly name: Name;
   readonly data: Data;
   readonly attemptsMade: number;
 }
 
-export interface TerminalJobFailure<Data> {
-  readonly job: JobMessage<Data> | undefined;
+export interface TerminalJobFailure<Data, Name extends string = string> {
+  readonly job: JobMessage<Data, Name> | undefined;
   readonly error: Error;
 }
 
-export interface JobQueue<Data = unknown> {
-  enqueue: (name: string, data: Data, options?: JobsOptions) => Promise<string>;
+export interface JobQueue<Data = unknown, Name extends string = string> {
+  enqueue: (name: Name, data: Data, options?: JobsOptions) => Promise<string>;
   close: () => Promise<void>;
 }
 
@@ -43,17 +43,21 @@ interface QueueConfiguration {
   redisUrl: string;
 }
 
-interface WorkerConfiguration<Data, Result> extends QueueConfiguration {
-  processor: (job: JobMessage<Data>) => Promise<Result>;
+interface WorkerConfiguration<
+  Data,
+  Result,
+  Name extends string = string,
+> extends QueueConfiguration {
+  processor: (job: JobMessage<Data, Name>) => Promise<Result>;
   onError: (error: Error) => void;
-  onFailed: (failure: TerminalJobFailure<Data>) => void;
+  onFailed: (failure: TerminalJobFailure<Data, Name>) => void;
 }
 
-export function createJobQueue<Data = unknown>({
+export function createJobQueue<Data = unknown, Name extends string = string>({
   queueName,
   redisUrl,
-}: QueueConfiguration): JobQueue<Data> {
-  const queue = new Queue<Job<Data, unknown, string>>(queueName, {
+}: QueueConfiguration): JobQueue<Data, Name> {
+  const queue = new Queue<Job<Data, unknown, Name>>(queueName, {
     connection: { url: redisUrl },
     defaultJobOptions,
   });
@@ -74,14 +78,14 @@ export function createJobQueue<Data = unknown>({
   };
 }
 
-export function createJobWorker<Data = unknown, Result = void>({
+export function createJobWorker<Data = unknown, Result = void, Name extends string = string>({
   queueName,
   redisUrl,
   processor,
   onError,
   onFailed,
-}: WorkerConfiguration<Data, Result>): JobWorker {
-  const worker = new Worker<Data, Result, string>(
+}: WorkerConfiguration<Data, Result, Name>): JobWorker {
+  const worker = new Worker<Data, Result, Name>(
     queueName,
     async (job) => {
       if (!job.id) {
@@ -138,4 +142,43 @@ export function createJobWorker<Data = unknown, Result = void>({
       await worker.close();
     },
   };
+}
+
+export const applicationQueueName = "competition-manager";
+
+export const applicationJobNames = {
+  apiStarted: "api.started",
+} as const;
+
+export type ApplicationJobName = (typeof applicationJobNames)[keyof typeof applicationJobNames];
+
+export interface ApplicationJobData {
+  readonly startedAt: string;
+}
+
+export type ApplicationJobQueue = JobQueue<ApplicationJobData, ApplicationJobName>;
+
+interface ApplicationWorkerConfiguration<Result> {
+  redisUrl: string;
+  processor: (job: JobMessage<ApplicationJobData, ApplicationJobName>) => Promise<Result>;
+  onError: (error: Error) => void;
+  onFailed: (failure: TerminalJobFailure<ApplicationJobData, ApplicationJobName>) => void;
+}
+
+export function createApplicationJobQueue({
+  redisUrl,
+}: Pick<QueueConfiguration, "redisUrl">): ApplicationJobQueue {
+  return createJobQueue<ApplicationJobData, ApplicationJobName>({
+    queueName: applicationQueueName,
+    redisUrl,
+  });
+}
+
+export function createApplicationJobWorker<Result = void>(
+  configuration: ApplicationWorkerConfiguration<Result>,
+): JobWorker {
+  return createJobWorker<ApplicationJobData, Result, ApplicationJobName>({
+    queueName: applicationQueueName,
+    ...configuration,
+  });
 }

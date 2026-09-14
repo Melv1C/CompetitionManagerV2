@@ -7,15 +7,19 @@
     "dev": "bun --watch src/index.ts",
     "env:generate": "varlock codegen",
     "env:validate": "varlock load",
-    "start": "bun src/index.ts"
+    "start": "bun src/index.ts",
+    "test": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run src/api-to-worker.integration.test.ts"
   },
   "dependencies": {
+    "@repo/jobs": "workspace:*",
     "varlock": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

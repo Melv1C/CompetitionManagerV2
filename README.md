@@ -94,6 +94,8 @@ REDIS_URL=redis://127.0.0.1:6379/15 bun run test:integration
 
 CI starts an isolated Redis service and runs this command after the regular workspace tests.
 
+The API enqueues a typed `api.started` delivery event after it begins listening. The worker consumes and logs that event, waits for Redis before reporting ready, and closes its BullMQ consumer on `SIGTERM` or `SIGINT`. Future domain jobs use the same `@repo/jobs` contract.
+
 Migrate the database:
 
 ```bash
