@@ -1,3 +1,3 @@
-# Single result authority per competition
+# Each competition event can choose its own result entry mode
 
-Each Competition selects one Result Entry Mode: AthleticsManager or Competition Manager Web. Only the selected system may authoritatively change results; changing mode after results exist requires a previewed, human-approved reconciliation because allowing concurrent writers or an automatic merge would make official result ownership ambiguous.
+Each Competition event can choose its own result entry mode: AthleticsManager or Competition Manager Web.

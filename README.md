@@ -6,11 +6,10 @@ This repository currently contains the approved product and engineering specific
 
 ## Start building
 
-1. Read [the complete build specification](docs/competition-manager-rewrite-agent-spec.md).
-2. Read [the domain glossary](CONTEXT.md).
-3. Read the architectural decisions in [docs/adr](docs/adr).
-4. Start with **Phase 0: Foundation** from the specification.
-5. Keep `CONTEXT.md`, ADRs, OpenAPI, and requirement traceability current while implementing.
+1. Read [the domain glossary](CONTEXT.md).
+2. Read the architectural decisions in [docs/adr](docs/adr).
+3. Start with **Phase 0: Foundation** from the specification.
+4. Keep `CONTEXT.md`, ADRs, and documentation up to date while implementing.
 
 ## Initial application boundaries
 
@@ -26,7 +25,6 @@ The desktop bridge is a later phase and is not part of the initial implementatio
 
 - [Legacy behavior](https://github.com/Melv1C/CompetitionManagerSaaS)
 - [Incomplete rewrite evidence](https://github.com/Melv1C/CompetitionManager)
-- [Preferred monorepo conventions](https://github.com/Melv1C/fullstack-web-turbo-kit)
 
 The specification takes precedence over all reference repositories.
 

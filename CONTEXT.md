@@ -40,26 +40,6 @@ _Avoid_: User account, Club affiliation, Platform Administrator
 An Organization member with complete authority over the Organization, its membership, and its competitions.
 _Avoid_: Platform admin, superadmin
 
-**Competition Manager**:
-An Organization member who can create and operate competitions but cannot control Organization ownership.
-_Avoid_: Platform admin, result manager
-
-**Registration Manager**:
-An Organization member who manages Athlete Registrations, Event Entries, and competition-day presence.
-_Avoid_: Registrant, check-in user
-
-**Result Manager**:
-An Organization member who manages competition results under the selected Result Entry Mode.
-_Avoid_: Registration manager, AthleticsManager
-
-**Viewer**:
-An Organization member with read-only access to private Organization and competition information.
-_Avoid_: Public visitor
-
-**Organization Role Assignment**:
-A fixed role granted to a User across an Organization, supplemented by zero or more Competition-specific role assignments. A User may hold multiple roles and receives the union of their permissions; the Organization Owner's authority cannot be narrowed by a Competition assignment.
-_Avoid_: Platform role, public permission
-
 **Platform Administrator**:
 A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator is outside every Organization's membership and role model and cannot impersonate Users in the initial product.
 _Avoid_: Organization Owner, Competition Manager
