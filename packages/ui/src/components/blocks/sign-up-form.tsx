@@ -85,7 +85,7 @@ function SignUpForm({ onSubmit, onLogin, title, description, schema, className }
   return (
     <Card
       className={cn(
-        "w-full max-w-md border-0 bg-white shadow-[0_24px_80px_rgba(18,54,84,0.12)] ring-1 ring-[#123654]/10",
+        "w-full max-w-md border-0 bg-card shadow-brand ring-1 ring-primary/10",
         className,
       )}
     >
@@ -194,24 +194,19 @@ function SignUpForm({ onSubmit, onLogin, title, description, schema, className }
                 </Field>
               )}
             />
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full bg-[#123654] hover:bg-[#1b486c]"
-              disabled={isLoading}
-            >
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
               {isLoading ? t("signUpForm.creatingAccount") : t("signUpForm.createAccount")}
             </Button>
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="justify-center border-[#123654]/10 bg-[#f7fafb] px-6 py-4 sm:px-8">
+      <CardFooter className="border-primary/10 bg-muted/55 justify-center px-6 py-4 sm:px-8">
         <p className="text-muted-foreground text-sm">
           {t("signUpForm.hasAccount")}{" "}
           <button
             type="button"
             onClick={onLogin}
-            className="font-medium text-[#123654] underline-offset-4 hover:underline"
+            className="text-primary font-medium underline-offset-4 hover:underline"
             disabled={isLoading}
           >
             {t("signUpForm.login")}
