@@ -152,17 +152,3 @@
     cursor: pointer;
   }
 }
-
-[data-sidebar="menu-button"] {
-  transition-property: width, height, padding, background-color, color, box-shadow;
-}
-
-[data-sidebar="menu-button"][data-active] {
-  color: var(--sidebar-active-foreground);
-  background-color: var(--sidebar-active);
-  box-shadow: inset 3px 0 0 var(--sidebar-active-marker);
-}
-
-[data-sidebar="menu-button"][data-active]:hover {
-  background-color: var(--sidebar-active);
-}
