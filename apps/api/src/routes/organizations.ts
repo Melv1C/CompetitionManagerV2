@@ -12,6 +12,17 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/middlewares/use-auth";
 
+function isOrganizationSlugConflict(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    body?: { code?: unknown };
+  };
+
+  return candidate.code === "P2002" || candidate.body?.code === "ORGANIZATION_ALREADY_EXISTS";
+}
+
 export const organizationsRoutes = new Hono()
   .use("*", isAdmin)
   .get("/owner-candidates", zValidator("query", OrganizationOwnerCandidatesQuery$), async (c) => {
@@ -93,24 +104,32 @@ export const organizationsRoutes = new Hono()
       return c.json({ error: "An organization with this slug already exists" }, 409);
     }
 
-    const organization = await auth.api.createOrganization({
-      body: { name, slug, userId: owner.id },
-    });
+    try {
+      const organization = await auth.api.createOrganization({
+        body: { name, slug, userId: owner.id },
+      });
 
-    return c.json(
-      OrganizationResponse$.parse({
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          slug: organization.slug,
-          createdAt: organization.createdAt,
-          owner: {
-            id: owner.id,
-            name: owner.name,
-            email: owner.email,
+      return c.json(
+        OrganizationResponse$.parse({
+          organization: {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+            createdAt: organization.createdAt,
+            owner: {
+              id: owner.id,
+              name: owner.name,
+              email: owner.email,
+            },
           },
-        },
-      }),
-      201,
-    );
+        }),
+        201,
+      );
+    } catch (error) {
+      if (isOrganizationSlugConflict(error)) {
+        return c.json({ error: "An organization with this slug already exists" }, 409);
+      }
+
+      throw error;
+    }
   });

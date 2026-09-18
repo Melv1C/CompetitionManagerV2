@@ -167,6 +167,33 @@ describe("organization administration", () => {
     });
   });
 
+  it("returns a conflict when a concurrent request takes the slug", async () => {
+    const owner = {
+      id: "U".repeat(32),
+      name: "Morgan Owner",
+      email: "owner@example.com",
+      role: "user",
+    };
+    findUnique.mockResolvedValue(owner);
+    createOrganization.mockRejectedValue({ code: "P2002" });
+    const app = await createTestApp();
+
+    const response = await app.request("/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Brussels Athletics",
+        slug: "brussels-athletics",
+        ownerId: owner.id,
+      }),
+    });
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: "An organization with this slug already exists",
+    });
+  });
+
   it("rejects organization administration by a regular user", async () => {
     const app = await createTestApp({ ...admin, id: "U".repeat(32), role: "user" });
 

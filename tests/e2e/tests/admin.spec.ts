@@ -36,6 +36,13 @@ test.describe("as admin", () => {
     await page.getByRole("textbox", { name: "Search owners" }).fill("user.e2e@example.com");
     await page.getByRole("combobox", { name: "Owner" }).click();
     await page.getByRole("option", { name: /E2E User.*user\.e2e@example\.com/ }).click();
+    await page.getByRole("textbox", { name: "Search owners" }).fill("another user");
+    await expect(
+      page.getByRole("button", { name: "Create organization", exact: true }),
+    ).toBeDisabled();
+    await page.getByRole("textbox", { name: "Search owners" }).fill("user.e2e@example.com");
+    await page.getByRole("combobox", { name: "Owner" }).click();
+    await page.getByRole("option", { name: /E2E User.*user\.e2e@example\.com/ }).click();
     await page.getByRole("button", { name: "Create organization", exact: true }).click();
 
     const organizationRow = page.getByRole("row", { name: new RegExp(organizationName) });

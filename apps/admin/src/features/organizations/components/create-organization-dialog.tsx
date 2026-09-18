@@ -123,7 +123,10 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
             <Input
               aria-label="Search owners"
               value={ownerSearch}
-              onChange={(event) => setOwnerSearch(event.target.value)}
+              onChange={(event) => {
+                setOwnerSearch(event.target.value);
+                setOwnerId("");
+              }}
               placeholder="Search by name or email"
             />
             <Select
