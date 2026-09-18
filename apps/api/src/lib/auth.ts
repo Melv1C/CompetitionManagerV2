@@ -15,5 +15,5 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins: [ENV.FRONTEND_URL, ENV.MANAGER_URL, ENV.ADMIN_URL],
-  plugins: [admin(), organization()],
+  plugins: [admin(), organization({ allowUserToCreateOrganization: false })],
 });

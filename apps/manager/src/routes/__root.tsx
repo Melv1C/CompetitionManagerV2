@@ -13,9 +13,14 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
     const sessionResult = await authClient.getSession().catch(() => null);
     const session = sessionResult?.data;
-    const organizationsResult = session
-      ? await authClient.organization.list().catch(() => null)
-      : null;
+    const organizationsResult = session ? await authClient.organization.list() : null;
+
+    if (organizationsResult?.error) {
+      throw new Error(
+        organizationsResult.error.message ?? "We couldn't verify your organization access.",
+      );
+    }
+
     const hasOrganization = Boolean(organizationsResult?.data?.length);
     const destination = getManagerAuthRedirect(
       location.pathname,

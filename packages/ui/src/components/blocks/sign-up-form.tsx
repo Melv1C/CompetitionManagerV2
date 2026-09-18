@@ -35,8 +35,10 @@ const createSignUpFormSchema = (t: (key: string) => string) =>
     .object({
       name: z.string().trim().min(1, t("signUpForm.errors.nameRequired")),
       email: z.email(t("signUpForm.errors.invalidEmail")),
-      password: z.string().trim().min(8, t("signUpForm.errors.passwordLength")),
-      confirmPassword: z.string().trim().min(1, t("signUpForm.errors.confirmPasswordRequired")),
+      // oxlint-disable-next-line zod/prefer-string-schema-with-trim -- Whitespace is part of a password.
+      password: z.string().min(8, t("signUpForm.errors.passwordLength")),
+      // oxlint-disable-next-line zod/prefer-string-schema-with-trim -- Confirmation must match exactly.
+      confirmPassword: z.string().min(1, t("signUpForm.errors.confirmPasswordRequired")),
     })
     .refine((values) => values.password === values.confirmPassword, {
       error: t("signUpForm.errors.passwordMismatch"),

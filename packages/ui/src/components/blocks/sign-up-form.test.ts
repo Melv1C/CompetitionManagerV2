@@ -46,4 +46,20 @@ describe("sign-up form validation", () => {
       }),
     );
   });
+
+  it("keeps password whitespace significant", () => {
+    const result = schema.safeParse({
+      name: "Alex Morgan",
+      email: "alex@example.com",
+      password: " scoreboard-12 ",
+      confirmPassword: "scoreboard-12",
+    });
+
+    expect(result.error?.issues).toContainEqual(
+      expect.objectContaining({
+        message: "signUpForm.errors.passwordMismatch",
+        path: ["confirmPassword"],
+      }),
+    );
+  });
 });
