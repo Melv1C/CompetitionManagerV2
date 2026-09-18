@@ -91,6 +91,21 @@ services:
       - competition-manager-v2-network
     restart: unless-stopped
 
+  manager:
+    build:
+      context: .
+      dockerfile: apps/manager/Dockerfile
+      args:
+        - APP_ENV=test
+    container_name: competition-manager-v2-manager
+    depends_on:
+      - api
+    ports:
+      - "5175:80"
+    networks:
+      - competition-manager-v2-network
+    restart: unless-stopped
+
 networks:
   competition-manager-v2-network:
     driver: bridge
