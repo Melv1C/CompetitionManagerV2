@@ -21,16 +21,13 @@ function AccessDeniedCard({
 }: AccessDeniedCardProps) {
   return (
     <Card
-      className={cn(
-        "w-full max-w-md border-0 bg-card shadow-brand ring-1 ring-primary/10",
-        className,
-      )}
+      className={cn("w-full max-w-md border-0 bg-card shadow-lg ring-1 ring-primary/10", className)}
     >
       <CardHeader className="px-6 pt-3 sm:px-8">
         <div className="bg-accent text-accent-foreground mb-3 grid size-11 place-items-center rounded-xl">
           <ShieldAlert className="size-5" aria-hidden="true" />
         </div>
-        <p className="font-data text-primary/70 text-xs font-semibold tracking-[0.18em] uppercase">
+        <p className="text-primary/70 font-mono text-xs font-semibold tracking-[0.18em] uppercase">
           {eyebrow}
         </p>
         <CardTitle

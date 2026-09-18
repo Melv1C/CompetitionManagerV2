@@ -118,10 +118,7 @@ function LoginForm({
 
   return (
     <Card
-      className={cn(
-        "w-full max-w-md border-0 bg-card shadow-brand ring-1 ring-primary/10",
-        className,
-      )}
+      className={cn("w-full max-w-md border-0 bg-card shadow-lg ring-1 ring-primary/10", className)}
     >
       <CardHeader className="px-6 pt-3 text-left sm:px-8">
         <CardTitle className="text-2xl font-semibold tracking-[-0.025em]">{displayTitle}</CardTitle>

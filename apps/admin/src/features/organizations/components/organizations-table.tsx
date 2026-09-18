@@ -82,7 +82,7 @@ export function OrganizationsTable({ onCreate }: OrganizationsTableProps) {
               {organizations.data.map((organization) => (
                 <TableRow key={organization.id}>
                   <TableCell className="font-medium">{organization.name}</TableCell>
-                  <TableCell className="font-data text-muted-foreground">
+                  <TableCell className="text-muted-foreground font-mono">
                     {organization.slug}
                   </TableCell>
                   <TableCell>
