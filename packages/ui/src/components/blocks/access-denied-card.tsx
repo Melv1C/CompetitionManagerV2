@@ -33,7 +33,13 @@ function AccessDeniedCard({
         <p className="font-data text-primary/70 text-xs font-semibold tracking-[0.18em] uppercase">
           {eyebrow}
         </p>
-        <CardTitle className="pt-1 text-2xl font-semibold tracking-[-0.025em]">{title}</CardTitle>
+        <CardTitle
+          role="heading"
+          aria-level={2}
+          className="pt-1 text-2xl font-semibold tracking-[-0.025em]"
+        >
+          {title}
+        </CardTitle>
         <CardDescription className="leading-6">{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 px-6 pb-3 sm:flex-row sm:px-8">
