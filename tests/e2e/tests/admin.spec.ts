@@ -30,6 +30,6 @@ test.describe("as user", () => {
     await page.goto(E2E_URLS.admin);
 
     await expect(page).toHaveURL(`${E2E_URLS.admin}/unauthorized`);
-    await expect(page.getByRole("heading", { name: "Access Denied" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "This account is not an admin" })).toBeVisible();
   });
 });
