@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { varlockVitePlugin } from "@varlock/vite-integration";
 import react from "@vitejs/plugin-react";
@@ -12,6 +13,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [
+    devtools({
+      consolePiping: { enabled: true },
+      eventBusConfig: { port: 4207 },
+      injectSource: { enabled: true },
+      removeDevtoolsOnBuild: true,
+    }),
     varlockVitePlugin(),
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
