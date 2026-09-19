@@ -27,7 +27,7 @@ export const E2E_USERS = {
     password: "Password123!",
   },
   staff: {
-    name: "E2E Staff",
+    name: "E2E Regional Competition Operations Staff Member",
     email: "staff.e2e@example.com",
     password: "Password123!",
   },
@@ -58,4 +58,11 @@ export const E2E_CATALOG_IDS = {
   secondaryOrganizationDiscipline: "20000000-0000-4000-8000-000000000099",
   athleteCategory: "30000000-0000-4000-8000-000000000001",
   secondaryOrganizationAthleteCategory: "30000000-0000-4000-8000-000000000099",
+} as const;
+
+export const E2E_ORGANIZATION_LOGOS = {
+  primary:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f766e'/%3E%3Cpath d='M13 42c10-17 24-24 39-21M16 49c10-15 22-20 37-18' fill='none' stroke='%23ccfbf1' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='18' r='5' fill='%23f0fdfa'/%3E%3C/svg%3E",
+  secondary:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231e3a8a'/%3E%3Cpath d='M14 43h36M18 35h28M23 27h18' fill='none' stroke='%23dbeafe' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M32 13l6 8H26z' fill='%23eff6ff'/%3E%3C/svg%3E",
 } as const;

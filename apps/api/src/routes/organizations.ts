@@ -73,6 +73,7 @@ export const organizationsRoutes = new Hono()
         id: record.id,
         name: record.name,
         slug: record.slug,
+        logo: record.logo,
         createdAt: record.createdAt,
         owner,
       };
@@ -81,7 +82,7 @@ export const organizationsRoutes = new Hono()
     return c.json(OrganizationsResponse$.parse({ organizations }));
   })
   .post("/", zValidator("json", CreateOrganization$), async (c) => {
-    const { name, slug, ownerId } = c.req.valid("json");
+    const { name, slug, logo, ownerId } = c.req.valid("json");
     const [owner, existingOrganization] = await Promise.all([
       prisma.user.findUnique({
         where: { id: ownerId },
@@ -111,7 +112,7 @@ export const organizationsRoutes = new Hono()
 
     try {
       const organization = await auth.api.createOrganization({
-        body: { name, slug, userId: owner.id },
+        body: { name, slug, logo, userId: owner.id },
       });
 
       return c.json(
@@ -120,6 +121,7 @@ export const organizationsRoutes = new Hono()
             id: organization.id,
             name: organization.name,
             slug: organization.slug,
+            logo: organization.logo ?? null,
             createdAt: organization.createdAt,
             owner: {
               id: owner.id,

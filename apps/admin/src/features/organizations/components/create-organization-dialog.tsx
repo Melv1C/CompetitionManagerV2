@@ -1,4 +1,7 @@
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Dialog,
   DialogContent,
@@ -14,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui";
-import { Loader2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { useCreateOrganization, useOrganizationOwnerCandidates } from "../use-organizations";
@@ -35,6 +38,7 @@ function toSlug(value: string) {
 export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizationDialogProps) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [logo, setLogo] = useState("");
   const [ownerId, setOwnerId] = useState("");
   const [ownerSearch, setOwnerSearch] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -50,6 +54,7 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
   const reset = () => {
     setName("");
     setSlug("");
+    setLogo("");
     setOwnerId("");
     setOwnerSearch("");
     setSlugEdited(false);
@@ -65,6 +70,7 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
     await createOrganization.mutateAsync({
       name: name.trim(),
       slug: slug.trim(),
+      logo: logo.trim() || undefined,
       ownerId,
     });
     handleOpenChange(false);
@@ -115,6 +121,33 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
             />
             <p className="text-muted-foreground text-xs">
               Used in links and integrations. Lowercase letters, numbers, and hyphens only.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="organization-logo">Logo URL</Label>
+            <div className="flex items-center gap-3">
+              <Avatar className="size-11 rounded-lg">
+                <AvatarImage
+                  src={logo || undefined}
+                  alt="Organization logo preview"
+                  className="rounded-lg"
+                />
+                <AvatarFallback className="rounded-lg">
+                  <Building2 className="size-5" />
+                </AvatarFallback>
+              </Avatar>
+              <Input
+                id="organization-logo"
+                type="url"
+                value={logo}
+                onChange={(event) => setLogo(event.target.value)}
+                placeholder="https://example.com/club-logo.png"
+                maxLength={2048}
+              />
+            </div>
+            <p className="text-muted-foreground text-xs">
+              Optional. Use a square image for the manager sidebar.
             </p>
           </div>
 

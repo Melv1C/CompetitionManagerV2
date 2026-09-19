@@ -1,4 +1,7 @@
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Card,
   CardContent,
@@ -81,7 +84,21 @@ export function OrganizationsTable({ onCreate }: OrganizationsTableProps) {
             <TableBody>
               {organizations.data.map((organization) => (
                 <TableRow key={organization.id}>
-                  <TableCell className="font-medium">{organization.name}</TableCell>
+                  <TableCell>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar className="size-9 rounded-lg">
+                        <AvatarImage
+                          src={organization.logo ?? undefined}
+                          alt={`${organization.name} logo`}
+                          className="rounded-lg"
+                        />
+                        <AvatarFallback className="rounded-lg">
+                          <Building2 className="size-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate font-medium">{organization.name}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground font-mono">
                     {organization.slug}
                   </TableCell>

@@ -1,18 +1,20 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Logo,
   Separator,
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -22,13 +24,34 @@ import {
   SidebarTrigger,
 } from "@repo/ui";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { CalendarDays, ChevronsUpDown, LogOut } from "lucide-react";
+import { CalendarDays, Check, ChevronsUpDown, LogOut } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { authClient, signOut, useSession } from "@/lib/auth-client";
 
-type Organization = { id: string; name: string; slug: string };
+type Organization = { id: string; name: string; slug: string; logo?: string | null };
+
+function organizationInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function OrganizationAvatar({ organization }: { organization: Organization }) {
+  return (
+    <Avatar className="size-8 rounded-lg">
+      <AvatarImage src={organization.logo ?? undefined} alt="" className="rounded-lg" />
+      <AvatarFallback className="bg-primary/10 text-primary rounded-lg text-xs font-semibold">
+        {organizationInitials(organization.name)}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
 
 export function ManagerLayout({ organizations }: { organizations: Organization[] }) {
   const navigate = useNavigate();
@@ -57,36 +80,64 @@ export function ManagerLayout({ organizations }: { organizations: Organization[]
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon" className="border-r-0">
-        <SidebarHeader className="border-sidebar-border/70 gap-3 border-b p-3">
-          <div className="flex items-center gap-2 px-1">
-            <Logo />
-            <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold">Competition Manager</p>
-              <p className="text-muted-foreground text-[11px] tracking-[0.12em] uppercase">
-                Operations desk
-              </p>
-            </div>
-          </div>
-          <label className="group-data-[collapsible=icon]:hidden">
-            <span className="sr-only">Organization</span>
-            <select
-              aria-label="Organization"
-              value={organizationId}
-              disabled={switching}
-              onChange={(event) => void changeOrganization(event.target.value)}
-              className="border-sidebar-border bg-sidebar-accent/60 focus:ring-sidebar-ring h-10 w-full rounded-lg border px-3 text-sm font-medium outline-none focus:ring-2"
-            >
-              {organizations.map((organization) => (
-                <option key={organization.id} value={organization.id}>
-                  {organization.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <SidebarHeader className="border-sidebar-border/70 border-b p-2">
+          {activeOrganization ? (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <SidebarMenuButton
+                        size="lg"
+                        aria-label={`Organization: ${activeOrganization.name}`}
+                        disabled={switching}
+                        className="border-sidebar-border/70 bg-sidebar-accent/45 data-popup-open:bg-sidebar-accent border shadow-xs"
+                      />
+                    }
+                  >
+                    <OrganizationAvatar organization={activeOrganization} />
+                    <div className="min-w-0 flex-1 leading-tight group-data-[collapsible=icon]:hidden">
+                      <span className="block truncate text-sm font-semibold">
+                        {activeOrganization.name}
+                      </span>
+                      <span className="text-muted-foreground block truncate text-xs">
+                        {activeOrganization.slug}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="text-muted-foreground ml-auto group-data-[collapsible=icon]:hidden" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" side="bottom" className="min-w-64 rounded-xl">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {organizations.map((organization) => (
+                        <DropdownMenuItem
+                          key={organization.id}
+                          disabled={switching}
+                          onClick={() => void changeOrganization(organization.id)}
+                          className="gap-2 p-2"
+                        >
+                          <OrganizationAvatar organization={organization} />
+                          <div className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{organization.name}</span>
+                            <span className="text-muted-foreground block truncate text-xs">
+                              {organization.slug}
+                            </span>
+                          </div>
+                          {organization.id === organizationId ? (
+                            <Check className="text-primary ml-auto size-4" />
+                          ) : null}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          ) : null}
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Meet operations</SidebarGroupLabel>
+          <SidebarGroup className="pt-3">
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -147,17 +198,23 @@ function ManagerUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <SidebarMenuButton size="lg">
-              <Avatar className="size-8 rounded-md">
-                <AvatarFallback className="rounded-md">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="truncate text-sm font-medium">{user.name}</p>
-                <p className="text-muted-foreground truncate text-xs">{user.email}</p>
-              </div>
-              <ChevronsUpDown className="ml-auto" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                aria-label={`Account: ${user.name}`}
+                className="data-popup-open:bg-sidebar-accent h-10"
+              />
+            }
+          >
+            <Avatar size="sm" className="rounded-md">
+              <AvatarImage src={user.image ?? undefined} alt="" className="rounded-md" />
+              <AvatarFallback className="rounded-md">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+              <p className="block truncate text-xs font-medium">{user.name}</p>
+              <p className="text-muted-foreground block truncate text-[11px]">{user.email}</p>
+            </div>
+            <ChevronsUpDown className="text-muted-foreground ml-auto size-3.5 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-56">
             <DropdownMenuItem

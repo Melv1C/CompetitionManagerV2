@@ -64,6 +64,7 @@ describe("organization administration", () => {
         id: "O".repeat(32),
         name: "Brussels Athletics",
         slug: "brussels-athletics",
+        logo: "https://example.com/brussels-athletics.svg",
         createdAt: new Date("2026-09-18T12:00:00.000Z"),
         members: [
           {
@@ -87,6 +88,7 @@ describe("organization administration", () => {
           id: "O".repeat(32),
           name: "Brussels Athletics",
           slug: "brussels-athletics",
+          logo: "https://example.com/brussels-athletics.svg",
           createdAt: "2026-09-18T12:00:00.000Z",
           owner: {
             id: "U".repeat(32),
@@ -159,6 +161,7 @@ describe("organization administration", () => {
       id: "O".repeat(32),
       name: "Brussels Athletics",
       slug: "brussels-athletics",
+      logo: "https://example.com/brussels-athletics.svg",
       createdAt: new Date("2026-09-18T12:00:00.000Z"),
     });
     const app = await createTestApp();
@@ -169,6 +172,7 @@ describe("organization administration", () => {
       body: JSON.stringify({
         name: "Brussels Athletics",
         slug: "brussels-athletics",
+        logo: "https://example.com/brussels-athletics.svg",
         ownerId: owner.id,
       }),
     });
@@ -179,6 +183,7 @@ describe("organization administration", () => {
         id: "O".repeat(32),
         name: "Brussels Athletics",
         slug: "brussels-athletics",
+        logo: "https://example.com/brussels-athletics.svg",
         createdAt: "2026-09-18T12:00:00.000Z",
         owner: {
           id: owner.id,
@@ -191,6 +196,7 @@ describe("organization administration", () => {
       body: {
         name: "Brussels Athletics",
         slug: "brussels-athletics",
+        logo: "https://example.com/brussels-athletics.svg",
         userId: owner.id,
       },
     });

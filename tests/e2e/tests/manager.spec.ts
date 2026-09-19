@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { E2E_AUTH_FILES, E2E_CATALOG_IDS, E2E_URLS } from "./constants";
+import { E2E_AUTH_FILES, E2E_CATALOG_IDS, E2E_URLS, E2E_USERS } from "./constants";
 
 test.describe("manager competition setup", () => {
   test.describe.configure({ mode: "serial" });
@@ -13,7 +13,9 @@ test.describe("manager competition setup", () => {
     await page.goto(E2E_URLS.manager);
     await expect(page.getByRole("heading", { name: "Competitions" })).toBeVisible();
     primaryOrganizationId = organizationIdFrom(page.url());
-    await expect(page.getByLabel("Organization")).toHaveValue(primaryOrganizationId);
+    await expect(
+      page.getByRole("button", { name: "Organization: E2E Athletics Organization" }),
+    ).toBeVisible();
 
     const competitionName = `E2E Brussels Meeting ${Date.now()}`;
     await createDraft(page, competitionName);
@@ -195,9 +197,27 @@ test.describe("manager competition setup", () => {
     const context = await browser.newContext({ storageState: E2E_AUTH_FILES.staff });
     const page = await context.newPage();
     await page.goto(E2E_URLS.manager);
-    await page.getByLabel("Organization").selectOption({ label: "E2E Secondary Organization" });
+
+    await expect(page.getByText("Competition Manager", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Operations desk", { exact: true })).toHaveCount(0);
+
+    const accountTrigger = page.getByRole("button", {
+      name: `Account: ${E2E_USERS.staff.name}`,
+    });
+    await expect(accountTrigger).toBeVisible();
+    const accountName = accountTrigger.getByText(E2E_USERS.staff.name);
+    await expect(accountName).toHaveCSS("text-overflow", "ellipsis");
+    expect(await accountName.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
+      true,
+    );
+
+    await page.getByRole("button", { name: "Organization: E2E Athletics Organization" }).click();
+    await page.getByRole("menuitem", { name: /E2E Secondary Organization/ }).click();
     await expect(page).toHaveURL(/\/organizations\/[A-Za-z0-9]{32}\/competitions$/);
     await expect(page.locator("header").getByText("E2E Secondary Organization")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Organization: E2E Secondary Organization" }),
+    ).toBeVisible();
     await context.close();
   });
 

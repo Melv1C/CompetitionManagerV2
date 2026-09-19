@@ -10,7 +10,7 @@ import {
   type APIRequestContext,
 } from "@playwright/test";
 
-import { E2E_AUTH_FILES, E2E_URLS, E2E_USERS } from "./constants";
+import { E2E_AUTH_FILES, E2E_ORGANIZATION_LOGOS, E2E_URLS, E2E_USERS } from "./constants";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
@@ -126,14 +126,14 @@ async function ensureUnverifiedOrganizationOwner(userId: string) {
   }
 }
 
-async function ensureOrganization(name: string, slug: string, ownerId: string) {
+async function ensureOrganization(name: string, slug: string, logo: string, ownerId: string) {
   const context = await playwrightRequest.newContext({
     baseURL: E2E_URLS.api,
     storageState: E2E_AUTH_FILES.admin,
   });
   try {
     const response = await context.post("/api/organizations", {
-      data: { name, slug, ownerId },
+      data: { name, slug, logo, ownerId },
     });
     if (response.status() !== 201 && response.status() !== 409) {
       throw new Error(
@@ -198,11 +198,13 @@ test("seed and authenticate e2e users", async ({ request }) => {
   await ensureOrganization(
     "E2E Athletics Organization",
     "e2e-athletics-organization",
+    E2E_ORGANIZATION_LOGOS.primary,
     competitionOwner.user.id,
   );
   await ensureOrganization(
     "E2E Secondary Organization",
     "e2e-secondary-organization",
+    E2E_ORGANIZATION_LOGOS.secondary,
     secondOwner.user.id,
   );
   await ensureUnverifiedOrganizationOwner(unverifiedUser.user.id);
