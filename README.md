@@ -160,6 +160,8 @@ Authentication currently uses email and password only. No social login provider 
 
 ## Deployment
 
+See [operations](./docs/operations.md) for the logging and data-handling policy.
+
 Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Images are built from each app’s `Dockerfile` at the monorepo root.
 
 ### Staging
