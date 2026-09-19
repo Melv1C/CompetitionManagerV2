@@ -52,3 +52,10 @@ export const E2E_AUTH_FILES = {
   member: "playwright/.auth/member.json",
   secondOwner: "playwright/.auth/second-owner.json",
 } as const;
+
+export const E2E_CATALOG_IDS = {
+  discipline: "20000000-0000-4000-8000-000000000001",
+  secondaryOrganizationDiscipline: "20000000-0000-4000-8000-000000000099",
+  athleteCategory: "30000000-0000-4000-8000-000000000001",
+  secondaryOrganizationAthleteCategory: "30000000-0000-4000-8000-000000000099",
+} as const;

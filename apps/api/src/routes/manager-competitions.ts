@@ -190,6 +190,50 @@ async function assertDraftVersion(
   throw new CompetitionRouteError(409, "This Draft changed. Reload it before saving again");
 }
 
+async function assertEventCatalogReferences(
+  tx: Prisma.TransactionClient,
+  input: {
+    organizationId: string;
+    competitionId: string;
+    disciplineId: string;
+    athleteCategoryIds: string[];
+  },
+) {
+  const competition = await tx.competition.findFirst({
+    where: { id: input.competitionId, organizationId: input.organizationId },
+    select: { athleticsSeasonId: true },
+  });
+  if (!competition) throw new CompetitionRouteError(404, "Competition not found");
+
+  const discipline = await tx.discipline.findFirst({
+    where: {
+      id: input.disciplineId,
+      active: true,
+      OR: [{ organizationId: null }, { organizationId: input.organizationId }],
+    },
+    select: { id: true },
+  });
+  if (!discipline) {
+    throw new CompetitionRouteError(400, "Discipline is not available to this Organization");
+  }
+
+  const categoryIds = [...new Set(input.athleteCategoryIds)];
+  const categoryCount = await tx.athleteCategory.count({
+    where: {
+      id: { in: categoryIds },
+      active: true,
+      athleticsSeasonId: competition.athleticsSeasonId,
+      OR: [{ organizationId: null }, { organizationId: input.organizationId }],
+    },
+  });
+  if (categoryCount !== categoryIds.length) {
+    throw new CompetitionRouteError(
+      400,
+      "Athlete Category is not available to this Organization and Athletics Season",
+    );
+  }
+}
+
 class CompetitionRouteError extends Error {
   constructor(
     readonly status: 400 | 404 | 409,
@@ -233,10 +277,8 @@ export const managerCompetitionsRoutes = new Hono()
         prisma.athleteCategory.findMany({
           where: {
             active: true,
-            OR: [
-              { organizationId },
-              { organizationId: null, ...(seasonId ? { athleticsSeasonId: seasonId } : {}) },
-            ],
+            ...(seasonId ? { athleticsSeasonId: seasonId } : {}),
+            OR: [{ organizationId }, { organizationId: null }],
           },
           include: { translations: true },
           orderBy: { code: "asc" },
@@ -323,9 +365,20 @@ export const managerCompetitionsRoutes = new Hono()
     async (c) => {
       const { organizationId, competitionId } = c.req.valid("param");
       const entries = await prisma.auditEntry.findMany({
-        where: { organizationId, entityId: competitionId },
+        where: {
+          organizationId,
+          OR: [
+            { entityType: "COMPETITION", entityId: competitionId },
+            {
+              entityType: "COMPETITION_EVENT",
+              metadata: { path: ["competitionId"], equals: competitionId },
+            },
+          ],
+        },
         orderBy: { createdAt: "asc" },
         select: {
+          entityType: true,
+          entityId: true,
           action: true,
           actorDisplayName: true,
           reason: true,
@@ -489,6 +542,12 @@ export const managerCompetitionsRoutes = new Hono()
           expectedUpdatedAt: input.expectedUpdatedAt,
           actorUserId: actor.actorUserId,
         });
+        await assertEventCatalogReferences(tx, {
+          organizationId,
+          competitionId,
+          disciplineId: input.disciplineId,
+          athleteCategoryIds: input.athleteCategoryIds,
+        });
         const createdEvent = await tx.competitionEvent.create({
           data: eventCreateData(competitionId, input),
         });
@@ -505,11 +564,11 @@ export const managerCompetitionsRoutes = new Hono()
         await tx.auditEntry.create({
           data: {
             organizationId,
-            entityType: "COMPETITION",
-            entityId: competitionId,
-            action: "UPDATE",
+            entityType: "COMPETITION_EVENT",
+            entityId: createdEvent.id,
+            action: "CREATE",
             ...actor,
-            metadata: { section: "events" },
+            metadata: { competitionId, section: "events" },
           },
         });
       });
@@ -532,6 +591,12 @@ export const managerCompetitionsRoutes = new Hono()
           competitionId,
           expectedUpdatedAt: input.expectedUpdatedAt,
           actorUserId: actor.actorUserId,
+        });
+        await assertEventCatalogReferences(tx, {
+          organizationId,
+          competitionId,
+          disciplineId: input.disciplineId,
+          athleteCategoryIds: input.athleteCategoryIds,
         });
         const existing = await tx.competitionEvent.findFirst({
           where: { id: eventId, competitionId },
@@ -587,7 +652,7 @@ export const managerCompetitionsRoutes = new Hono()
             entityId: eventId,
             action: "UPDATE",
             ...actor,
-            metadata: { section: "events" },
+            metadata: { competitionId, section: "events" },
           },
         });
       });
@@ -623,7 +688,7 @@ export const managerCompetitionsRoutes = new Hono()
             action: "DELETE",
             reason: "Removed while configuring Draft",
             ...actor,
-            metadata: { section: "events" },
+            metadata: { competitionId, section: "events" },
           },
         });
       });

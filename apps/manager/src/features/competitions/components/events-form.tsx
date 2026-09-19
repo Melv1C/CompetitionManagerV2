@@ -38,7 +38,7 @@ import {
   type CompetitionCatalog,
   type CompetitionEvent,
 } from "@/features/competitions";
-import { instantToZonedInput, zonedInputToInstant } from "@/features/competitions/date-time";
+import { instantToZonedInput, requireValidZonedDate } from "@/features/competitions/date-time";
 
 type RoundDraft = {
   key: string;
@@ -281,12 +281,12 @@ function EventDialog({
               rounds: rounds.map((round) => ({
                 label: round.label,
                 scheduledStartAt: round.scheduledStartAt
-                  ? new Date(zonedInputToInstant(round.scheduledStartAt, timeZone)!)
+                  ? requireValidZonedDate(round.scheduledStartAt, timeZone, "Round start")
                   : null,
                 startGroups: round.startGroups.map((group) => ({
                   label: group.label,
                   scheduledStartAt: group.scheduledStartAt
-                    ? new Date(zonedInputToInstant(group.scheduledStartAt, timeZone)!)
+                    ? requireValidZonedDate(group.scheduledStartAt, timeZone, "Start Group start")
                     : null,
                 })),
               })),

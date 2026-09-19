@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { E2E_AUTH_FILES, E2E_URLS } from "./constants";
+import { E2E_AUTH_FILES, E2E_CATALOG_IDS, E2E_URLS } from "./constants";
 
 test.describe("manager competition setup", () => {
   test.describe.configure({ mode: "serial" });
@@ -63,6 +63,11 @@ test.describe("manager competition setup", () => {
       relay: true,
     });
 
+    await page.getByRole("button", { name: "Edit" }).first().click();
+    await page.getByRole("dialog").getByLabel("Description").fill("Championship sprint Final");
+    await page.getByRole("dialog").getByRole("button", { name: "Save Event" }).click();
+    await expect(page.getByText("Event saved")).toBeVisible();
+
     await expect(
       page.getByText("This Competition has everything required for publication."),
     ).toBeVisible();
@@ -76,10 +81,71 @@ test.describe("manager competition setup", () => {
       `${E2E_URLS.api}/api/manager/organizations/${primaryOrganizationId}/competitions/${competitionId}/audit`,
     );
     expect(audit.ok()).toBeTruthy();
-    const auditBody = (await audit.json()) as { entries: Array<{ action: string }> };
+    const auditBody = (await audit.json()) as {
+      entries: Array<{ entityType: string; action: string }>;
+    };
     expect(auditBody.entries.map((entry) => entry.action)).toEqual(
       expect.arrayContaining(["CREATE", "UPDATE", "STATE_TRANSITION"]),
     );
+    expect(auditBody.entries).toContainEqual(
+      expect.objectContaining({ entityType: "COMPETITION_EVENT", action: "UPDATE" }),
+    );
+  });
+
+  test("rejects Event catalog references owned by another Organization", async ({ page }) => {
+    await page.goto(E2E_URLS.manager);
+    await createDraft(page, `E2E tenant boundary ${Date.now()}`);
+    const organizationId = organizationIdFrom(page.url());
+    const competitionId = page.url().split("/").at(-1)!;
+    const detailResponse = await page.request.get(
+      `${E2E_URLS.api}/api/manager/organizations/${organizationId}/competitions/${competitionId}`,
+    );
+    expect(detailResponse.ok()).toBeTruthy();
+    const { competition } = (await detailResponse.json()) as {
+      competition: { updatedAt: string };
+    };
+    const eventUrl = `${E2E_URLS.api}/api/manager/organizations/${organizationId}/competitions/${competitionId}/events`;
+    const eventInput = {
+      expectedUpdatedAt: competition.updatedAt,
+      kind: "INDIVIDUAL",
+      relayLegCount: null,
+      resultEntryMode: "COMPETITION_MANAGER_WEB",
+      registerable: false,
+      capacity: null,
+      translations: [{ locale: "EN", name: "Tenant boundary Event", description: "" }],
+      prices: [],
+      rounds: [
+        {
+          label: "Final",
+          scheduledStartAt: "2027-06-12T10:00:00.000Z",
+          startGroups: [],
+        },
+      ],
+    };
+
+    const foreignDiscipline = await page.request.post(eventUrl, {
+      data: {
+        ...eventInput,
+        disciplineId: E2E_CATALOG_IDS.secondaryOrganizationDiscipline,
+        athleteCategoryIds: [E2E_CATALOG_IDS.athleteCategory],
+      },
+    });
+    expect(foreignDiscipline.status()).toBe(400);
+    await expect(foreignDiscipline.json()).resolves.toMatchObject({
+      error: "Discipline is not available to this Organization",
+    });
+
+    const foreignCategory = await page.request.post(eventUrl, {
+      data: {
+        ...eventInput,
+        disciplineId: E2E_CATALOG_IDS.discipline,
+        athleteCategoryIds: [E2E_CATALOG_IDS.secondaryOrganizationAthleteCategory],
+      },
+    });
+    expect(foreignCategory.status()).toBe(400);
+    await expect(foreignCategory.json()).resolves.toMatchObject({
+      error: "Athlete Category is not available to this Organization and Athletics Season",
+    });
   });
 
   test("stale edits are rejected and staff can delete an accidental Draft", async ({ browser }) => {

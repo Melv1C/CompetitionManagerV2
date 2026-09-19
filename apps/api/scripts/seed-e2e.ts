@@ -83,6 +83,21 @@ await Promise.all([
     update: { active: true },
   }),
   prisma.discipline.upsert({
+    where: { id: "20000000-0000-4000-8000-000000000099" },
+    create: {
+      id: "20000000-0000-4000-8000-000000000099",
+      organizationId: secondary.id,
+      code: "PRIVATE-200M",
+      measurement: "TIME",
+      translations: {
+        create: [
+          { locale: "EN", name: "Secondary Organization 200 metres", abbreviation: "200 m" },
+        ],
+      },
+    },
+    update: { active: true },
+  }),
+  prisma.discipline.upsert({
     where: { id: "20000000-0000-4000-8000-000000000002" },
     create: {
       id: "20000000-0000-4000-8000-000000000002",
@@ -112,6 +127,28 @@ await Promise.all([
           { locale: "EN", name: "Senior men", abbreviation: "SEN M" },
           { locale: "FR", name: "Seniors hommes", abbreviation: "SEN H" },
           { locale: "NL", name: "Senioren mannen", abbreviation: "SEN M" },
+        ],
+      },
+    },
+    update: { active: true },
+  }),
+  prisma.athleteCategory.upsert({
+    where: { id: "30000000-0000-4000-8000-000000000099" },
+    create: {
+      id: "30000000-0000-4000-8000-000000000099",
+      organizationId: secondary.id,
+      athleticsSeasonId: season.id,
+      provider: "E2E",
+      code: "PRIVATE-U18",
+      gender: "X",
+      maximumAge: 17,
+      translations: {
+        create: [
+          {
+            locale: "EN",
+            name: "Secondary Organization under 18",
+            abbreviation: "U18",
+          },
         ],
       },
     },

@@ -20,7 +20,7 @@ import {
   type Competition,
   type CompetitionCatalog,
 } from "@/features/competitions";
-import { instantToZonedInput, zonedInputToInstant } from "@/features/competitions/date-time";
+import { instantToZonedInput, requireValidZonedDate } from "@/features/competitions/date-time";
 
 const locales = ["EN", "FR", "NL"] as const;
 
@@ -113,14 +113,14 @@ export function CompetitionDetailsForm({
         translations: locales
           .filter((locale) => translations[locale].name.trim())
           .map((locale) => ({ locale, ...translations[locale] })),
-        startsAt: startsAt ? new Date(zonedInputToInstant(startsAt, timeZone)!) : null,
-        endsAt: endsAt ? new Date(zonedInputToInstant(endsAt, timeZone)!) : null,
+        startsAt: startsAt ? requireValidZonedDate(startsAt, timeZone, "Competition start") : null,
+        endsAt: endsAt ? requireValidZonedDate(endsAt, timeZone, "Competition end") : null,
         timeZone: timeZone.trim() || null,
         registrationOpensAt: registrationOpensAt
-          ? new Date(zonedInputToInstant(registrationOpensAt, timeZone)!)
+          ? requireValidZonedDate(registrationOpensAt, timeZone, "Registration opening")
           : null,
         registrationClosesAt: registrationClosesAt
-          ? new Date(zonedInputToInstant(registrationClosesAt, timeZone)!)
+          ? requireValidZonedDate(registrationClosesAt, timeZone, "Registration closing")
           : null,
         contactName: contactName.trim() || null,
         contactEmail: contactEmail.trim() || null,

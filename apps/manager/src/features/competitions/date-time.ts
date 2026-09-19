@@ -20,16 +20,14 @@ export function instantToZonedInput(instant: string | null, timeZone: string) {
 
 export function zonedInputToInstant(localValue: string, timeZone: string) {
   if (!localValue) return null;
-  const [datePart, timePart] = localValue.split("T");
-  if (!datePart || !timePart) return null;
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-  if (
-    [year, month, day, hour, minute].some((part) => part === undefined || !Number.isFinite(part))
-  ) {
-    return null;
-  }
-  const desired = Date.UTC(year!, month! - 1, day!, hour!, minute!);
+  const match = localValue.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const desired = Date.UTC(year, month - 1, day, hour, minute);
   let guess = desired;
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -59,5 +57,14 @@ export function zonedInputToInstant(localValue: string, timeZone: string) {
     );
     guess += desired - rendered;
   }
-  return new Date(guess).toISOString();
+  const instant = new Date(guess).toISOString();
+  return instantToZonedInput(instant, timeZone) === localValue ? instant : null;
+}
+
+export function requireValidZonedDate(localValue: string, timeZone: string, label: string) {
+  const instant = zonedInputToInstant(localValue, timeZone);
+  if (!instant) {
+    throw new Error(`${label} is not a valid local time in ${timeZone}. Choose another time.`);
+  }
+  return new Date(instant);
 }
