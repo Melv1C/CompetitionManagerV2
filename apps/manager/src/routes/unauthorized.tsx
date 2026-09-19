@@ -18,14 +18,14 @@ function UnauthorizedPage() {
 
   return (
     <AuthShell
-      eyebrow="Platform administration"
-      title="Keep every competition running smoothly."
-      description="Admin access is reserved for the people who maintain the platform."
+      eyebrow="Organization workspace"
+      title="Keep the whole event moving."
+      description="Plan competitions, coordinate schedules, and publish results with your organization."
     >
       <AccessDeniedCard
-        eyebrow="Admin access"
-        title="This account is not an admin"
-        description="Sign in with an admin account, or return to the competition frontend."
+        eyebrow="Organization access"
+        title="No organization found"
+        description="Ask an organization owner to invite this account, or sign in with a different one."
       >
         <Button className="sm:flex-1" onClick={handleSignOut}>
           Sign out

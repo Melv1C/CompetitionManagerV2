@@ -11,7 +11,8 @@ const queryClient = new QueryClient();
 
 export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
-    const { data: session } = await authClient.getSession();
+    const sessionResult = await authClient.getSession().catch(() => null);
+    const session = sessionResult?.data;
     const isPublicPage = location.pathname === "/login" || location.pathname === "/unauthorized";
 
     if (!session && !isPublicPage) {

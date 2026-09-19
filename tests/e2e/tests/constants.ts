@@ -2,6 +2,7 @@ export const E2E_URLS = {
   api: "http://localhost:3000",
   frontend: "http://localhost:5173",
   admin: "http://localhost:5174",
+  manager: "http://localhost:5175",
 } as const;
 
 export const E2E_USERS = {

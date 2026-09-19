@@ -117,12 +117,14 @@ function LoginForm({
   const displayDescription = description ?? t("loginForm.description");
 
   return (
-    <Card className={cn("w-full max-w-md", className)}>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">{displayTitle}</CardTitle>
-        <CardDescription>{displayDescription}</CardDescription>
+    <Card
+      className={cn("w-full max-w-md border-0 bg-card shadow-lg ring-1 ring-primary/10", className)}
+    >
+      <CardHeader className="px-6 pt-3 text-left sm:px-8">
+        <CardTitle className="text-2xl font-semibold tracking-[-0.025em]">{displayTitle}</CardTitle>
+        <CardDescription className="leading-6">{displayDescription}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 sm:px-8">
         <form id="login-form" onSubmit={form.handleSubmit(handleFormSubmit)}>
           <FieldGroup className="gap-6">
             {error && (
@@ -192,7 +194,7 @@ function LoginForm({
                 </Field>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
               {isLoading ? t("loginForm.loggingIn") : t("loginForm.login")}
             </Button>
             {providers.length > 0 && (
@@ -228,7 +230,7 @@ function LoginForm({
         </form>
       </CardContent>
       {showSignUp && (
-        <CardFooter className="justify-center">
+        <CardFooter className="border-primary/10 bg-muted/55 justify-center px-6 py-4 sm:px-8">
           <p className="text-muted-foreground text-sm">
             {t("loginForm.noAccount")}{" "}
             <button

@@ -25,6 +25,28 @@ const nl = {
       passwordRequired: "Wachtwoord is verplicht.",
     },
   },
+  signUpForm: {
+    title: "Maak je account aan",
+    description: "Gebruik je e-mailadres en een wachtwoord om te beginnen.",
+    name: "Naam",
+    email: "E-mail",
+    emailPlaceholder: "naam@voorbeeld.nl",
+    password: "Wachtwoord",
+    confirmPassword: "Bevestig wachtwoord",
+    showPassword: "Toon wachtwoord",
+    hidePassword: "Verberg wachtwoord",
+    createAccount: "Account aanmaken",
+    creatingAccount: "Account wordt aangemaakt...",
+    hasAccount: "Heb je al een account?",
+    login: "Inloggen",
+    errors: {
+      nameRequired: "Naam is verplicht.",
+      invalidEmail: "Voer een geldig e-mailadres in.",
+      passwordLength: "Het wachtwoord moet minimaal 8 tekens bevatten.",
+      confirmPasswordRequired: "Bevestig je wachtwoord.",
+      passwordMismatch: "De wachtwoorden komen niet overeen.",
+    },
+  },
 } satisfies Translations;
 
 export default nl;

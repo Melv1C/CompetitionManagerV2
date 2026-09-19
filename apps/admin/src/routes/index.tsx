@@ -2,6 +2,7 @@ import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } fro
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
+  Building2,
   CheckCircle,
   Database,
   ExternalLink,
@@ -95,6 +96,20 @@ function Index() {
                 <h3 className="font-medium">Manage Users</h3>
                 <p className="text-muted-foreground text-sm">
                   Create, edit, and manage application users
+                </p>
+              </div>
+            </a>
+            <a
+              href="/organizations"
+              className="hover:bg-muted/50 flex items-center gap-4 rounded-lg border p-4 transition-colors"
+            >
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Building2 className="text-primary h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-medium">Manage Organizations</h3>
+                <p className="text-muted-foreground text-sm">
+                  Create organizations and assign their owners
                 </p>
               </div>
             </a>

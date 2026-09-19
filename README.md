@@ -148,6 +148,14 @@ The script signs up the user via Better Auth, sets `role` to `admin`, and marks 
 
 Requires the same env as the API (`DATABASE_URL`, `BETTER_AUTH_SECRET`, etc.). Run `bun run env:validate` from the repo root first if unsure.
 
+## Account access
+
+- Frontend users can create an account with their name, email, and password.
+- The manager app has no public sign-up. A signed-in user needs membership in at least one organization to open it.
+- Admin accounts do not have public sign-up. Create the first one with the command above.
+
+Authentication currently uses email and password only. No social login provider is configured.
+
 ## Deployment
 
 Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Images are built from each app’s `Dockerfile` at the monorepo root.

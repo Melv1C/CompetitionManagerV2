@@ -50,11 +50,13 @@ describe("user schemas", () => {
         ipAddress: null,
         userAgent: null,
         userId: betterAuthId,
+        activeOrganizationId: betterAuthId,
       }),
     ).toMatchObject({
       token: "token",
       ipAddress: null,
       userId: betterAuthId,
+      activeOrganizationId: betterAuthId,
     });
   });
 });

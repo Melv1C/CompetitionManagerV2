@@ -25,6 +25,28 @@ const fr = {
       passwordRequired: "Le mot de passe est requis.",
     },
   },
+  signUpForm: {
+    title: "Créer votre compte",
+    description: "Utilisez votre adresse e-mail et un mot de passe pour commencer.",
+    name: "Nom",
+    email: "E-mail",
+    emailPlaceholder: "nom@exemple.fr",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    showPassword: "Afficher le mot de passe",
+    hidePassword: "Masquer le mot de passe",
+    createAccount: "Créer un compte",
+    creatingAccount: "Création du compte...",
+    hasAccount: "Vous avez déjà un compte ?",
+    login: "Se connecter",
+    errors: {
+      nameRequired: "Le nom est obligatoire.",
+      invalidEmail: "Saisissez une adresse e-mail valide.",
+      passwordLength: "Le mot de passe doit contenir au moins 8 caractères.",
+      confirmPasswordRequired: "Confirmez votre mot de passe.",
+      passwordMismatch: "Les mots de passe ne correspondent pas.",
+    },
+  },
 } satisfies Translations;
 
 export default fr;
