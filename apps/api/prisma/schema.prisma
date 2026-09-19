@@ -1021,8 +1021,9 @@ model CheckoutFeeSchedule {
 
 model RegistrationCart {
   id                        String                @id @default(uuid()) @db.Uuid
+  organizationId            String
   competitionId             String                @db.Uuid
-  competition               Competition           @relation(fields: [competitionId], references: [id], onDelete: Restrict)
+  competition               Competition           @relation(fields: [competitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
   submittedByUserId         String?
   submittedBy               User?                 @relation("CartSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   state                     RegistrationCartState
@@ -1042,7 +1043,7 @@ model RegistrationCart {
   lines   RegistrationCartLine[]
   payment RegistrationPayment?
 
-  @@unique([id, competitionId])
+  @@unique([id, competitionId, organizationId])
   @@index([competitionId, state, submittedAt])
   @@index([submittedByUserId])
   @@map("registration_cart")
@@ -1050,9 +1051,10 @@ model RegistrationCart {
 
 model RegistrationCartLine {
   id             String           @id @default(uuid()) @db.Uuid
+  organizationId String
   competitionId  String           @db.Uuid
   cartId         String           @db.Uuid
-  cart           RegistrationCart @relation(fields: [cartId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  cart           RegistrationCart @relation(fields: [cartId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
   eventEntryId   String?          @unique @db.Uuid
   eventEntry     EventEntry?      @relation(fields: [eventEntryId, competitionId], references: [id, competitionId], onDelete: Restrict)
   relayEntryId   String?          @unique @db.Uuid
@@ -1061,6 +1063,7 @@ model RegistrationCartLine {
 
   paymentAllocation PaymentAllocation?
 
+  @@unique([id, cartId, competitionId, organizationId])
   @@unique([eventEntryId, competitionId])
   @@unique([relayEntryId, competitionId])
   @@index([cartId])
@@ -1069,8 +1072,10 @@ model RegistrationCartLine {
 
 model RegistrationPayment {
   id                      String                   @id @default(uuid()) @db.Uuid
+  organizationId          String
+  competitionId           String                   @db.Uuid
   cartId                  String                   @unique @db.Uuid
-  cart                    RegistrationCart         @relation(fields: [cartId], references: [id], onDelete: Restrict)
+  cart                    RegistrationCart         @relation(fields: [cartId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
   payerUserId             String?
   payer                   User?                    @relation("PaymentPayer", fields: [payerUserId], references: [id], onDelete: SetNull)
   payerNameSnapshot       String
@@ -1087,6 +1092,8 @@ model RegistrationPayment {
   attempts    PaymentAttempt[]
   allocations PaymentAllocation[]
 
+  @@unique([cartId, competitionId, organizationId])
+  @@unique([id, cartId, competitionId, organizationId])
   @@index([payerUserId, createdAt])
   @@map("registration_payment")
 }
@@ -1122,14 +1129,19 @@ model PaymentProviderEvent {
 
 model PaymentAllocation {
   id              String               @id @default(uuid()) @db.Uuid
+  organizationId  String
+  competitionId   String               @db.Uuid
+  cartId          String               @db.Uuid
   paymentId       String               @db.Uuid
-  payment         RegistrationPayment  @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  payment         RegistrationPayment  @relation(fields: [paymentId, cartId, competitionId, organizationId], references: [id, cartId, competitionId, organizationId], onDelete: Restrict)
   cartLineId      String               @unique @db.Uuid
-  cartLine        RegistrationCartLine @relation(fields: [cartLineId], references: [id], onDelete: Restrict)
+  cartLine        RegistrationCartLine @relation(fields: [cartLineId, cartId, competitionId, organizationId], references: [id, cartId, competitionId, organizationId], onDelete: Restrict)
   eventPriceCents Int
 
   settlementLines SettlementLine[]
 
+  @@unique([cartLineId, cartId, competitionId, organizationId])
+  @@unique([id, competitionId, organizationId])
   @@index([paymentId])
   @@map("payment_allocation")
 }
@@ -1145,7 +1157,7 @@ model OrganizationSettlement {
   currency           String                   @default("EUR") @db.Char(3)
   providerTransferId String?                  @unique
   adjustmentOfId     String?                  @db.Uuid
-  adjustmentOf       OrganizationSettlement?  @relation("SettlementAdjustment", fields: [adjustmentOfId], references: [id], onDelete: Restrict)
+  adjustmentOf       OrganizationSettlement?  @relation("SettlementAdjustment", fields: [adjustmentOfId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
   adjustments        OrganizationSettlement[] @relation("SettlementAdjustment")
   createdByUserId    String?
   createdBy          User?                    @relation("SettlementCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
@@ -1155,16 +1167,19 @@ model OrganizationSettlement {
 
   lines SettlementLine[]
 
+  @@unique([id, competitionId, organizationId])
   @@index([organizationId, competitionId, state])
   @@map("organization_settlement")
 }
 
 model SettlementLine {
   id                  String                 @id @default(uuid()) @db.Uuid
+  organizationId      String
+  competitionId       String                 @db.Uuid
   settlementId        String                 @db.Uuid
-  settlement          OrganizationSettlement @relation(fields: [settlementId], references: [id], onDelete: Restrict)
+  settlement          OrganizationSettlement @relation(fields: [settlementId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
   paymentAllocationId String                 @db.Uuid
-  paymentAllocation   PaymentAllocation      @relation(fields: [paymentAllocationId], references: [id], onDelete: Restrict)
+  paymentAllocation   PaymentAllocation      @relation(fields: [paymentAllocationId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
   amountCents         Int
 
   @@unique([settlementId, paymentAllocationId])
@@ -1237,6 +1252,7 @@ model AuditEntry {
   actor            User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   actorDisplayName String?
   actorEmail       String?
+  /// Required by a database constraint for exceptional actions such as overrides, transfers, merges, and reopening.
   reason           String?
   metadata         Json?
   createdAt        DateTime        @default(now())

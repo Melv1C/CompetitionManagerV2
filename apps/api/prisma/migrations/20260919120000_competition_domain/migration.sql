@@ -586,6 +586,7 @@ CREATE TABLE "checkout_fee_schedule" (
 -- CreateTable
 CREATE TABLE "registration_cart" (
     "id" UUID NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "competitionId" UUID NOT NULL,
     "submittedByUserId" TEXT,
     "state" "RegistrationCartState" NOT NULL,
@@ -607,6 +608,7 @@ CREATE TABLE "registration_cart" (
 -- CreateTable
 CREATE TABLE "registration_cart_line" (
     "id" UUID NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "competitionId" UUID NOT NULL,
     "cartId" UUID NOT NULL,
     "eventEntryId" UUID,
@@ -619,6 +621,8 @@ CREATE TABLE "registration_cart_line" (
 -- CreateTable
 CREATE TABLE "registration_payment" (
     "id" UUID NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "competitionId" UUID NOT NULL,
     "cartId" UUID NOT NULL,
     "payerUserId" TEXT,
     "payerNameSnapshot" TEXT NOT NULL,
@@ -663,6 +667,9 @@ CREATE TABLE "payment_provider_event" (
 -- CreateTable
 CREATE TABLE "payment_allocation" (
     "id" UUID NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "competitionId" UUID NOT NULL,
+    "cartId" UUID NOT NULL,
     "paymentId" UUID NOT NULL,
     "cartLineId" UUID NOT NULL,
     "eventPriceCents" INTEGER NOT NULL,
@@ -691,6 +698,8 @@ CREATE TABLE "organization_settlement" (
 -- CreateTable
 CREATE TABLE "settlement_line" (
     "id" UUID NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "competitionId" UUID NOT NULL,
     "settlementId" UUID NOT NULL,
     "paymentAllocationId" UUID NOT NULL,
     "amountCents" INTEGER NOT NULL,
@@ -984,7 +993,7 @@ CREATE INDEX "registration_cart_competitionId_state_submittedAt_idx" ON "registr
 CREATE INDEX "registration_cart_submittedByUserId_idx" ON "registration_cart"("submittedByUserId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "registration_cart_id_competitionId_key" ON "registration_cart"("id", "competitionId");
+CREATE UNIQUE INDEX "registration_cart_id_competitionId_organizationId_key" ON "registration_cart"("id", "competitionId", "organizationId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "registration_cart_line_eventEntryId_key" ON "registration_cart_line"("eventEntryId");
@@ -996,6 +1005,9 @@ CREATE UNIQUE INDEX "registration_cart_line_relayEntryId_key" ON "registration_c
 CREATE INDEX "registration_cart_line_cartId_idx" ON "registration_cart_line"("cartId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "registration_cart_line_id_cartId_competitionId_organization_key" ON "registration_cart_line"("id", "cartId", "competitionId", "organizationId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "registration_cart_line_eventEntryId_competitionId_key" ON "registration_cart_line"("eventEntryId", "competitionId");
 
 -- CreateIndex
@@ -1003,6 +1015,12 @@ CREATE UNIQUE INDEX "registration_cart_line_relayEntryId_competitionId_key" ON "
 
 -- CreateIndex
 CREATE UNIQUE INDEX "registration_payment_cartId_key" ON "registration_payment"("cartId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "registration_payment_cartId_competitionId_organizationId_key" ON "registration_payment"("cartId", "competitionId", "organizationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "registration_payment_id_cartId_competitionId_organizationId_key" ON "registration_payment"("id", "cartId", "competitionId", "organizationId");
 
 -- CreateIndex
 CREATE INDEX "registration_payment_payerUserId_createdAt_idx" ON "registration_payment"("payerUserId", "createdAt");
@@ -1020,10 +1038,19 @@ CREATE INDEX "payment_provider_event_paymentAttemptId_idx" ON "payment_provider_
 CREATE UNIQUE INDEX "payment_allocation_cartLineId_key" ON "payment_allocation"("cartLineId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "payment_allocation_cartLineId_cartId_competitionId_organiza_key" ON "payment_allocation"("cartLineId", "cartId", "competitionId", "organizationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_allocation_id_competitionId_organizationId_key" ON "payment_allocation"("id", "competitionId", "organizationId");
+
+-- CreateIndex
 CREATE INDEX "payment_allocation_paymentId_idx" ON "payment_allocation"("paymentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "organization_settlement_providerTransferId_key" ON "organization_settlement"("providerTransferId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "organization_settlement_id_competitionId_organizationId_key" ON "organization_settlement"("id", "competitionId", "organizationId");
 
 -- CreateIndex
 CREATE INDEX "organization_settlement_organizationId_competitionId_state_idx" ON "organization_settlement"("organizationId", "competitionId", "state");
@@ -1254,7 +1281,7 @@ ALTER TABLE "round_result" ADD CONSTRAINT "round_result_scoringRuleVersionId_fke
 ALTER TABLE "result_attempt" ADD CONSTRAINT "result_attempt_roundResultId_fkey" FOREIGN KEY ("roundResultId") REFERENCES "round_result"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "registration_cart" ADD CONSTRAINT "registration_cart_competitionId_fkey" FOREIGN KEY ("competitionId") REFERENCES "competition"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "registration_cart" ADD CONSTRAINT "registration_cart_competitionId_organizationId_fkey" FOREIGN KEY ("competitionId", "organizationId") REFERENCES "competition"("id", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "registration_cart" ADD CONSTRAINT "registration_cart_submittedByUserId_fkey" FOREIGN KEY ("submittedByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1263,7 +1290,7 @@ ALTER TABLE "registration_cart" ADD CONSTRAINT "registration_cart_submittedByUse
 ALTER TABLE "registration_cart" ADD CONSTRAINT "registration_cart_feeScheduleId_fkey" FOREIGN KEY ("feeScheduleId") REFERENCES "checkout_fee_schedule"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_cartId_competitionId_fkey" FOREIGN KEY ("cartId", "competitionId") REFERENCES "registration_cart"("id", "competitionId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_cartId_competitionId_organizationId_fkey" FOREIGN KEY ("cartId", "competitionId", "organizationId") REFERENCES "registration_cart"("id", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_eventEntryId_competitionId_fkey" FOREIGN KEY ("eventEntryId", "competitionId") REFERENCES "event_entry"("id", "competitionId") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1272,7 +1299,7 @@ ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_even
 ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_relayEntryId_competitionId_fkey" FOREIGN KEY ("relayEntryId", "competitionId") REFERENCES "relay_entry"("id", "competitionId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "registration_payment" ADD CONSTRAINT "registration_payment_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "registration_cart"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "registration_payment" ADD CONSTRAINT "registration_payment_cartId_competitionId_organizationId_fkey" FOREIGN KEY ("cartId", "competitionId", "organizationId") REFERENCES "registration_cart"("id", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "registration_payment" ADD CONSTRAINT "registration_payment_payerUserId_fkey" FOREIGN KEY ("payerUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1284,10 +1311,10 @@ ALTER TABLE "payment_attempt" ADD CONSTRAINT "payment_attempt_paymentId_fkey" FO
 ALTER TABLE "payment_provider_event" ADD CONSTRAINT "payment_provider_event_paymentAttemptId_fkey" FOREIGN KEY ("paymentAttemptId") REFERENCES "payment_attempt"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "payment_allocation" ADD CONSTRAINT "payment_allocation_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "registration_payment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "payment_allocation" ADD CONSTRAINT "payment_allocation_paymentId_cartId_competitionId_organiza_fkey" FOREIGN KEY ("paymentId", "cartId", "competitionId", "organizationId") REFERENCES "registration_payment"("id", "cartId", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "payment_allocation" ADD CONSTRAINT "payment_allocation_cartLineId_fkey" FOREIGN KEY ("cartLineId") REFERENCES "registration_cart_line"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "payment_allocation" ADD CONSTRAINT "payment_allocation_cartLineId_cartId_competitionId_organiz_fkey" FOREIGN KEY ("cartLineId", "cartId", "competitionId", "organizationId") REFERENCES "registration_cart_line"("id", "cartId", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1296,16 +1323,16 @@ ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_or
 ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_competitionId_organizationId_fkey" FOREIGN KEY ("competitionId", "organizationId") REFERENCES "competition"("id", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_adjustmentOfId_fkey" FOREIGN KEY ("adjustmentOfId") REFERENCES "organization_settlement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_adjustmentOfId_competitionId_organ_fkey" FOREIGN KEY ("adjustmentOfId", "competitionId", "organizationId") REFERENCES "organization_settlement"("id", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "organization_settlement" ADD CONSTRAINT "organization_settlement_createdByUserId_fkey" FOREIGN KEY ("createdByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "settlement_line" ADD CONSTRAINT "settlement_line_settlementId_fkey" FOREIGN KEY ("settlementId") REFERENCES "organization_settlement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "settlement_line" ADD CONSTRAINT "settlement_line_settlementId_competitionId_organizationId_fkey" FOREIGN KEY ("settlementId", "competitionId", "organizationId") REFERENCES "organization_settlement"("id", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "settlement_line" ADD CONSTRAINT "settlement_line_paymentAllocationId_fkey" FOREIGN KEY ("paymentAllocationId") REFERENCES "payment_allocation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "settlement_line" ADD CONSTRAINT "settlement_line_paymentAllocationId_competitionId_organiza_fkey" FOREIGN KEY ("paymentAllocationId", "competitionId", "organizationId") REFERENCES "payment_allocation"("id", "competitionId", "organizationId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "result_import_batch" ADD CONSTRAINT "result_import_batch_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1363,6 +1390,10 @@ ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_targ
 ALTER TABLE "registration_cart_line" ADD CONSTRAINT "registration_cart_line_price" CHECK ("unitPriceCents" >= 0);
 ALTER TABLE "registration_payment" ADD CONSTRAINT "registration_payment_amounts" CHECK ("eventEntriesAmountCents" >= 0 AND "checkoutFeeCents" >= 0 AND "totalCents" = "eventEntriesAmountCents" + "checkoutFeeCents");
 ALTER TABLE "payment_allocation" ADD CONSTRAINT "payment_allocation_amount" CHECK ("eventPriceCents" >= 0);
+ALTER TABLE "audit_entry" ADD CONSTRAINT "audit_entry_exceptional_action_reason" CHECK (
+  "action" NOT IN ('OVERRIDE', 'CANCEL', 'TRANSFER', 'MERGE', 'REOPEN', 'REVOKE_OFFICIALIZATION', 'DELETE')
+  OR NULLIF(BTRIM("reason"), '') IS NOT NULL
+);
 
 -- Active claims and operational uniqueness use partial indexes because historical rows are retained.
 CREATE UNIQUE INDEX "athlete_registration_one_active_claim" ON "athlete_registration"("competitionId", "athleteId") WHERE "state" IN ('PENDING_PAYMENT', 'CONFIRMED');
@@ -1383,7 +1414,10 @@ DECLARE
   discipline_organization_id TEXT;
 BEGIN
   SELECT "organizationId" INTO competition_organization_id FROM "competition" WHERE "id" = NEW."competitionId";
-  SELECT "organizationId" INTO discipline_organization_id FROM "discipline" WHERE "id" = NEW."disciplineId";
+  SELECT "organizationId" INTO discipline_organization_id
+  FROM "discipline"
+  WHERE "id" = NEW."disciplineId"
+  FOR SHARE;
   IF discipline_organization_id IS NOT NULL AND discipline_organization_id <> competition_organization_id THEN
     RAISE EXCEPTION 'Competition Event cannot use another Organization''s Discipline';
   END IF;
@@ -1403,7 +1437,10 @@ BEGIN
   SELECT c."organizationId" INTO competition_organization_id
   FROM "competition_event" e JOIN "competition" c ON c."id" = e."competitionId"
   WHERE e."id" = NEW."competitionEventId";
-  SELECT "organizationId" INTO category_organization_id FROM "athlete_category" WHERE "id" = NEW."athleteCategoryId";
+  SELECT "organizationId" INTO category_organization_id
+  FROM "athlete_category"
+  WHERE "id" = NEW."athleteCategoryId"
+  FOR SHARE;
   IF category_organization_id IS NOT NULL AND category_organization_id <> competition_organization_id THEN
     RAISE EXCEPTION 'Competition Event cannot use another Organization''s Athlete Category';
   END IF;
@@ -1415,11 +1452,116 @@ CREATE TRIGGER "competition_event_category_scope"
 BEFORE INSERT OR UPDATE OF "competitionEventId", "athleteCategoryId" ON "competition_event_eligibility"
 FOR EACH ROW EXECUTE FUNCTION "enforce_competition_event_category_scope"();
 
+-- Catalog ownership changes must preserve the scope of every existing reference.
+CREATE FUNCTION "enforce_discipline_reference_scope"() RETURNS trigger AS $$
+BEGIN
+  IF NEW."organizationId" IS DISTINCT FROM OLD."organizationId" AND NEW."organizationId" IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM "competition_event" e
+    JOIN "competition" c ON c."id" = e."competitionId"
+    WHERE e."disciplineId" = NEW."id"
+      AND c."organizationId" <> NEW."organizationId"
+  ) THEN
+    RAISE EXCEPTION 'Discipline ownership change would leave a Competition Event outside its Organization scope';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "discipline_reference_scope"
+BEFORE UPDATE OF "organizationId" ON "discipline"
+FOR EACH ROW EXECUTE FUNCTION "enforce_discipline_reference_scope"();
+
+CREATE FUNCTION "enforce_athlete_category_reference_scope"() RETURNS trigger AS $$
+BEGIN
+  IF NEW."organizationId" IS DISTINCT FROM OLD."organizationId" AND NEW."organizationId" IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM "competition_event_eligibility" eligibility
+    JOIN "competition_event" e ON e."id" = eligibility."competitionEventId"
+    JOIN "competition" c ON c."id" = e."competitionId"
+    WHERE eligibility."athleteCategoryId" = NEW."id"
+      AND c."organizationId" <> NEW."organizationId"
+  ) THEN
+    RAISE EXCEPTION 'Athlete Category ownership change would leave Competition Event eligibility outside its Organization scope';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "athlete_category_reference_scope"
+BEFORE UPDATE OF "organizationId" ON "athlete_category"
+FOR EACH ROW EXECUTE FUNCTION "enforce_athlete_category_reference_scope"();
+
+-- Polymorphic import mappings must resolve to an entity of the declared type in the same Competition.
+CREATE FUNCTION "enforce_external_entity_mapping_target"() RETURNS trigger AS $$
+DECLARE
+  target_is_valid BOOLEAN;
+BEGIN
+  target_is_valid := CASE NEW."entityType"
+    WHEN 'ATHLETE' THEN EXISTS (
+      SELECT 1
+      FROM "athlete_registration" registration
+      WHERE registration."competitionId" = NEW."competitionId"
+        AND registration."athleteId" = NEW."internalEntityId"
+    )
+    WHEN 'COMPETITION_EVENT' THEN EXISTS (
+      SELECT 1
+      FROM "competition_event" e
+      WHERE e."id" = NEW."internalEntityId"
+        AND e."competitionId" = NEW."competitionId"
+    )
+    WHEN 'ROUND' THEN EXISTS (
+      SELECT 1
+      FROM "round" r
+      JOIN "competition_event" e ON e."id" = r."competitionEventId"
+      WHERE r."id" = NEW."internalEntityId"
+        AND e."competitionId" = NEW."competitionId"
+    )
+    WHEN 'START_GROUP' THEN EXISTS (
+      SELECT 1
+      FROM "start_group" group_row
+      JOIN "round" r ON r."id" = group_row."roundId"
+      JOIN "competition_event" e ON e."id" = r."competitionEventId"
+      WHERE group_row."id" = NEW."internalEntityId"
+        AND e."competitionId" = NEW."competitionId"
+    )
+    WHEN 'ROUND_ENTRY' THEN EXISTS (
+      SELECT 1
+      FROM "round_entry" entry
+      JOIN "competition_event" e ON e."id" = entry."competitionEventId"
+      WHERE entry."id" = NEW."internalEntityId"
+        AND e."competitionId" = NEW."competitionId"
+    )
+    WHEN 'RESULT' THEN EXISTS (
+      SELECT 1
+      FROM "round_result" result
+      JOIN "round_entry" entry ON entry."id" = result."roundEntryId"
+      JOIN "competition_event" e ON e."id" = entry."competitionEventId"
+      WHERE result."id" = NEW."internalEntityId"
+        AND e."competitionId" = NEW."competitionId"
+    )
+    ELSE FALSE
+  END;
+
+  IF NOT target_is_valid THEN
+    RAISE EXCEPTION 'External Entity Mapping target must match its declared type and Competition';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "external_entity_mapping_target"
+BEFORE INSERT OR UPDATE OF "competitionId", "entityType", "internalEntityId" ON "external_entity_mapping"
+FOR EACH ROW EXECUTE FUNCTION "enforce_external_entity_mapping_target"();
+
 -- Combined Event composition is an ordered, same-Competition tree with no shared child or cycle.
 CREATE FUNCTION "prevent_combined_event_cycle"() RETURNS trigger AS $$
 DECLARE
   parent_kind "CompetitionEventKind";
 BEGIN
+  -- Serialize graph changes for one Competition before reading its transitive closure.
+  PERFORM pg_advisory_xact_lock(hashtextextended(NEW."competitionId"::TEXT, 0));
+
   SELECT "kind" INTO parent_kind FROM "competition_event" WHERE "id" = NEW."combinedCompetitionEventId";
   IF parent_kind <> 'COMBINED' THEN
     RAISE EXCEPTION 'Combined Event parent must have COMBINED kind';
