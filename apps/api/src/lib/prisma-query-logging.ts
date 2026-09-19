@@ -5,14 +5,17 @@ type PrismaQueryEvent = {
   target: string;
 };
 
-type PrismaQueryLogDefinition = {
-  emit: "event";
-  level: "query";
-};
+export const prismaQueryLogConfig = [{ emit: "event", level: "query" }] as const;
 
-export const getPrismaQueryLogConfig = (appEnv: string): PrismaQueryLogDefinition[] =>
-  appEnv === "development" ? [{ emit: "event", level: "query" }] : [];
+const getQueryOperation = (query: string) =>
+  query.match(/^\s*(DELETE|INSERT|MERGE|SELECT|UPDATE|WITH)\b/i)?.[1]?.toUpperCase() ?? "OTHER";
 
-export const getSafePrismaQueryMetadata = ({ duration }: PrismaQueryEvent) => ({
+export const getPrismaQueryMetadata = (
+  { duration, params, query, target }: PrismaQueryEvent,
+  appEnv: string,
+) => ({
   durationMs: duration,
+  operation: getQueryOperation(query),
+  target,
+  ...(appEnv === "development" ? { params, query } : {}),
 });

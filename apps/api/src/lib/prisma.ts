@@ -4,7 +4,7 @@ import type { DefaultArgs } from "@prisma/client/runtime/client";
 import { ENV } from "varlock/env";
 
 import { logger } from "@/lib/logger";
-import { getPrismaQueryLogConfig, getSafePrismaQueryMetadata } from "@/lib/prisma-query-logging";
+import { getPrismaQueryMetadata, prismaQueryLogConfig } from "@/lib/prisma-query-logging";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient<"query", Prisma.GlobalOmitConfig | undefined, DefaultArgs> | undefined;
@@ -19,12 +19,12 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: getPrismaQueryLogConfig(ENV.APP_ENV),
+    log: [...prismaQueryLogConfig],
   });
 
 prisma.$on("query", (e) => {
   logger.debug("Prisma query completed", {
-    metadata: getSafePrismaQueryMetadata(e),
+    metadata: getPrismaQueryMetadata(e, ENV.APP_ENV),
   });
 });
 

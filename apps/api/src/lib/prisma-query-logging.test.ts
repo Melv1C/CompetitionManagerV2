@@ -1,25 +1,52 @@
 import { describe, expect, it } from "vitest";
 
-import { getPrismaQueryLogConfig, getSafePrismaQueryMetadata } from "./prisma-query-logging";
+import { getPrismaQueryMetadata, prismaQueryLogConfig } from "./prisma-query-logging";
 
 describe("Prisma query logging", () => {
-  it("enables query events only in development", () => {
-    expect(getPrismaQueryLogConfig("development")).toEqual([{ emit: "event", level: "query" }]);
-    expect(getPrismaQueryLogConfig("test")).toEqual([]);
-    expect(getPrismaQueryLogConfig("staging")).toEqual([]);
-    expect(getPrismaQueryLogConfig("production")).toEqual([]);
+  const queryEvent = {
+    duration: 12,
+    params: '["private@example.com"]',
+    query: 'SELECT * FROM "User" WHERE "email" = $1',
+    target: "quaint::connector::metrics",
+  };
+
+  it("enables query events in every environment", () => {
+    expect(prismaQueryLogConfig).toEqual([{ emit: "event", level: "query" }]);
   });
 
-  it("keeps query text and parameters out of metadata", () => {
-    const metadata = getSafePrismaQueryMetadata({
-      duration: 12,
+  it.each(["test", "staging", "production"])(
+    "keeps query text and parameters out of %s metadata",
+    (appEnv) => {
+      const metadata = getPrismaQueryMetadata(queryEvent, appEnv);
+
+      expect(metadata).toEqual({
+        durationMs: 12,
+        operation: "SELECT",
+        target: "quaint::connector::metrics",
+      });
+      expect(metadata).not.toHaveProperty("params");
+      expect(metadata).not.toHaveProperty("query");
+      expect(JSON.stringify(metadata)).not.toContain("private@example.com");
+    },
+  );
+
+  it("includes query text and parameters in development metadata", () => {
+    expect(getPrismaQueryMetadata(queryEvent, "development")).toEqual({
+      durationMs: 12,
+      operation: "SELECT",
       params: '["private@example.com"]',
       query: 'SELECT * FROM "User" WHERE "email" = $1',
       target: "quaint::connector::metrics",
     });
+  });
 
-    expect(metadata).toEqual({ durationMs: 12 });
+  it("does not copy unknown query text into the operation field", () => {
+    const metadata = getPrismaQueryMetadata(
+      { ...queryEvent, query: "private@example.com" },
+      "production",
+    );
+
+    expect(metadata.operation).toBe("OTHER");
     expect(JSON.stringify(metadata)).not.toContain("private@example.com");
-    expect(JSON.stringify(metadata)).not.toContain("SELECT");
   });
 });
