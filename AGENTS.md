@@ -20,12 +20,19 @@ This is a Bun and Turborepo monorepo. Read `README.md` and the relevant package 
 
 ## Verification
 
-Run focused tests while developing. Before finishing a repository-wide change, run:
+After a clean checkout, generate the ignored environment types and Prisma client before running verification:
 
 ```bash
+bun run env:generate
+bun run prisma:generate
+```
+
+Build workspace packages before checks that consume their emitted types. Run focused tests while developing. Before finishing a repository-wide change, run:
+
+```bash
+bun run build
 bun run check
 bun run test
-bun run build
 ```
 
 Report any command that could not run and why.
