@@ -1,0 +1,3 @@
+# Use explicit, resumable Competition Draft setup
+
+Organization Owners and Organization Staff configure a Competition through an Organization-scoped, resumable Draft with explicit saves for details, pricing, and Events. Publication is a separate manual action that requires the Draft to pass Publication Readiness; configured timestamps do not publish or change registration state automatically in this release. The Competition's primary locale is fixed when the Draft is created so that required localized identity remains stable. Relay Events have a configurable positive leg count with a default of four.

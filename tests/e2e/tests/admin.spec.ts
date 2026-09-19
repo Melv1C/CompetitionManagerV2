@@ -53,8 +53,8 @@ test.describe("as admin", () => {
     const ownerContext = await browser.newContext({ storageState: E2E_AUTH_FILES.user });
     const managerPage = await ownerContext.newPage();
     await managerPage.goto(E2E_URLS.manager);
-    await expect(managerPage).toHaveURL(`${E2E_URLS.manager}/`);
-    await expect(managerPage.getByRole("heading", { name: /Welcome to/i })).toBeVisible();
+    await expect(managerPage).toHaveURL(/\/organizations\/[A-Za-z0-9]{32}\/competitions$/);
+    await expect(managerPage.getByRole("heading", { name: "Competitions" })).toBeVisible();
     await ownerContext.close();
   });
 });

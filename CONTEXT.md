@@ -98,6 +98,10 @@ _Avoid_: Interface translation, separate localized Competition
 The operational progression Draft, Published, In Progress, Completed, and Archived. Scheduled transitions may be configured, but authorized Organization staff may explicitly override them with an audit entry.
 _Avoid_: Result status, payment status
 
+**Competition Publication Readiness**:
+The completeness check a Draft Competition must pass before publication, covering its identity, dates, contact, Venue, Events, eligibility, schedules, and applicable prices.
+_Avoid_: Draft validity, automatic publication
+
 **Registration State**:
 The independently controlled registration availability of an Athletics Competition: Scheduled, Open, or Closed. Configured times may drive transitions, but authorized Organization staff may explicitly override them with an audit entry.
 _Avoid_: Competition lifecycle, Athlete Registration status

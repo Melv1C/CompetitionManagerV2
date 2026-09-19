@@ -5,6 +5,7 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { ManagerLayout } from "@/features/layout";
 import { authClient } from "@/lib/auth-client";
 import { getManagerAuthRedirect } from "@/lib/auth-routing";
 
@@ -35,15 +36,21 @@ export const Route = createRootRoute({
     if (destination) {
       throw redirect({ to: destination });
     }
+
+    return {
+      isPublicPage: location.pathname === "/login" || location.pathname === "/unauthorized",
+      organizations: organizationsResult?.data ?? [],
+    };
   },
   component: RootComponent,
 });
 
 function RootComponent() {
+  const { isPublicPage, organizations } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <UICoreProvider i18nConfig={{ locale: "en" }}>
-        <Outlet />
+        {isPublicPage ? <Outlet /> : <ManagerLayout organizations={organizations} />}
       </UICoreProvider>
       <TanStackDevtools
         plugins={[

@@ -3,3 +3,19 @@
 
 @source "../../../packages/ui/dist";
 @import "@repo/ui/index.css";
+
+@layer base {
+  :root {
+    --manager-track: #155e75;
+    --manager-lane: #d9eef2;
+    --manager-ink: #172033;
+  }
+}
+
+@layer utilities {
+  .manager-canvas {
+    background-color: #f7fafb;
+    background-image: linear-gradient(rgba(21, 94, 117, 0.035) 1px, transparent 1px);
+    background-size: 100% 3rem;
+  }
+}

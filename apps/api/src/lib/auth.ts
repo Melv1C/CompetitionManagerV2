@@ -1,3 +1,4 @@
+import { organizationAccessControl, organizationRoles } from "@repo/utils";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin, organization } from "better-auth/plugins";
@@ -15,5 +16,12 @@ export const auth = betterAuth({
     enabled: true,
   },
   trustedOrigins: [ENV.FRONTEND_URL, ENV.MANAGER_URL, ENV.ADMIN_URL],
-  plugins: [admin(), organization({ allowUserToCreateOrganization: false })],
+  plugins: [
+    admin(),
+    organization({
+      allowUserToCreateOrganization: false,
+      ac: organizationAccessControl,
+      roles: organizationRoles,
+    }),
+  ],
 });

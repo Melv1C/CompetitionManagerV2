@@ -7,9 +7,9 @@ The monorepo uses [Bun](https://bun.sh/) and [Turborepo](https://turbo.build/rep
 ## Current implementation
 
 - The public frontend supports email/password sign-up, sign-in, and API health display.
-- The Organization manager requires a signed-in, email-verified User with at least one Organization Membership.
+- The Organization manager requires a signed-in, email-verified User with at least one Organization Membership. Owners and Organization Staff can create resumable Competition Drafts, configure their Venue, contact, registration schedule, pricing, Events, eligibility, Rounds, and Start Groups, then publish a complete Competition.
 - The platform-admin application manages Users and Organizations and embeds Prisma Studio for authorized database access.
-- The PostgreSQL schema models the Competition, athlete, registration, pricing, result, interchange, payment, settlement, and audit domains; application workflows over those models remain planned.
+- The PostgreSQL schema models the Competition, athlete, registration, pricing, result, interchange, payment, settlement, and audit domains. Competition setup and publication are implemented; registration, payment, result, and interchange workflows remain planned.
 - The API provides Better Auth endpoints, platform-admin Organization endpoints, health and Prometheus endpoints, and a Socket.IO endpoint that reads Better Auth sessions.
 - The API and worker share a Redis-backed BullMQ contract. The only current application job is an `api.started` delivery check.
 
@@ -167,7 +167,7 @@ Keep secrets and local overrides out of version control.
 Authentication currently uses email and password only. Google sign-in is planned, but no social provider is configured.
 
 - The public frontend allows account creation with a name, email address, and password.
-- The manager has no public sign-up. A User needs a verified email and at least one Organization Membership.
+- The manager has no public sign-up. A User needs a verified email and at least one Organization Membership. Organization Owners and members with the `staff` role can configure Competitions; ordinary members cannot mutate Competition setup.
 - The admin has no public sign-up. A User needs the platform `admin` role.
 - Email delivery is not configured. A platform administrator can mark an account's email as verified in the admin User editor.
 

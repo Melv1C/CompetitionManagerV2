@@ -7,6 +7,7 @@ import { isAdmin, isVerified, useAuth } from "@/middlewares/use-auth";
 import { useLogger } from "@/middlewares/use-logger";
 
 import { healthRoutes } from "./health";
+import { managerCompetitionsRoutes } from "./manager-competitions";
 import { organizationsRoutes } from "./organizations";
 
 export const routes = new Hono()
@@ -25,6 +26,7 @@ export const routes = new Hono()
   //////////////////////////////////////////////////
   // Add routes with logging middleware applied here
   .route("/health", healthRoutes)
+  .route("/manager/organizations", managerCompetitionsRoutes)
   .route("/organizations", organizationsRoutes)
 
   //////////////////////////////////////////////////
