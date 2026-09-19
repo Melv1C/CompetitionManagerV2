@@ -35,14 +35,13 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate clean-checkout artifacts
+        run: |
+          bun run env:generate
+          bun run prisma:generate
+
       - name: Prisma Validate
         run: bun run prisma:validate
-
-      - name: Prisma Generate
-        run: bun run prisma:generate
-
-      - name: Varlock Generate
-        run: bun run env:generate
 
       - name: Varlock Validate (Development)
         run: bun run env:validate

@@ -71,13 +71,28 @@ For a full local stack in containers, see [docker-compose.yml](./docker-compose.
 Install dependencies:
 
 ```bash
-bun install
+bun install --frozen-lockfile
+```
+
+Generate the environment types and Prisma client. These generated files are ignored by Git, so run this after every clean checkout and whenever their source schemas change:
+
+```bash
+bun run env:generate
+bun run prisma:generate
 ```
 
 Check that your environment variables are set up correctly:
 
 ```bash
 bun run env:validate
+```
+
+To verify a clean checkout, build the workspace packages before running the checks that consume their emitted types:
+
+```bash
+bun run build
+bun run check
+bun run test
 ```
 
 Start the development infrastructure (PostgreSQL and Redis):
