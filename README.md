@@ -1,72 +1,75 @@
-# Fullstack Turbo Kit
+# Competition Manager
 
-A production-ready [Turborepo](https://turbo.build/repo) monorepo starter with full-stack applications and shared packages.
+Competition Manager is a multi-tenant web application for organizing athletics competitions, accepting athlete registrations, and publishing results. This repository is under active development. It currently provides the account, Organization, deployment, and background-job foundations; most competition, registration, payment, and result workflows described in the domain documents are planned rather than implemented.
 
-## What's Inside?
+The monorepo uses [Bun](https://bun.sh/) and [Turborepo](https://turbo.build/repo). All applications and packages are TypeScript.
 
-### Apps
+## Current implementation
 
-- **api** — [Hono](https://hono.dev/) API server with [Better Auth](https://better-auth.com/), [Prisma](https://www.prisma.io/), and [Socket.IO](https://socket.io/)
-- **frontend** — [Vite](https://vitejs.dev/) + [React](https://react.dev/) application
-- **manager** — Vite + React organization-management application
-- **admin** — Vite + React admin application (real-time logs via WebSockets)
-- **worker** — background-job process
+- The public frontend supports email/password sign-up, sign-in, and API health display.
+- The Organization manager requires a signed-in, email-verified User with at least one Organization Membership.
+- The platform-admin application manages Users and Organizations and embeds Prisma Studio for authorized database access.
+- The API provides Better Auth endpoints, platform-admin Organization endpoints, health and Prometheus endpoints, and a Socket.IO endpoint that reads Better Auth sessions.
+- The API and worker share a Redis-backed BullMQ contract. The only current application job is an `api.started` delivery check.
 
-### Packages
+See [CONTEXT.md](./CONTEXT.md) for the planned domain language and [the architectural decision records](./docs/adr/) for accepted product and architecture decisions.
 
-- **@repo/utils** — Shared utility functions, Zod schemas, and Socket.IO types
-- **@repo/jobs** — Shared BullMQ queue and worker contract
-- **@repo/typescript-config** — TypeScript configurations
-- **@repo/ui** — Shared UI components and design system
+## Repository layout
 
-All packages and apps are written in [TypeScript](https://www.typescriptlang.org/).
+### Applications
+
+| Path            | Package name | Responsibility                                                 |
+| --------------- | ------------ | -------------------------------------------------------------- |
+| `apps/api`      | `api`        | Hono API, Better Auth, Prisma, metrics, logging, and Socket.IO |
+| `apps/frontend` | `frontend`   | Public and registrant React application                        |
+| `apps/manager`  | `manager`    | Organization manager React application                         |
+| `apps/admin`    | `admin`      | Platform-administration React application                      |
+| `apps/worker`   | `worker`     | BullMQ background-job consumer                                 |
+
+### Shared packages and tests
+
+| Path                         | Package name              | Responsibility                                               |
+| ---------------------------- | ------------------------- | ------------------------------------------------------------ |
+| `packages/jobs`              | `@repo/jobs`              | Queue names, typed job payloads, and BullMQ adapters         |
+| `packages/utils`             | `@repo/utils`             | Shared schemas, utilities, auth routing, and Socket.IO types |
+| `packages/ui`                | `@repo/ui`                | Reusable React components, styles, and locale resources      |
+| `packages/typescript-config` | `@repo/typescript-config` | Shared TypeScript configuration                              |
+| `tests/e2e`                  | `e2e`                     | Playwright tests against the Docker-based application stack  |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  subgraph clients["Browser clients"]
-    FE[frontend<br/>Vite + React]
-    AD[admin<br/>Vite + React]
+  subgraph clients[Browser clients]
+    FE[frontend]
+    MG[manager]
+    AD[admin]
   end
 
-  subgraph api["api"]
-    HONO[Hono REST /api]
-    AUTH[Better Auth]
-    SIO[Socket.IO]
+  subgraph server[Server applications]
+    API[Hono API and Socket.IO]
+    WORKER[BullMQ worker]
   end
 
   DB[(PostgreSQL)]
   REDIS[(Redis)]
-  WORKER[worker process]
 
-  FE -->|HTTP + cookies| HONO
-  FE -->|auth| AUTH
-  AD -->|HTTP + cookies| HONO
-  AD -->|auth| AUTH
-  AD -->|WebSocket| SIO
-
-  HONO --> DB
-  AUTH --> DB
-  SIO --> AUTH
-  HONO -->|enqueue BullMQ jobs| REDIS
-  REDIS -->|deliver BullMQ jobs| WORKER
+  FE -->|HTTP and auth cookies| API
+  MG -->|HTTP and auth cookies| API
+  AD -->|HTTP, auth cookies, Socket.IO| API
+  API -->|Prisma| DB
+  API -->|enqueue jobs| REDIS
+  REDIS -->|deliver jobs| WORKER
 ```
 
-| Connection                       | Protocol              | Purpose                           |
-| -------------------------------- | --------------------- | --------------------------------- |
-| frontend / admin / manager → api | HTTP (`/api/*`)       | REST API, health checks           |
-| frontend / admin / manager → api | HTTP (Better Auth)    | Sign-in, sessions, cookies        |
-| admin → api                      | WebSocket (Socket.IO) | Real-time admin rooms (e.g. logs) |
-| api → PostgreSQL                 | Prisma                | Persistence                       |
-| api → Redis                      | BullMQ                | Enqueue durable background jobs   |
-| worker → Redis                   | BullMQ                | Consume durable background jobs   |
+The API listens on `API_PORT`, which defaults to `3000`. The three React applications run on separate Vite development servers. Socket.IO shares the API HTTP server and accepts configured frontend and admin origins.
 
-In development, apps run separately via Turbo (`bun run dev`). The API listens on `API_PORT` (default `3000`); frontend, manager, and admin use Vite dev servers. Socket.IO shares the API HTTP server and allows CORS from `FRONTEND_URL`, `MANAGER_URL`, and `ADMIN_URL`.
+## Prerequisites
 
-For a full local stack in containers, see [docker-compose.yml](./docker-compose.yml) (Postgres + all three apps).
+- Bun 1.4.2, as declared by `packageManager` in `package.json`
+- Docker with Docker Compose for PostgreSQL, Redis, integration tests, and end-to-end tests
 
-## Getting Started
+## Local development
 
 Install dependencies:
 
@@ -74,20 +77,48 @@ Install dependencies:
 bun install --frozen-lockfile
 ```
 
-Generate the environment types and Prisma client. These generated files are ignored by Git, so run this after every clean checkout and whenever their source schemas change:
+Generate the ignored Varlock types and Prisma client. Run these commands after every clean checkout and whenever their schemas change:
 
 ```bash
 bun run env:generate
 bun run prisma:generate
 ```
 
-Check that your environment variables are set up correctly:
+Start PostgreSQL and Redis:
+
+```bash
+bun run docker:db
+```
+
+This uses [docker-compose.db.yml](./docker-compose.db.yml). Stop the services with `bun run docker:db:down`.
+
+Validate the development environment and apply local database migrations:
 
 ```bash
 bun run env:validate
+bun run prisma:migrate
 ```
 
-To verify a clean checkout, build the workspace packages before running the checks that consume their emitted types:
+Start all five applications:
+
+```bash
+bun run dev
+```
+
+Default development URLs:
+
+| Application | URL                     |
+| ----------- | ----------------------- |
+| API         | `http://localhost:3000` |
+| Frontend    | `http://localhost:5173` |
+| Admin       | `http://localhost:5174` |
+| Manager     | `http://localhost:5175` |
+
+The health endpoint is `GET /api/health`; Prometheus metrics are available at `GET /metrics`.
+
+## Verification and tests
+
+Build shared packages and applications before running checks that consume emitted types:
 
 ```bash
 bun run build
@@ -95,116 +126,95 @@ bun run check
 bun run test
 ```
 
-Start the development infrastructure (PostgreSQL and Redis):
+`bun run check` validates formatting, lint rules, and TypeScript through the configured Oxlint type-aware checks.
 
-```bash
-bun run docker:db
-```
-
-Run the end-to-end suite with its isolated PostgreSQL and Redis services:
-
-```bash
-bun run e2e
-```
-
-The E2E PostgreSQL service is available to the other E2E containers at `test-db:5432` and does not publish a host port. This lets the E2E stack run alongside the development database started by `bun run docker:db`. To inspect the E2E database from the host, run `docker compose -f docker-compose.e2e.yml exec test-db psql -U postgres -d postgres` while the E2E stack is running.
-
-Run the Redis-backed BullMQ integration suite:
+Run the Redis-backed BullMQ integration tests while the development Redis service is running:
 
 ```bash
 REDIS_URL=redis://127.0.0.1:6379/15 bun run test:integration
 ```
 
-CI starts an isolated Redis service and runs this command after the regular workspace tests.
-
-The API enqueues a typed `api.started` delivery event after it begins listening. The worker consumes and logs that event, waits for Redis before reporting ready, and closes its BullMQ consumer on `SIGTERM` or `SIGINT`. Future domain jobs use the same `@repo/jobs` contract.
-
-Migrate the database:
+Run the Playwright end-to-end suite:
 
 ```bash
-bun run prisma:migrate
+bun run e2e
 ```
 
-Generate the Prisma client:
+The end-to-end command uses [docker-compose.e2e.yml](./docker-compose.e2e.yml) to build and start PostgreSQL, Redis, the API, the worker, and all three web applications. Its PostgreSQL and Redis services do not publish host ports, so they can coexist with the development infrastructure. The application ports `3000`, `5173`, `5174`, and `5175` must still be available.
 
-```bash
-bun run prisma:generate
-```
-
-Run all apps in development mode:
-
-```bash
-bun run dev
-```
-
-Default URLs in development:
-
-| App      | URL                   |
-| -------- | --------------------- |
-| API      | http://localhost:3000 |
-| Frontend | http://localhost:5173 |
-| Admin    | http://localhost:5174 |
-| Manager  | http://localhost:5175 |
+CI performs clean-checkout generation, validates both Compose files, validates Prisma and Varlock, builds the monorepo, runs `bun run check`, and runs unit, integration, and end-to-end tests.
 
 ## Environment variables
 
-Configuration is managed with [Varlock](https://varlock.dev/). Schemas are the source of truth; run `bun run env:generate` after changing them to refresh TypeScript types.
+[Varlock](https://varlock.dev/) schemas are the configuration source of truth. Change the relevant schema, then run `bun run env:generate`; do not edit generated `env.d.ts` files.
 
-| File                                                     | Scope                                                                                     |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [.env.shared](./.env.shared)                             | Ports, `APP_ENV`, and public URLs (`API_URL`, `FRONTEND_URL`, `MANAGER_URL`, `ADMIN_URL`) |
-| [apps/api/.env.schema](./apps/api/.env.schema)           | `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`                                         |
-| [apps/worker/.env.schema](./apps/worker/.env.schema)     | `REDIS_URL`                                                                               |
-| [apps/frontend/.env.schema](./apps/frontend/.env.schema) | Imports shared schema only                                                                |
-| [apps/manager/.env.schema](./apps/manager/.env.schema)   | Imports shared schema only                                                                |
-| [apps/admin/.env.schema](./apps/admin/.env.schema)       | Imports shared schema only                                                                |
+| File                                                     | Variables and purpose                                                            |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [.env.shared](./.env.shared)                             | `APP_ENV`, application ports, and derived API, frontend, manager, and admin URLs |
+| [apps/api/.env.schema](./apps/api/.env.schema)           | `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, and `LOKI_HOST`               |
+| [apps/worker/.env.schema](./apps/worker/.env.schema)     | `REDIS_URL`                                                                      |
+| [apps/frontend/.env.schema](./apps/frontend/.env.schema) | Imports the shared browser configuration                                         |
+| [apps/manager/.env.schema](./apps/manager/.env.schema)   | Imports the shared browser configuration                                         |
+| [apps/admin/.env.schema](./apps/admin/.env.schema)       | Imports the shared browser configuration                                         |
 
-## First admin user
+Development and test defaults live in the schemas. Staging and production deployments must provide `MY_APP_API_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and `MY_APP_ADMIN_URL`. The API also requires its database, Redis, Better Auth secret, and Loki values; the worker requires Redis.
 
-After the database is migrated and the API can connect, create the first admin account:
+Keep secrets and local overrides out of version control.
+
+## Accounts and access
+
+Authentication currently uses email and password only. Google sign-in is planned, but no social provider is configured.
+
+- The public frontend allows account creation with a name, email address, and password.
+- The manager has no public sign-up. A User needs a verified email and at least one Organization Membership.
+- The admin has no public sign-up. A User needs the platform `admin` role.
+- Email delivery is not configured. A platform administrator can mark an account's email as verified in the admin User editor.
+
+After the database is migrated and the API environment is available, create the first platform administrator with:
 
 ```bash
 bun --filter api add-admin -- "Admin User" admin@example.com your-secure-password
 ```
 
-The script signs up the user via Better Auth, sets `role` to `admin`, and marks the email as verified. If the email already exists, it exits without changes.
+The script creates the account through Better Auth, assigns the `admin` role, and marks the email as verified. If the email already exists, it exits without changing that account.
 
-Requires the same env as the API (`DATABASE_URL`, `BETTER_AUTH_SECRET`, etc.). Run `bun run env:validate` from the repo root first if unsure.
+Platform administrators create Organizations and assign an eligible verified User as owner. Users cannot create Organizations themselves.
 
-## Account access
+## Background jobs
 
-- Frontend users can create an account with their name, email, and password.
-- The manager app has no public sign-up. A signed-in user needs a verified email and membership in at least one organization to open it.
-- Admin accounts do not have public sign-up. Create the first one with the command above.
-
-Email delivery is not configured yet. Until it is, a platform administrator can mark an account's email as verified from the admin application's user editor.
-
-Authentication currently uses email and password only. No social login provider is configured.
+The API enqueues a typed `api.started` job after it starts listening. The worker waits for Redis before reporting ready, consumes the job, and closes its BullMQ worker on `SIGTERM` or `SIGINT`. Future domain jobs will use the same `@repo/jobs` contract.
 
 ## Deployment
 
-See [operations](./docs/operations.md) for the logging and data-handling policy.
+See [docs/operations.md](./docs/operations.md) for logging, health, metrics, and shutdown behavior.
 
-Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Images are built from each app’s `Dockerfile` at the monorepo root.
+Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Each application has a Dockerfile under its `apps/<name>` directory.
 
 ### Staging
 
-| Trigger                                      | What happens                                                                                                                                                 |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Push to `main` (or manual workflow dispatch) | CI → build `admin`, `api`, `frontend`, `manager`, and `worker` with `APP_ENV=staging` → push `*:staging` and `*:<sha>` tags → Dokploy staging deploy per app |
+A push to `main`, or a manual staging workflow dispatch, runs CI and builds all five images with `APP_ENV=staging`. It pushes `:staging` and commit-SHA tags, then triggers each Dokploy staging application.
 
-Configure GitHub secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DOKPLOY_DOMAIN`, `DOKPLOY_API_KEY`, and `DOKPLOY_STAGING_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID`.
+Configure `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DOKPLOY_DOMAIN`, `DOKPLOY_API_KEY`, and `DOKPLOY_STAGING_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID` as GitHub secrets.
 
 ### Production
 
-| Trigger                                                              | What happens                                                                         |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Git tag `admin@*`, `api@*`, `frontend@*`, `manager@*`, or `worker@*` | Build single app image → push `:latest` and `:<version>` → Dokploy production deploy |
+A tag matching `admin@*`, `api@*`, `frontend@*`, `manager@*`, or `worker@*` builds and deploys that application. Production images receive `:latest` and version tags. Web applications build with `APP_ENV=production`; the API and worker read runtime values from Dokploy.
 
-Web apps are built with `APP_ENV=production`. The API and worker images use runtime environment values from Dokploy (database, secrets, URLs).
+Production releases use [Changesets](https://github.com/changesets/changesets):
 
-Production releases typically use [Changesets](https://github.com/changesets/changesets): `bun run release:prepare`, then `bun run release:version` and `bun run release:push`.
+```bash
+bun run release:prepare
+bun run release:version
+bun run release:push
+```
 
-Configure GitHub secrets: same Docker Hub and Dokploy keys, plus `DOKPLOY_PROD_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID`.
+Configure the same Docker Hub and Dokploy credentials as staging, plus `DOKPLOY_PROD_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID`.
 
-Workflow definitions: [.github/workflows/staging.yml](./.github/workflows/staging.yml), [.github/workflows/production.yml](./.github/workflows/production.yml).
+Workflow definitions live in [.github/workflows/staging.yml](./.github/workflows/staging.yml) and [.github/workflows/production.yml](./.github/workflows/production.yml).
+
+## Documentation map
+
+- [CONTEXT.md](./CONTEXT.md) defines the domain vocabulary and planned product concepts.
+- [docs/adr](./docs/adr/) records accepted architecture and product decisions.
+- [docs/operations.md](./docs/operations.md) covers runtime operations and log data handling.
+- [AGENTS.md](./AGENTS.md) gives repository-specific guidance to coding agents.

@@ -1,4 +1,4 @@
-# Competition Manager Domain
+# Competition Manager domain
 
 Competition Manager is a multi-tenant SaaS for organizing athletics competitions, accepting athlete registrations, and publishing competition results.
 
@@ -50,16 +50,20 @@ _Avoid_: Organization Owner, Competition Manager
 A scheduled collection of track-and-field events owned and operated by one Organization.
 _Avoid_: Generic competition, tournament
 
+**Competition Event**:
+A discipline offered within an Athletics Competition, such as a 100-metre race or long jump. A Competition Event may contain one or more Rounds.
+_Avoid_: Athletics Competition, Round, Event Entry
+
 **Competition Lifecycle**:
 The operational progression Draft, Published, Registration Open, Registration Closed, In Progress, Completed, and Archived. Scheduled transitions may be configured, but authorized Organization staff may explicitly override them with an audit entry.
 _Avoid_: Result status, payment status
 
 **Competition Officialization**:
-The Competition-level action that makes the results of all its finished Events official. Until this action, publicly visible results remain provisional even when their Event is finished; correcting an official result requires revoking the Competition's official status, applying the correction, and officializing it again.
-_Avoid_: Event finish, result entry
+The Competition-level action that makes the results of all its finished Competition Events official. Until this action, publicly visible results remain provisional even when their Competition Event is finished; correcting an official result requires revoking the Competition's official status, applying the correction, and officializing it again.
+_Avoid_: Competition Event finish, result entry
 
-**Event Status**:
-The status derived from the statuses of its Rounds: Not Started, Live, or Finished. Finishing an Event stops ordinary result entry but does not by itself make its results official.
+**Competition Event Status**:
+The status derived from the statuses of a Competition Event's Rounds: Not Started, Live, or Finished. Finishing a Competition Event stops ordinary result entry but does not by itself make its results official.
 _Avoid_: Competition lifecycle, official result
 
 **Round**:
@@ -67,11 +71,11 @@ An independently operated stage of a Competition Event, such as a qualifying rou
 _Avoid_: Competition Event, attempt
 
 **Result Entry Mode**:
-The Competition-level choice of which system has authority to create and change results: AthleticsManager or Competition Manager Web.
+The choice, made separately for each Competition Event, of which system has authority to create and change its results: AthleticsManager or Competition Manager Web.
 _Avoid_: Synchronization direction, display mode
 
 **Official Result**:
-The Competition outcome accepted from the system selected by the Result Entry Mode and made official by Competition Officialization.
+A result accepted from the authority selected for its Competition Event and made official by Competition Officialization.
 _Avoid_: Draft result, provisional entry
 
 **Provisional Result**:
@@ -79,7 +83,7 @@ A publicly visible result that may still change and is explicitly marked as prov
 _Avoid_: Official result, unsaved result
 
 **Result Reconciliation**:
-An explicit, reviewed process required to change Result Entry Mode after results exist. It previews conflicts and requires a human choice of authoritative data rather than automatically merging writers.
+An explicit, reviewed process required to change a Competition Event's Result Entry Mode after results exist. It previews conflicts and requires a human choice of authoritative data rather than automatically merging writers.
 _Avoid_: Automatic merge, silent overwrite
 
 ## Registration
@@ -92,8 +96,12 @@ _Avoid_: Checkout, event registration, inscription line
 An Athlete Registration's participation in one Competition Event.
 _Avoid_: Athlete registration, payment line
 
+**Combined Event**:
+A Competition Event, such as a decathlon, whose standing aggregates results from a defined set of child Competition Events.
+_Avoid_: Combined Event Entry, individual discipline
+
 **Combined Event Entry**:
-A single priced and capacity-controlled registration for a Combined Event such as a decathlon. It automatically creates participation in the child disciplines, whose results contribute to the aggregate standing.
+A single priced and capacity-controlled registration for a Combined Event. It automatically creates participation in the child Competition Events, whose results contribute to the aggregate standing.
 _Avoid_: Separate purchase of each child discipline
 
 **Personal Best**:
@@ -135,8 +143,8 @@ A payment by a Registrant for one or more Athlete event entries, collected into 
 _Avoid_: Subscription payment, plan purchase
 
 **Price Snapshot**:
-The unit price recorded on an Event Entry or checkout line when it is submitted. Organizations may change an Event price after registration opens only after acknowledging a strong warning; existing pending or paid lines retain their price and new additions use the new price.
-_Avoid_: Current Event price, recalculated invoice
+The unit price recorded on an Event Entry or checkout line when it is submitted. Organizations may change a Competition Event price after registration opens only after acknowledging a strong warning; existing pending or paid lines retain their price and new additions use the new price.
+_Avoid_: Current Competition Event price, recalculated invoice
 
 **Checkout Fee**:
 An additional payment-method-neutral platform service fee charged once per paid Registration Cart, calculated from a platform-wide fixed EUR amount plus a percentage of Event Entry prices, disclosed before submission, and retained entirely by the platform. It is snapshotted at submission and separate from Event Entry prices, which are owed in full to the Organization.
@@ -157,7 +165,7 @@ _Avoid_: Organization debt, Registrant reimbursement
 ## Access and communication
 
 **Verified User**:
-A User whose email address is verified and who may register Athletes, pay, accept Organization invitations, or access Organization tools. Initial authentication supports email/password and Google through one account shared across applications.
+A User whose email address is verified and who may register Athletes, pay, accept Organization invitations, or access Organization tools.
 _Avoid_: Athlete verification, Organization Membership
 
 **Account Anonymization**:
@@ -177,5 +185,5 @@ _Avoid_: Translation fallback as completed localization, multi-currency support
 ## Interchange
 
 **AthleticsManager Interchange**:
-Manual AthleticsManager result XML import and participant CSV export performed in the Organization manager. Imports persist Athlete, Event, Round, and Heat mappings, preview differences, update matched results idempotently, and never create duplicates; ambiguous rows remain unapplied until resolved. Exports include both an AthleticsManager-compatible CSV and a generic reporting CSV. A desktop bridge may automate interchange in a later release.
+Manual AthleticsManager result XML import and participant CSV export performed in the Organization manager. Imports persist Athlete, Competition Event, Round, and Heat mappings, preview differences, update matched results idempotently, and never create duplicates; ambiguous rows remain unapplied until resolved. Exports include both an AthleticsManager-compatible CSV and a generic reporting CSV. A desktop bridge may automate interchange in a later release.
 _Avoid_: Live synchronization, initial desktop dependency
