@@ -14,7 +14,9 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
     const sessionResult = await authClient.getSession().catch(() => null);
     const session = sessionResult?.data;
-    const organizationsResult = session ? await authClient.organization.list() : null;
+    const organizationsResult = session?.user.emailVerified
+      ? await authClient.organization.list()
+      : null;
 
     if (organizationsResult?.error) {
       throw new Error(
@@ -26,6 +28,7 @@ export const Route = createRootRoute({
     const destination = getManagerAuthRedirect(
       location.pathname,
       Boolean(session),
+      Boolean(session?.user.emailVerified),
       hasOrganization,
     );
 

@@ -50,28 +50,80 @@ async function authenticate(email: string, password: string, authFile: string) {
     }
 
     await context.storageState({ path: authFile });
+    return (await response.json()) as { user: { id: string } };
   } finally {
     await context.dispose();
   }
 }
 
-async function ensureUser(request: APIRequestContext) {
+async function ensureUser(
+  request: APIRequestContext,
+  user: { readonly name: string; readonly email: string; readonly password: string },
+  authFile: string,
+) {
   try {
-    await authenticate(E2E_USERS.user.email, E2E_USERS.user.password, E2E_AUTH_FILES.user);
-    return;
+    return await authenticate(user.email, user.password, authFile);
   } catch {
     // User does not exist yet, create it below.
   }
 
   const response = await request.post(`${E2E_URLS.api}/api/auth/sign-up/email`, {
-    data: E2E_USERS.user,
+    data: user,
   });
 
   if (!response.ok()) {
     throw new Error(`Failed to create e2e user: ${response.status()} ${await response.text()}`);
   }
 
-  await authenticate(E2E_USERS.user.email, E2E_USERS.user.password, E2E_AUTH_FILES.user);
+  return authenticate(user.email, user.password, authFile);
+}
+
+async function setEmailVerified(userId: string, emailVerified: boolean) {
+  const context = await playwrightRequest.newContext({
+    baseURL: E2E_URLS.api,
+    storageState: E2E_AUTH_FILES.admin,
+  });
+
+  try {
+    const response = await context.post("/api/auth/admin/update-user", {
+      data: { userId, data: { emailVerified } },
+    });
+
+    if (!response.ok()) {
+      throw new Error(
+        `Failed to update email verification: ${response.status()} ${await response.text()}`,
+      );
+    }
+  } finally {
+    await context.dispose();
+  }
+}
+
+async function ensureUnverifiedOrganizationOwner(userId: string) {
+  const context = await playwrightRequest.newContext({
+    baseURL: E2E_URLS.api,
+    storageState: E2E_AUTH_FILES.admin,
+  });
+
+  try {
+    await setEmailVerified(userId, true);
+    const response = await context.post("/api/organizations", {
+      data: {
+        name: "E2E Unverified Owner Organization",
+        slug: "e2e-unverified-owner-organization",
+        ownerId: userId,
+      },
+    });
+
+    if (response.status() !== 201 && response.status() !== 409) {
+      throw new Error(
+        `Failed to create unverified-owner fixture: ${response.status()} ${await response.text()}`,
+      );
+    }
+  } finally {
+    await setEmailVerified(userId, false);
+    await context.dispose();
+  }
 }
 
 test("seed and authenticate e2e users", async ({ request }) => {
@@ -101,7 +153,14 @@ test("seed and authenticate e2e users", async ({ request }) => {
     },
   );
 
-  await waitForApi(request);
-  await ensureUser(request);
   await authenticate(E2E_USERS.admin.email, E2E_USERS.admin.password, E2E_AUTH_FILES.admin);
+  const verifiedUser = await ensureUser(request, E2E_USERS.user, E2E_AUTH_FILES.user);
+  const unverifiedUser = await ensureUser(
+    request,
+    E2E_USERS.unverifiedUser,
+    E2E_AUTH_FILES.unverifiedUser,
+  );
+
+  await setEmailVerified(verifiedUser.user.id, true);
+  await ensureUnverifiedOrganizationOwner(unverifiedUser.user.id);
 });

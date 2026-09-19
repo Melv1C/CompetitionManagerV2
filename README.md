@@ -151,8 +151,10 @@ Requires the same env as the API (`DATABASE_URL`, `BETTER_AUTH_SECRET`, etc.). R
 ## Account access
 
 - Frontend users can create an account with their name, email, and password.
-- The manager app has no public sign-up. A signed-in user needs membership in at least one organization to open it.
+- The manager app has no public sign-up. A signed-in user needs a verified email and membership in at least one organization to open it.
 - Admin accounts do not have public sign-up. Create the first one with the command above.
+
+Email delivery is not configured yet. Until it is, a platform administrator can mark an account's email as verified from the admin application's user editor.
 
 Authentication currently uses email and password only. No social login provider is configured.
 

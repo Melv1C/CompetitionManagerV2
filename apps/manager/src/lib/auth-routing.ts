@@ -3,6 +3,7 @@ type ManagerAuthRedirect = "/" | "/login" | "/unauthorized";
 export function getManagerAuthRedirect(
   pathname: string,
   hasSession: boolean,
+  isEmailVerified: boolean,
   hasOrganization: boolean,
 ): ManagerAuthRedirect | null {
   const isPublicPage = pathname === "/login" || pathname === "/unauthorized";
@@ -11,11 +12,17 @@ export function getManagerAuthRedirect(
     return "/login";
   }
 
-  if (hasSession && pathname === "/login") {
-    return "/";
+  if (pathname === "/unauthorized") {
+    return null;
   }
 
-  if (hasSession && !hasOrganization && !isPublicPage) {
+  const hasManagerAccess = isEmailVerified && hasOrganization;
+
+  if (hasSession && pathname === "/login") {
+    return hasManagerAccess ? "/" : "/unauthorized";
+  }
+
+  if (hasSession && !hasManagerAccess) {
     return "/unauthorized";
   }
 

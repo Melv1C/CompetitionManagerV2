@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { isAdmin, useAuth } from "@/middlewares/use-auth";
+import { isAdmin, isVerified, useAuth } from "@/middlewares/use-auth";
 import { useLogger } from "@/middlewares/use-logger";
 
 import { healthRoutes } from "./health";
@@ -16,6 +16,7 @@ export const routes = new Hono()
     const results = await prisma.$queryRawUnsafe(query.sql, ...query.parameters);
     return c.json([null, results]);
   })
+  .use("/auth/organization/*", isVerified)
   .on(["POST", "GET"], "/auth/*", (c) => auth.handler(c.req.raw))
   //////////////////////////////////////////////////
   // Add routes without logging middleware here

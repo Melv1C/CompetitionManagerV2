@@ -112,10 +112,38 @@ describe("organization administration", () => {
     });
     expect(findUsers).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ role: "user" }),
+        where: expect.objectContaining({ role: "user", emailVerified: true }),
         take: 25,
       }),
     );
+  });
+
+  it("rejects an unverified user as organization owner", async () => {
+    const owner = {
+      id: "U".repeat(32),
+      name: "Morgan Owner",
+      email: "owner@example.com",
+      emailVerified: false,
+      role: "user",
+    };
+    findUnique.mockResolvedValue(owner);
+    const app = await createTestApp();
+
+    const response = await app.request("/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Brussels Athletics",
+        slug: "brussels-athletics",
+        ownerId: owner.id,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Organization owners must have a verified email",
+    });
+    expect(createOrganization).not.toHaveBeenCalled();
   });
 
   it("creates an organization for the selected owner", async () => {
@@ -123,6 +151,7 @@ describe("organization administration", () => {
       id: "U".repeat(32),
       name: "Morgan Owner",
       email: "owner@example.com",
+      emailVerified: true,
       role: "user",
     };
     findUnique.mockResolvedValue(owner);
@@ -172,6 +201,7 @@ describe("organization administration", () => {
       id: "U".repeat(32),
       name: "Morgan Owner",
       email: "owner@example.com",
+      emailVerified: true,
       role: "user",
     };
     findUnique.mockResolvedValue(owner);
