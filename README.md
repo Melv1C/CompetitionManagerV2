@@ -101,6 +101,14 @@ Start the development infrastructure (PostgreSQL and Redis):
 bun run docker:db
 ```
 
+Run the end-to-end suite with its isolated PostgreSQL and Redis services:
+
+```bash
+bun run e2e
+```
+
+The E2E PostgreSQL service is available to the other E2E containers at `test-db:5432` and does not publish a host port. This lets the E2E stack run alongside the development database started by `bun run docker:db`. To inspect the E2E database from the host, run `docker compose -f docker-compose.e2e.yml exec test-db psql -U postgres -d postgres` while the E2E stack is running.
+
 Run the Redis-backed BullMQ integration suite:
 
 ```bash
