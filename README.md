@@ -9,6 +9,7 @@ The monorepo uses [Bun](https://bun.sh/) and [Turborepo](https://turbo.build/rep
 - The public frontend supports email/password sign-up, sign-in, and API health display.
 - The Organization manager requires a signed-in, email-verified User with at least one Organization Membership.
 - The platform-admin application manages Users and Organizations and embeds Prisma Studio for authorized database access.
+- The PostgreSQL schema models the Competition, athlete, registration, pricing, result, interchange, payment, settlement, and audit domains; application workflows over those models remain planned.
 - The API provides Better Auth endpoints, platform-admin Organization endpoints, health and Prometheus endpoints, and a Socket.IO endpoint that reads Better Auth sessions.
 - The API and worker share a Redis-backed BullMQ contract. The only current application job is an `api.started` delivery check.
 

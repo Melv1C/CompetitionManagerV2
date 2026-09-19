@@ -8,6 +8,10 @@ Competition Manager is a multi-tenant SaaS for organizing athletics competitions
 An independent athletics organization that owns competitions and forms the tenant boundary.
 _Avoid_: Club, customer account, tenant account
 
+**Organization Deactivation**:
+The disabling of an Organization that has retained Competition history. It prevents new operations without deleting Competitions, registrations, payments, results, settlements, or audit history.
+_Avoid_: Organization deletion, Competition archival
+
 **Club**:
 An athletics affiliation recorded on an Athlete or registration for sporting purposes. A Club is not an Organization, is not a tenant, and has no required relationship to an Organization; an Organization may itself happen to be a club without creating a domain link between the two concepts.
 _Avoid_: Organization, tenant, organization membership
@@ -20,12 +24,24 @@ _Avoid_: Athlete, account holder
 A person who participates in athletics competitions and is identified independently from any User account.
 _Avoid_: User, participant account
 
+**Athlete External Identity**:
+A provider-scoped identifier linking one Athlete to a federation or athletics data source. An Athlete may have identities from multiple providers without using a federation license as the Athlete's own identity.
+_Avoid_: User account, Athlete ID, registration snapshot
+
+**Athlete Merge**:
+An audited operation that moves a duplicate One-day Athlete's records to a surviving Athlete before deleting the duplicate. Conflicting registrations, payments, or results require explicit staff reconciliation.
+_Avoid_: Athlete reassignment, silent deduplication
+
+**Athletics Season**:
+A provider-scoped sporting period with a stable code and explicit start and end dates. Each Athletics Competition operates under one Athletics Season.
+_Avoid_: Calendar year, Competition date range
+
 **Athlete Season**:
-A season-specific record belonging to one Athlete and containing that season's bib and Club affiliation. One Athlete may have many Athlete Seasons, but only one record for a given season.
+A record belonging to one Athlete and one Athletics Season that contains the Athlete's federation bib and Club affiliation for that period.
 _Avoid_: Athlete identity, Competition registration
 
 **Competition Bib**:
-A bib unique within one Competition and assigned from an Organization-configured range to a One-day Athlete. Federated Athletes instead use the bib stored on their applicable Athlete Season.
+A bib snapshotted on Athlete Registration and unique within one Competition. It comes from the applicable Athlete Season for a Federated Athlete or an Organization-configured Competition range for a One-day Athlete.
 _Avoid_: Athlete Season bib, Athlete identity
 
 **Registrant**:
@@ -40,6 +56,10 @@ _Avoid_: User account, Club affiliation, Platform Administrator
 An Organization member with complete authority over the Organization, its membership, and its competitions.
 _Avoid_: Platform admin, superadmin
 
+**Organization Staff**:
+An Organization member whose assigned permissions authorize specific competition operations. Registration creation, management, transfer, and override are separate permissions inherited by the Organization Owner.
+_Avoid_: Registrant, Platform Administrator, all Organization members
+
 **Platform Administrator**:
 A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator is outside every Organization's membership and role model and cannot impersonate Users in the initial product.
 _Avoid_: Organization Owner, Competition Manager
@@ -50,13 +70,37 @@ _Avoid_: Organization Owner, Competition Manager
 A scheduled collection of track-and-field events owned and operated by one Organization.
 _Avoid_: Generic competition, tournament
 
+**Discipline**:
+A reusable athletics definition, such as 100 metres or long jump, that may be offered by many Athletics Competitions. A Discipline belongs either to the platform catalog or to one Organization.
+_Avoid_: Competition Event, scheduled event
+
 **Competition Event**:
-A discipline offered within an Athletics Competition, such as a 100-metre race or long jump. A Competition Event may contain one or more Rounds.
+A scheduled offering of one Discipline within an Athletics Competition. A Competition Event may contain one or more Rounds.
 _Avoid_: Athletics Competition, Round, Event Entry
 
+**Competition Event Eligibility**:
+The set of athlete categories allowed to enter one Competition Event. Eligible categories share the event's operation unless the Organization creates separate Competition Events.
+_Avoid_: Event Entry, athlete category snapshot
+
+**Athlete Category**:
+A standard or Organization-specific classification used to determine eligibility and rankings for an Athlete in a season. Registrations and results retain a snapshot of the applicable category.
+_Avoid_: Competition Event Eligibility, Club, age entered as free text
+
+**Competition Venue**:
+The single owned physical location assigned to an Athletics Competition and shared by all of its Competition Events. It retains the venue name, structured address, and optional coordinates for that Competition.
+_Avoid_: Organization address, Competition Event venue
+
+**Competition Translation**:
+A localized Competition or Competition Event name and description. Each Competition has one primary locale used when an optional English, French, or Dutch translation is missing.
+_Avoid_: Interface translation, separate localized Competition
+
 **Competition Lifecycle**:
-The operational progression Draft, Published, Registration Open, Registration Closed, In Progress, Completed, and Archived. Scheduled transitions may be configured, but authorized Organization staff may explicitly override them with an audit entry.
+The operational progression Draft, Published, In Progress, Completed, and Archived. Scheduled transitions may be configured, but authorized Organization staff may explicitly override them with an audit entry.
 _Avoid_: Result status, payment status
+
+**Registration State**:
+The independently controlled registration availability of an Athletics Competition: Scheduled, Open, or Closed. Configured times may drive transitions, but authorized Organization staff may explicitly override them with an audit entry.
+_Avoid_: Competition lifecycle, Athlete Registration status
 
 **Competition Officialization**:
 The Competition-level action that makes the results of all its finished Competition Events official. Until this action, publicly visible results remain provisional even when their Competition Event is finished; correcting an official result requires revoking the Competition's official status, applying the correction, and officializing it again.
@@ -67,8 +111,20 @@ The status derived from the statuses of a Competition Event's Rounds: Not Starte
 _Avoid_: Competition lifecycle, official result
 
 **Round**:
-An independently operated stage of a Competition Event, such as a qualifying round, heat, or final, with status Not Started, Live, or Finished.
+An independently operated and scheduled stage of a Competition Event, such as a qualifying round or final, with status Not Started, Live, or Finished. A Competition Event's advertised start is derived from its earliest Round.
 _Avoid_: Competition Event, attempt
+
+**Start Group**:
+An ordered group of Event Entries operated together within one Round. The interface may call it a heat for track disciplines or a flight for field disciplines.
+_Avoid_: Round, Competition Event, athlete category
+
+**Round Entry**:
+An Event Entry's participation in one Round, including its Start Group, lane or order, advancement state, participation state, and Round Result.
+_Avoid_: Event Entry, Competition result, Start Group
+
+**Advancement Rule**:
+A Round's structured rule for proposing qualifiers to a later Round by place and then by Performance. An official confirms the proposal, and manual changes require an audit reason.
+_Avoid_: Confirmed Round Entry, hidden seeding logic
 
 **Result Entry Mode**:
 The choice, made separately for each Competition Event, of which system has authority to create and change its results: AthleticsManager or Competition Manager Web.
@@ -82,23 +138,51 @@ _Avoid_: Draft result, provisional entry
 A publicly visible result that may still change and is explicitly marked as provisional until it is finalized as an Official Result.
 _Avoid_: Official result, unsaved result
 
+**Performance**:
+An exact athletics mark represented in the Discipline's canonical integer unit: milliseconds for time, centimetres for distance and height, or integer points. Wind uses hundredths of a metre per second, while non-numeric outcomes use explicit statuses.
+_Avoid_: Floating-point result, formatted result string, Personal Best
+
+**Result Attempt**:
+One ordered attempt within a Round Result, recording its status, Performance when applicable, and wind when applicable. The best valid attempt is derived from the attempts.
+_Avoid_: Round Result, persisted best-attempt flag
+
+**Scoring Rule Version**:
+The immutable scoring formula used to convert a Combined Event component Performance into points. Accepted component results retain the applied version, while the Combined Event total is derived from those points.
+_Avoid_: Mutable points table, Competition Event price
+
 **Result Reconciliation**:
 An explicit, reviewed process required to change a Competition Event's Result Entry Mode after results exist. It previews conflicts and requires a human choice of authoritative data rather than automatically merging writers.
 _Avoid_: Automatic merge, silent overwrite
 
+**Result Import Batch**:
+An immutable record of one AthleticsManager result import, its source file, matched external mappings, proposed differences, and applied or unresolved rows.
+_Avoid_: Live synchronization, unreviewed overwrite
+
 ## Registration
 
 **Athlete Registration**:
-The single active relationship between one Athlete and one Athletics Competition. It is controlled by the first successful Registrant unless authorized Organization staff transfer control; deletion means cancellation with an audit trail, not destructive record removal.
+The single active relationship between one Athlete and one Athletics Competition. It is Pending Payment or Confirmed while active and becomes Expired or Cancelled when it releases its Registration Claim; historical records are retained.
 _Avoid_: Checkout, event registration, inscription line
 
 **Event Entry**:
-An Athlete Registration's participation in one Competition Event.
+A registration's participation in one Competition Event, with an entry state of Pending, Confirmed, Waitlisted, or Cancelled and a separate participation state of Declared, Withdrawn, Did Not Start, or Started.
 _Avoid_: Athlete registration, payment line
+
+**Relay Entry**:
+A Club and Athlete Category team's participation in one relay Competition Event, controlled by one Registrant or authorized Organization Staff member. Capacity and price apply once to the team.
+_Avoid_: Athlete Event Entry, Relay Leg
+
+**Relay Leg**:
+One ordered Athlete Registration assignment within a Relay Entry. Relay legs may change until the relay Competition Event's first Round becomes Live.
+_Avoid_: Relay Entry, individual Competition Event
 
 **Combined Event**:
 A Competition Event, such as a decathlon, whose standing aggregates results from a defined set of child Competition Events.
 _Avoid_: Combined Event Entry, individual discipline
+
+**Combined Event Component**:
+The ordered inclusion of one child Competition Event in one Combined Event. A component is not shared with another Combined Event or a standalone Competition Event.
+_Avoid_: Combined Event Entry, reusable Discipline
 
 **Combined Event Entry**:
 A single priced and capacity-controlled registration for a Combined Event. It automatically creates participation in the child Competition Events, whose results contribute to the aggregate standing.
@@ -128,26 +212,54 @@ _Avoid_: One-day Athlete, User profile
 The exclusive right of a Registrant to manage an Athlete Registration for one Competition. Submission claims it atomically; free registrations confirm immediately, while paid registrations and capacity reservations remain pending for a limited checkout window and are released if payment expires.
 _Avoid_: Draft ownership, Athlete ownership
 
+**Registration Control Transfer**:
+An immediate, audited change of the verified User who manages an Athlete Registration. It does not change the original payer or payment history and generates a Transactional Notification for the new Registrant.
+_Avoid_: Payment transfer, Athlete ownership, Organization Membership
+
+**Staff Registration Override**:
+An audited action by authorized Organization Staff that creates or changes an Athlete Registration outside ordinary ownership, capacity, or pricing rules. Capacity and price overrides require reasons and remain visible on the affected records.
+_Avoid_: Platform Administrator edit, silent exception
+
 **Registration Cart**:
-A single checkout containing Event Entries for one or more Athletes. Submission is atomic: if any claim or capacity check fails, nothing is submitted and the Registrant must review the cart; registrations remain individually identifiable after a successful submission even though they share one payment.
+A submitted checkout containing Event Entries for one or more Athletes. Browser-only drafts are not persisted; submission is atomic, and registrations remain individually identifiable after success even though they share one payment.
 _Avoid_: Athlete Registration, Event Entry
 
+**Capacity Reservation**:
+A temporary claim on Competition Event capacity held by a submitted paid Registration Cart until its explicit expiry time. Expiry releases the related Registration Claims and capacity before waitlist promotion.
+_Avoid_: Confirmed Event Entry, saved cart, Waitlist Entry
+
 **Waitlist Entry**:
-A queued request for an Event Entry after its capacity is full. When capacity becomes available, the first eligible request is automatically invited into a limited payment window; expiry advances the queue, while a free Event Entry confirms immediately.
+A queued request for an Event Entry after its capacity is full. When capacity becomes available, the first eligible request is offered the current applicable price in a limited payment window; expiry advances the queue, while a free Event Entry confirms immediately.
 _Avoid_: Pending payment, confirmed Event Entry
 
 ## Commercial scope
+
+**Competition Pricing Tier**:
+A Competition-specific set of Event Entry prices assigned to selected Clubs. Each Club belongs to at most one non-default tier, and an Athlete without an assigned tier uses the default prices.
+_Avoid_: Club eligibility, stacked discount, payment method fee
+
+**Competition Club Eligibility**:
+An optional allowlist restricting Athlete registration by Club independently from Competition Pricing Tiers. Without an allowlist, Club affiliation does not restrict eligibility.
+_Avoid_: Organization Membership, Pricing Tier
+
+**Event Entry Price Override**:
+An audited price chosen by authorized Organization staff for one Event Entry instead of its applicable Pricing Tier price. The override requires a reason and does not change Competition pricing rules.
+_Avoid_: Pricing Tier edit, automatic discount
 
 **Registration Payment**:
 A payment by a Registrant for one or more Athlete event entries, collected into the platform's single Stripe account. After the Competition and its configured refund window, the platform settles exactly the collected Event Entry prices to the Organization and retains the Checkout Fee; this does not include SaaS subscriptions or Organization billing.
 _Avoid_: Subscription payment, plan purchase
 
+**Payment Attempt**:
+An immutable attempt to pay one Registration Payment through a single Stripe Checkout session. Retries create new attempts, and at most one attempt for a Registration Payment may succeed.
+_Avoid_: Registration Payment, mutable checkout session
+
 **Price Snapshot**:
-The unit price recorded on an Event Entry or checkout line when it is submitted. Organizations may change a Competition Event price after registration opens only after acknowledging a strong warning; existing pending or paid lines retain their price and new additions use the new price.
+The unit price recorded when an Event Entry enters checkout. Organizations may change a Competition Event price after registration opens only after acknowledging a strong warning; existing pending or paid lines retain their price, while new entries and promoted Waitlist Entries use the current applicable price.
 _Avoid_: Current Competition Event price, recalculated invoice
 
 **Checkout Fee**:
-An additional payment-method-neutral platform service fee charged once per paid Registration Cart, calculated from a platform-wide fixed EUR amount plus a percentage of Event Entry prices, disclosed before submission, and retained entirely by the platform. It is snapshotted at submission and separate from Event Entry prices, which are owed in full to the Organization.
+An additional payment-method-neutral platform service fee charged once per paid Registration Cart, initially €0.30 plus 10% of Event Entry prices, disclosed before submission, and retained entirely by the platform. Its versioned formula and calculated amount are snapshotted at submission; Event Entry prices remain owed in full to the Organization.
 _Avoid_: Card surcharge, per-Athlete fee, Organization revenue
 
 **Refund Policy**:
@@ -155,7 +267,7 @@ The Organization's rules and external process for reimbursing a Registrant. Comp
 _Avoid_: Stripe refund, platform refund workflow, automatic refund rule
 
 **Organization Settlement**:
-The post-Competition transfer from the platform to the Organization after its configured refund window. The amount equals the Event Entry prices collected for the Competition; the Checkout Fee remains with the platform, and reimbursements performed externally by the Organization do not change the platform ledger.
+An immutable post-Competition allocation and transfer of collected Event Entry prices to the Organization after its configured refund window. Corrections use adjusting settlements; Checkout Fees and external reimbursements do not change the original settlement lines.
 _Avoid_: Registrant refund, Stripe payout, Checkout Fee
 
 **Chargeback Loss**:
@@ -172,8 +284,12 @@ _Avoid_: Athlete verification, Organization Membership
 The response to a User deletion request: revoke access, remove or irreversibly anonymize personal profile data, and retain only legally required anonymized payment, Competition, and audit records.
 _Avoid_: Destructive deletion of financial history, account suspension
 
+**Audit Entry**:
+An immutable Organization-scoped record of a significant domain action, its target, time, actor snapshot, required reason, and relevant structured details. Anonymizing the actor does not delete the entry.
+_Avoid_: Application log, mutable note, payment record
+
 **Transactional Notification**:
-An email generated for account verification, registration or payment status, waitlist promotion, material Competition changes, or official result publication. SMS is outside the initial scope.
+An email generated for account verification, registration control transfer, registration or payment status, waitlist promotion, material Competition changes, or official result publication. A transfer notification includes a payment link when money remains due; SMS is outside the initial scope.
 _Avoid_: Marketing email, in-app-only alert
 
 ## Localization
