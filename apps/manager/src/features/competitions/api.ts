@@ -1,38 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ENV } from "varlock/env";
+
+import { apiClient } from "@/lib/api-client";
 
 import type {
   Competition,
-  CompetitionCatalog,
-  CompetitionSummary,
   CreateCompetition,
   UpdateCompetitionDetails,
   UpdateCompetitionPricing,
   UpsertCompetitionEvent,
 } from "./types";
 
-const base = `${ENV.API_URL}/api/manager/organizations`;
+const organizationsApi = apiClient.api.manager.organizations[":organizationId"];
+const competitionsApi = organizationsApi.competitions;
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
-  const response = await fetch(`${base}${path}`, {
-    credentials: "include",
-    ...init,
-    headers,
-  });
-  const body = (await response.json().catch(() => null)) as
-    | T
-    | { error?: string; readiness?: { missing?: string[] } }
-    | null;
-  if (!response.ok) {
-    const message =
-      body && typeof body === "object" && "error" in body && body.error
-        ? body.error
-        : "Request failed";
-    throw new Error(message);
-  }
-  return body as T;
+async function throwResponseError(response: Response, fallback: string): Promise<never> {
+  const body: unknown = await response.json().catch(() => null);
+  const message =
+    body && typeof body === "object" && "error" in body && typeof body.error === "string"
+      ? body.error
+      : fallback;
+  throw new Error(message);
 }
 
 export const competitionKeys = {
@@ -46,19 +33,25 @@ export const competitionKeys = {
 export function useCompetitionCatalog(organizationId: string, seasonId?: string) {
   return useQuery({
     queryKey: competitionKeys.catalog(organizationId, seasonId),
-    queryFn: () =>
-      request<CompetitionCatalog>(
-        `/${organizationId}/catalog${seasonId ? `?seasonId=${seasonId}` : ""}`,
-      ),
+    queryFn: async () => {
+      const response = await organizationsApi.catalog.$get({
+        param: { organizationId },
+        query: { seasonId },
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to load Competition catalog");
+      return response.json();
+    },
   });
 }
 
 export function useCompetitions(organizationId: string) {
   return useQuery({
     queryKey: competitionKeys.list(organizationId),
-    queryFn: async () =>
-      (await request<{ competitions: CompetitionSummary[] }>(`/${organizationId}/competitions`))
-        .competitions,
+    queryFn: async () => {
+      const response = await competitionsApi.$get({ param: { organizationId } });
+      if (!response.ok) return throwResponseError(response, "Failed to load Competitions");
+      return (await response.json()).competitions;
+    },
     // Authorization failures are deterministic and should be shown immediately.
     retry: false,
   });
@@ -67,12 +60,13 @@ export function useCompetitions(organizationId: string) {
 export function useCompetition(organizationId: string, competitionId: string) {
   return useQuery({
     queryKey: competitionKeys.detail(organizationId, competitionId),
-    queryFn: async () =>
-      (
-        await request<{ competition: Competition }>(
-          `/${organizationId}/competitions/${competitionId}`,
-        )
-      ).competition,
+    queryFn: async () => {
+      const response = await competitionsApi[":competitionId"].$get({
+        param: { organizationId, competitionId },
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to load Competition");
+      return (await response.json()).competition;
+    },
   });
 }
 
@@ -94,31 +88,46 @@ function useCompetitionMutation<TInput>(
 export function useCreateCompetition(organizationId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateCompetition) =>
-      request<{ competition: Competition }>(`/${organizationId}/competitions`, {
-        method: "POST",
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: CreateCompetition) => {
+      const response = await competitionsApi.$post({
+        param: { organizationId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to create Competition");
+      return response.json();
+    },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: competitionKeys.list(organizationId) }),
   });
 }
 
 export function useSaveCompetitionDetails(organizationId: string, competitionId: string) {
-  return useCompetitionMutation<UpdateCompetitionDetails>(organizationId, competitionId, (input) =>
-    request(`/${organizationId}/competitions/${competitionId}/details`, {
-      method: "PUT",
-      body: JSON.stringify(input),
-    }),
+  return useCompetitionMutation<UpdateCompetitionDetails>(
+    organizationId,
+    competitionId,
+    async (input) => {
+      const response = await competitionsApi[":competitionId"].details.$put({
+        param: { organizationId, competitionId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to save Competition details");
+      return response.json();
+    },
   );
 }
 
 export function useSaveCompetitionPricing(organizationId: string, competitionId: string) {
-  return useCompetitionMutation<UpdateCompetitionPricing>(organizationId, competitionId, (input) =>
-    request(`/${organizationId}/competitions/${competitionId}/pricing`, {
-      method: "PUT",
-      body: JSON.stringify(input),
-    }),
+  return useCompetitionMutation<UpdateCompetitionPricing>(
+    organizationId,
+    competitionId,
+    async (input) => {
+      const response = await competitionsApi[":competitionId"].pricing.$put({
+        param: { organizationId, competitionId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to save Competition pricing");
+      return response.json();
+    },
   );
 }
 
@@ -127,11 +136,23 @@ export function useSaveCompetitionEvent(
   competitionId: string,
   eventId?: string,
 ) {
-  return useCompetitionMutation<UpsertCompetitionEvent>(organizationId, competitionId, (input) =>
-    request(
-      `/${organizationId}/competitions/${competitionId}/events${eventId ? `/${eventId}` : ""}`,
-      { method: eventId ? "PUT" : "POST", body: JSON.stringify(input) },
-    ),
+  return useCompetitionMutation<UpsertCompetitionEvent>(
+    organizationId,
+    competitionId,
+    async (input) => {
+      const competitionApi = competitionsApi[":competitionId"];
+      const response = eventId
+        ? await competitionApi.events[":eventId"].$put({
+            param: { organizationId, competitionId, eventId },
+            json: input,
+          })
+        : await competitionApi.events.$post({
+            param: { organizationId, competitionId },
+            json: input,
+          });
+      if (!response.ok) return throwResponseError(response, "Failed to save Competition Event");
+      return response.json();
+    },
   );
 }
 
@@ -139,11 +160,14 @@ export function useDeleteCompetitionEvent(organizationId: string, competitionId:
   return useCompetitionMutation<{ eventId: string; expectedUpdatedAt: string }>(
     organizationId,
     competitionId,
-    ({ eventId, expectedUpdatedAt }) =>
-      request(`/${organizationId}/competitions/${competitionId}/events/${eventId}`, {
-        method: "DELETE",
-        body: JSON.stringify({ expectedUpdatedAt }),
-      }),
+    async ({ eventId, expectedUpdatedAt }) => {
+      const response = await competitionsApi[":competitionId"].events[":eventId"].$delete({
+        param: { organizationId, competitionId, eventId },
+        json: { expectedUpdatedAt },
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to delete Competition Event");
+      return response.json();
+    },
   );
 }
 
@@ -151,22 +175,28 @@ export function usePublishCompetition(organizationId: string, competitionId: str
   return useCompetitionMutation<{ expectedUpdatedAt: string }>(
     organizationId,
     competitionId,
-    (input) =>
-      request(`/${organizationId}/competitions/${competitionId}/publish`, {
-        method: "POST",
-        body: JSON.stringify(input),
-      }),
+    async (input) => {
+      const response = await competitionsApi[":competitionId"].publish.$post({
+        param: { organizationId, competitionId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to publish Competition");
+      return response.json();
+    },
   );
 }
 
 export function useDeleteCompetition(organizationId: string, competitionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { expectedUpdatedAt: string; reason: string }) =>
-      request<{ deleted: true }>(`/${organizationId}/competitions/${competitionId}`, {
-        method: "DELETE",
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: { expectedUpdatedAt: string; reason: string }) => {
+      const response = await competitionsApi[":competitionId"].$delete({
+        param: { organizationId, competitionId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to delete Competition Draft");
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.removeQueries({
         queryKey: competitionKeys.detail(organizationId, competitionId),
