@@ -11,11 +11,12 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check": "bun run format --check && bun run lint",
+    "check": "bun run docs:check && bun run format --check && bun run lint",
     "deps": "ncu",
     "dev": "turbo run dev --ui=tui",
     "docker:db": "docker compose -f docker-compose.db.yml up -d",
     "docker:db:down": "docker compose -f docker-compose.db.yml down",
+    "docs:check": "bun scripts/check-markdown-links.ts",
     "e2e": "bun run --filter e2e e2e",
     "env:generate": "turbo run env:generate",
     "env:validate": "turbo run env:validate",
