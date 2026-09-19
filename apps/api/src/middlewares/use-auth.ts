@@ -40,6 +40,22 @@ export const isAuthenticated = async (c: Context, next: Next) => {
   await next();
 };
 
+export const isVerified = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  if (!user) {
+    logger.error("Authentication required but no user found");
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  if (!user.emailVerified) {
+    logger.warn("Email verification required for organization access", { userId: user.id });
+    return c.json({ error: "Email verification required" }, 403);
+  }
+
+  await next();
+};
+
 export const isAdmin = async (c: Context, next: Next) => {
   const user = c.get("user");
 

@@ -16,9 +16,15 @@ export const E2E_USERS = {
     email: "user.e2e@example.com",
     password: "Password123!",
   },
+  unverifiedUser: {
+    name: "E2E Unverified User",
+    email: "unverified-user.e2e@example.com",
+    password: "Password123!",
+  },
 } as const;
 
 export const E2E_AUTH_FILES = {
   admin: "playwright/.auth/admin.json",
   user: "playwright/.auth/user.json",
+  unverifiedUser: "playwright/.auth/unverified-user.json",
 } as const;

@@ -24,8 +24,8 @@ function UnauthorizedPage() {
     >
       <AccessDeniedCard
         eyebrow="Organization access"
-        title="No organization found"
-        description="Ask an organization owner to invite this account, or sign in with a different one."
+        title="Manager access unavailable"
+        description="Verify this account's email and ask an organization owner to add it, or sign in with a different account."
       >
         <Button className="sm:flex-1" onClick={handleSignOut}>
           Sign out
