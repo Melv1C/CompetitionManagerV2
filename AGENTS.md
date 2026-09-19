@@ -23,7 +23,6 @@ This is a Bun and Turborepo monorepo. Read `README.md`, the relevant package's `
 - `CONTEXT.md` is the domain glossary. Keep implementation details out of it and use its canonical terms in code and documentation.
 - `docs/adr` records durable architectural and product decisions. Update an existing record when correcting its wording; add a new record when a decision changes.
 - `docs/operations.md` documents runtime behavior and data-handling rules.
-- Run `bun run docs:check` after changing Markdown links. The normal `bun run check` command includes this check.
 
 ## Working rules
 

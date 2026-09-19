@@ -126,7 +126,7 @@ bun run check
 bun run test
 ```
 
-`bun run check` validates local Markdown links, formatting, lint rules, and TypeScript through the configured Oxlint type-aware checks.
+`bun run check` validates formatting, lint rules, and TypeScript through the configured Oxlint type-aware checks.
 
 Run the Redis-backed BullMQ integration tests while the development Redis service is running:
 
