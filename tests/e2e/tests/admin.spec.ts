@@ -21,6 +21,8 @@ test.describe("as admin", () => {
     await expect(page.getByRole("link", { name: /Manage Users/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Manage Organizations/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Frontend App/i })).toBeVisible();
+    await expect(page.getByText("TurboKit", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("competition-manager-v2", { exact: true })).toHaveCount(0);
   });
 
   test("can create an organization for another user", async ({ browser, page }) => {

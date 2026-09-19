@@ -211,12 +211,21 @@ test.describe("manager competition setup", () => {
       true,
     );
 
-    await page.getByRole("button", { name: "Organization: E2E Athletics Organization" }).click();
-    await page.getByRole("menuitem", { name: /E2E Secondary Organization/ }).click();
+    const primaryOrganization = "E2E Athletics Organization";
+    const secondaryOrganization = "E2E Secondary Organization";
+    const primaryTrigger = page.getByRole("button", {
+      name: `Organization: ${primaryOrganization}`,
+    });
+    const startsOnPrimary = await primaryTrigger.isVisible();
+    const activeOrganization = startsOnPrimary ? primaryOrganization : secondaryOrganization;
+    const targetOrganization = startsOnPrimary ? secondaryOrganization : primaryOrganization;
+
+    await page.getByRole("button", { name: `Organization: ${activeOrganization}` }).click();
+    await page.getByRole("menuitem", { name: new RegExp(targetOrganization) }).click();
     await expect(page).toHaveURL(/\/organizations\/[A-Za-z0-9]{32}\/competitions$/);
-    await expect(page.locator("header").getByText("E2E Secondary Organization")).toBeVisible();
+    await expect(page.locator("header").getByText(targetOrganization)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Organization: E2E Secondary Organization" }),
+      page.getByRole("button", { name: `Organization: ${targetOrganization}` }),
     ).toBeVisible();
     await context.close();
   });
