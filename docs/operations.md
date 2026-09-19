@@ -10,3 +10,6 @@ Prisma query events are logged at `debug` in every environment. Their metadata c
 duration as `durationMs`, an allowlisted SQL operation, and Prisma's internal `target`.
 Development logs also contain SQL and parameter values for local diagnostics. Test, staging, and
 production logs omit SQL and parameter values.
+
+See [ADR 0014](./adr/0014-allowlisted-database-query-logging.md) for the rationale behind this
+environment boundary.
