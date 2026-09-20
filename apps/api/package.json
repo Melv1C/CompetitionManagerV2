@@ -48,6 +48,7 @@
     "@types/pg": "^8.23.1",
     "concurrently": "^10.0.5",
     "prisma": "^7.10.0",
+    "prisma-zod-generator": "^3.3.1",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

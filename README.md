@@ -29,13 +29,13 @@ See [CONTEXT.md](./CONTEXT.md) for the planned domain language and [the architec
 
 ### Shared packages and tests
 
-| Path                         | Package name              | Responsibility                                               |
-| ---------------------------- | ------------------------- | ------------------------------------------------------------ |
-| `packages/jobs`              | `@repo/jobs`              | Queue names, typed job payloads, and BullMQ adapters         |
-| `packages/utils`             | `@repo/utils`             | Shared schemas, utilities, auth routing, and Socket.IO types |
-| `packages/ui`                | `@repo/ui`                | Reusable React components, styles, and locale resources      |
-| `packages/typescript-config` | `@repo/typescript-config` | Shared TypeScript configuration                              |
-| `tests/e2e`                  | `e2e`                     | Playwright tests against the Docker-based application stack  |
+| Path                         | Package name              | Responsibility                                                                |
+| ---------------------------- | ------------------------- | ----------------------------------------------------------------------------- |
+| `packages/jobs`              | `@repo/jobs`              | Queue names, typed job payloads, and BullMQ adapters                          |
+| `packages/utils`             | `@repo/utils`             | Shared Prisma-derived contracts, utilities, auth routing, and Socket.IO types |
+| `packages/ui`                | `@repo/ui`                | Reusable React components, styles, and locale resources                       |
+| `packages/typescript-config` | `@repo/typescript-config` | Shared TypeScript configuration                                               |
+| `tests/e2e`                  | `e2e`                     | Playwright tests against the Docker-based application stack                   |
 
 ## Architecture
 
@@ -78,7 +78,7 @@ Install dependencies:
 bun install --frozen-lockfile
 ```
 
-Generate the ignored Varlock types and Prisma client. Run these commands after every clean checkout and whenever their schemas change:
+Generate the ignored Varlock types, Prisma client, and shared Prisma-derived Zod model schemas. Run these commands after every clean checkout and whenever their schemas change:
 
 ```bash
 bun run env:generate
