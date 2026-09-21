@@ -19,6 +19,7 @@ function createLrbaExport(runId: string) {
   const clubNumber = runId.slice(-9);
   return [
     LRBA_HEADERS,
+    ["0", "", "", "LRBA export metadata"].join("\t"),
     [
       `8${runId}`,
       "501",

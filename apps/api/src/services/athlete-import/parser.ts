@@ -25,6 +25,10 @@ function isIsoDate(value: string) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+function isAthleteLicense(value: string) {
+  return /^\d+$/.test(value) && BigInt(value) > 10_000n;
+}
+
 export function parseLrbaAthleteExport(contents: string, today = new Date()): LrbaParseResult {
   const normalized = contents.replace(/^\uFEFF/, "");
   const lines = normalized.split(/\r?\n/);
@@ -57,6 +61,7 @@ export function parseLrbaAthleteExport(contents: string, today = new Date()): Lr
   const errors: AthleteImportValidationError[] = [];
   const licenses = new Set<string>();
   const todayIso = today.toISOString().slice(0, 10);
+  let athleteDataStarted = false;
 
   const report = (error: AthleteImportValidationError) => {
     if (errors.length < MAX_ERRORS) errors.push(error);
@@ -78,7 +83,11 @@ export function parseLrbaAthleteExport(contents: string, today = new Date()): Lr
     const clubAbbreviation = valueAt(columns, "db_teams.abbreviation");
     let valid = true;
 
-    if (!/^\d+$/.test(license) || BigInt(license || "0") <= 10_000n) {
+    const hasAthleteLicense = isAthleteLicense(license);
+    if (!athleteDataStarted && !hasAthleteLicense) continue;
+    athleteDataStarted = true;
+
+    if (!hasAthleteLicense) {
       report({ row: sourceRow, field: "license", message: "License must be greater than 10000" });
       valid = false;
     } else if (licenses.has(license)) {
@@ -150,6 +159,13 @@ export function parseLrbaAthleteExport(contents: string, today = new Date()): Lr
       clubExternalId,
       clubAbbreviation,
     });
+  }
+
+  if (!athleteDataStarted) {
+    return {
+      success: false,
+      errors: [{ row: null, field: null, message: "The LRBA export has no athlete rows" }],
+    };
   }
 
   return errors.length > 0 ? { success: false, errors } : { success: true, rows };

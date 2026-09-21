@@ -34,6 +34,8 @@ HTTP health endpoint.
 An LRBA Athlete Directory Import stores its filename, SHA-256 checksum, target season, actor,
 status, timestamps, and summary counts. Previewing does not retain the uploaded file or its rows.
 Every upload computes a fresh preview, including when its checksum matches an earlier import.
+Rows before the first license greater than 10000 are treated as export metadata and skipped. After
+the first Athlete row, malformed rows fail the whole preview.
 Confirmation stages normalized Athlete and Club rows for the worker. A successful transaction
 deletes those rows immediately. Failed staging expires after 24 hours, and the worker removes it
 during hourly cleanup. The raw CSV bytes are never persisted. Confirmation stores a unique worker
