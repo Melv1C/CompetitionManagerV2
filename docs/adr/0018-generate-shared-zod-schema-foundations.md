@@ -1,0 +1,3 @@
+# Generate shared Zod schema foundations from Prisma
+
+Prisma remains the source of truth for stored model fields and enums. `prisma-zod-generator` emits relation-free model schemas into `packages/utils` during `prisma generate`; shared command and response contracts compose those generated schemas with explicit `pick`, `omit`, and `extend` operations for authorization-independent business rules and JSON serialization. Applications consume the curated `@repo/utils` contracts rather than raw generated models or Prisma CRUD schemas, while Hono RPC infers each route's exact input, output, and status types.

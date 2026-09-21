@@ -18,6 +18,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:validate": "APP_ENV=development prisma validate",
+    "seed-e2e": "bun ./scripts/seed-e2e.ts",
     "start": "bun run prisma:migrate:deploy && bun src/index.ts",
     "sync-json-data": "bun ./scripts/sync-json-data.ts",
     "test": "vitest run"
@@ -47,6 +48,7 @@
     "@types/pg": "^8.23.1",
     "concurrently": "^10.0.5",
     "prisma": "^7.10.0",
+    "prisma-zod-generator": "^3.3.1",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

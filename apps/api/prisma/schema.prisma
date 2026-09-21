@@ -3,6 +3,12 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator zod {
+  provider = "prisma-zod-generator"
+  output   = "../../../packages/utils/src/generated/prisma-zod"
+  config   = "./zod-generator.config.json"
+}
+
 datasource db {
   provider = "postgresql"
 }
@@ -533,6 +539,7 @@ model Competition {
   contactEmail               String?
   contactPhone               String?
   maxEventEntriesPerAthlete  Int?
+  oneDayRegistrationEnabled  Boolean                      @default(false)
   oneDayBibStart             Int?
   oneDayBibEnd               Int?
   capacityReservationMinutes Int                          @default(15)
@@ -649,6 +656,7 @@ model CompetitionEvent {
   resultEntryMode ResultEntryMode      @default(COMPETITION_MANAGER_WEB)
   registerable    Boolean              @default(true)
   capacity        Int?
+  relayLegCount   Int?
   active          Boolean              @default(true)
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt

@@ -1,24 +1,26 @@
-import { CardHealth, Logo } from "@repo/ui";
-import { APP_NAME } from "@repo/utils";
-import { createFileRoute } from "@tanstack/react-router";
-import { ENV } from "varlock/env";
-
-import { useAPIHealth } from "@/hooks/use-api-health";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  beforeLoad: ({ context }) => {
+    const organization = context.organizations[0];
+    if (organization) {
+      throw redirect({
+        to: "/organizations/$organizationId/competitions",
+        params: { organizationId: organization.id },
+      });
+    }
+  },
+  component: EmptyOrganization,
 });
 
-function Index() {
-  const { isPending, isError, refetch } = useAPIHealth();
-
+function EmptyOrganization() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100 p-4">
-      <Logo />
-      <h1 className="text-3xl font-bold">Welcome to {APP_NAME}</h1>
-      <p className="text-gray-700">Environment: {ENV.APP_ENV}</p>
-      <div className="mt-4">
-        <CardHealth className="w-64" isPending={isPending} isError={isError} refetch={refetch} />
+    <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center p-6 text-center">
+      <div>
+        <h1 className="text-xl font-semibold">No Organization available</h1>
+        <p className="text-muted-foreground mt-2 max-w-md text-sm">
+          Ask an Organization Owner to add this account before using the manager.
+        </p>
       </div>
     </div>
   );

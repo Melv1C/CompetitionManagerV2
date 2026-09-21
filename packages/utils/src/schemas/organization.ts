@@ -13,6 +13,7 @@ export const Organization$ = z.object({
   id: BetterAuthId$,
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
+  logo: z.url().max(2048).nullable(),
   createdAt: Date$,
   owner: OrganizationOwner$,
 });
@@ -27,6 +28,7 @@ export const CreateOrganization$ = z.object({
     .min(1)
     .max(80)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens."),
+  logo: z.url().max(2048).optional(),
   ownerId: BetterAuthId$,
 });
 export type CreateOrganization = z.infer<typeof CreateOrganization$>;

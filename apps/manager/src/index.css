@@ -3,3 +3,11 @@
 
 @source "../../../packages/ui/dist";
 @import "@repo/ui/index.css";
+
+@layer utilities {
+  .manager-canvas {
+    background-color: #f7fafb;
+    background-image: linear-gradient(rgba(21, 94, 117, 0.035) 1px, transparent 1px);
+    background-size: 100% 3rem;
+  }
+}

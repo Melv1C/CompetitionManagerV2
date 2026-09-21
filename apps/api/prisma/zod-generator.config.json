@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/prisma-zod-generator/lib/config/schema.json",
+  "mode": "custom",
+  "pureModels": true,
+  "pureModelsIncludeRelations": false,
+  "decimalMode": "number",
+  "useMultipleFiles": true,
+  "emit": {
+    "enums": true,
+    "objects": false,
+    "crud": false,
+    "results": false,
+    "pureModels": true,
+    "variants": false
+  }
+}

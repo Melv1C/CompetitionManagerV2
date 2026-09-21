@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as OrganizationsOrganizationIdCompetitionsIndexRouteImport } from './routes/organizations/$organizationId/competitions/index'
+import { Route as OrganizationsOrganizationIdCompetitionsCompetitionIdRouteImport } from './routes/organizations/$organizationId/competitions/$competitionId'
+import { Route as OrganizationsOrganizationIdCompetitionsNewRouteImport } from './routes/organizations/$organizationId/competitions/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +31,84 @@ const UnauthorizedRoute = UnauthorizedRouteImport.update({
   path: '/unauthorized',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganizationsOrganizationIdCompetitionsIndexRoute =
+  OrganizationsOrganizationIdCompetitionsIndexRouteImport.update({
+    id: '/organizations/$organizationId/competitions/',
+    path: '/organizations/$organizationId/competitions/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OrganizationsOrganizationIdCompetitionsCompetitionIdRoute =
+  OrganizationsOrganizationIdCompetitionsCompetitionIdRouteImport.update({
+    id: '/organizations/$organizationId/competitions/$competitionId',
+    path: '/organizations/$organizationId/competitions/$competitionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OrganizationsOrganizationIdCompetitionsNewRoute =
+  OrganizationsOrganizationIdCompetitionsNewRouteImport.update({
+    id: '/organizations/$organizationId/competitions/new',
+    path: '/organizations/$organizationId/competitions/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/organizations/$organizationId/competitions/$competitionId': typeof OrganizationsOrganizationIdCompetitionsCompetitionIdRoute
+  '/organizations/$organizationId/competitions/new': typeof OrganizationsOrganizationIdCompetitionsNewRoute
+  '/organizations/$organizationId/competitions/': typeof OrganizationsOrganizationIdCompetitionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/organizations/$organizationId/competitions/$competitionId': typeof OrganizationsOrganizationIdCompetitionsCompetitionIdRoute
+  '/organizations/$organizationId/competitions/new': typeof OrganizationsOrganizationIdCompetitionsNewRoute
+  '/organizations/$organizationId/competitions': typeof OrganizationsOrganizationIdCompetitionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/organizations/$organizationId/competitions/$competitionId': typeof OrganizationsOrganizationIdCompetitionsCompetitionIdRoute
+  '/organizations/$organizationId/competitions/new': typeof OrganizationsOrganizationIdCompetitionsNewRoute
+  '/organizations/$organizationId/competitions/': typeof OrganizationsOrganizationIdCompetitionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/unauthorized'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/unauthorized'
+    | '/organizations/$organizationId/competitions/$competitionId'
+    | '/organizations/$organizationId/competitions/new'
+    | '/organizations/$organizationId/competitions/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/unauthorized'
-  id: '__root__' | '/' | '/login' | '/unauthorized'
+  to:
+    | '/'
+    | '/login'
+    | '/unauthorized'
+    | '/organizations/$organizationId/competitions/$competitionId'
+    | '/organizations/$organizationId/competitions/new'
+    | '/organizations/$organizationId/competitions'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/unauthorized'
+    | '/organizations/$organizationId/competitions/$competitionId'
+    | '/organizations/$organizationId/competitions/new'
+    | '/organizations/$organizationId/competitions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
+  OrganizationsOrganizationIdCompetitionsCompetitionIdRoute: typeof OrganizationsOrganizationIdCompetitionsCompetitionIdRoute
+  OrganizationsOrganizationIdCompetitionsNewRoute: typeof OrganizationsOrganizationIdCompetitionsNewRoute
+  OrganizationsOrganizationIdCompetitionsIndexRoute: typeof OrganizationsOrganizationIdCompetitionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +134,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnauthorizedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/organizations/$organizationId/competitions/': {
+      id: '/organizations/$organizationId/competitions/'
+      path: '/organizations/$organizationId/competitions'
+      fullPath: '/organizations/$organizationId/competitions/'
+      preLoaderRoute: typeof OrganizationsOrganizationIdCompetitionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations/$organizationId/competitions/$competitionId': {
+      id: '/organizations/$organizationId/competitions/$competitionId'
+      path: '/organizations/$organizationId/competitions/$competitionId'
+      fullPath: '/organizations/$organizationId/competitions/$competitionId'
+      preLoaderRoute: typeof OrganizationsOrganizationIdCompetitionsCompetitionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations/$organizationId/competitions/new': {
+      id: '/organizations/$organizationId/competitions/new'
+      path: '/organizations/$organizationId/competitions/new'
+      fullPath: '/organizations/$organizationId/competitions/new'
+      preLoaderRoute: typeof OrganizationsOrganizationIdCompetitionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +162,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   UnauthorizedRoute: UnauthorizedRoute,
+  OrganizationsOrganizationIdCompetitionsCompetitionIdRoute:
+    OrganizationsOrganizationIdCompetitionsCompetitionIdRoute,
+  OrganizationsOrganizationIdCompetitionsNewRoute:
+    OrganizationsOrganizationIdCompetitionsNewRoute,
+  OrganizationsOrganizationIdCompetitionsIndexRoute:
+    OrganizationsOrganizationIdCompetitionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

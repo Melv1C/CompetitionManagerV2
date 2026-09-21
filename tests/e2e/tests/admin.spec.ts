@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { E2E_AUTH_FILES, E2E_URLS } from "./constants";
+import { E2E_AUTH_FILES, E2E_ORGANIZATION_LOGOS, E2E_URLS } from "./constants";
 
 test("admin app redirects anonymous users to login", async ({ page }) => {
   await page.goto(E2E_URLS.admin);
@@ -21,11 +21,14 @@ test.describe("as admin", () => {
     await expect(page.getByRole("link", { name: /Manage Users/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Manage Organizations/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Frontend App/i })).toBeVisible();
+    await expect(page.getByText("TurboKit", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("competition-manager-v2", { exact: true })).toHaveCount(0);
   });
 
   test("can create an organization for another user", async ({ browser, page }) => {
     const organizationName = `E2E Athletics ${Date.now()}`;
     const organizationSlug = organizationName.toLowerCase().replaceAll(" ", "-");
+    const organizationLogo = E2E_ORGANIZATION_LOGOS.primary;
 
     await page.goto(`${E2E_URLS.admin}/organizations`);
 
@@ -33,6 +36,7 @@ test.describe("as admin", () => {
     await page.getByRole("button", { name: "Create organization" }).click();
     await page.getByRole("textbox", { name: "Name" }).fill(organizationName);
     await expect(page.getByRole("textbox", { name: "Slug" })).toHaveValue(organizationSlug);
+    await page.getByRole("textbox", { name: "Logo URL" }).fill(organizationLogo);
     await page.getByRole("textbox", { name: "Search owners" }).fill("user.e2e@example.com");
     await page.getByRole("combobox", { name: "Owner" }).click();
     await page.getByRole("option", { name: /E2E User.*user\.e2e@example\.com/ }).click();
@@ -49,12 +53,15 @@ test.describe("as admin", () => {
     await expect(organizationRow).toContainText(organizationSlug);
     await expect(organizationRow).toContainText("E2E User");
     await expect(organizationRow).toContainText("user.e2e@example.com");
+    await expect(
+      organizationRow.getByRole("img", { name: `${organizationName} logo` }),
+    ).toHaveAttribute("src", organizationLogo);
 
     const ownerContext = await browser.newContext({ storageState: E2E_AUTH_FILES.user });
     const managerPage = await ownerContext.newPage();
     await managerPage.goto(E2E_URLS.manager);
-    await expect(managerPage).toHaveURL(`${E2E_URLS.manager}/`);
-    await expect(managerPage.getByRole("heading", { name: /Welcome to/i })).toBeVisible();
+    await expect(managerPage).toHaveURL(/\/organizations\/[A-Za-z0-9]{32}\/competitions$/);
+    await expect(managerPage.getByRole("heading", { name: "Competitions" })).toBeVisible();
     await ownerContext.close();
   });
 });

@@ -10,7 +10,7 @@ import {
   type APIRequestContext,
 } from "@playwright/test";
 
-import { E2E_AUTH_FILES, E2E_URLS, E2E_USERS } from "./constants";
+import { E2E_AUTH_FILES, E2E_ORGANIZATION_LOGOS, E2E_URLS, E2E_USERS } from "./constants";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
@@ -126,6 +126,25 @@ async function ensureUnverifiedOrganizationOwner(userId: string) {
   }
 }
 
+async function ensureOrganization(name: string, slug: string, logo: string, ownerId: string) {
+  const context = await playwrightRequest.newContext({
+    baseURL: E2E_URLS.api,
+    storageState: E2E_AUTH_FILES.admin,
+  });
+  try {
+    const response = await context.post("/api/organizations", {
+      data: { name, slug, logo, ownerId },
+    });
+    if (response.status() !== 201 && response.status() !== 409) {
+      throw new Error(
+        `Failed to create Organization fixture: ${response.status()} ${await response.text()}`,
+      );
+    }
+  } finally {
+    await context.dispose();
+  }
+}
+
 test("seed and authenticate e2e users", async ({ request }) => {
   await waitForApi(request);
 
@@ -155,12 +174,55 @@ test("seed and authenticate e2e users", async ({ request }) => {
 
   await authenticate(E2E_USERS.admin.email, E2E_USERS.admin.password, E2E_AUTH_FILES.admin);
   const verifiedUser = await ensureUser(request, E2E_USERS.user, E2E_AUTH_FILES.user);
+  const competitionOwner = await ensureUser(
+    request,
+    E2E_USERS.competitionOwner,
+    E2E_AUTH_FILES.competitionOwner,
+  );
   const unverifiedUser = await ensureUser(
     request,
     E2E_USERS.unverifiedUser,
     E2E_AUTH_FILES.unverifiedUser,
   );
+  const staff = await ensureUser(request, E2E_USERS.staff, E2E_AUTH_FILES.staff);
+  const member = await ensureUser(request, E2E_USERS.member, E2E_AUTH_FILES.member);
+  const secondOwner = await ensureUser(request, E2E_USERS.secondOwner, E2E_AUTH_FILES.secondOwner);
 
-  await setEmailVerified(verifiedUser.user.id, true);
+  await Promise.all([
+    setEmailVerified(verifiedUser.user.id, true),
+    setEmailVerified(competitionOwner.user.id, true),
+    setEmailVerified(staff.user.id, true),
+    setEmailVerified(member.user.id, true),
+    setEmailVerified(secondOwner.user.id, true),
+  ]);
+  await ensureOrganization(
+    "E2E Athletics Organization",
+    "e2e-athletics-organization",
+    E2E_ORGANIZATION_LOGOS.primary,
+    competitionOwner.user.id,
+  );
+  await ensureOrganization(
+    "E2E Secondary Organization",
+    "e2e-secondary-organization",
+    E2E_ORGANIZATION_LOGOS.secondary,
+    secondOwner.user.id,
+  );
   await ensureUnverifiedOrganizationOwner(unverifiedUser.user.id);
+
+  execFileSync(
+    "docker",
+    [
+      "compose",
+      "-f",
+      "docker-compose.e2e.yml",
+      "exec",
+      "-T",
+      "api",
+      "bun",
+      "--filter=api",
+      "run",
+      "seed-e2e",
+    ],
+    { cwd: repoRoot, stdio: "inherit" },
+  );
 });
