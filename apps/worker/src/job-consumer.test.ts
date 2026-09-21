@@ -66,4 +66,30 @@ describe("worker job consumer", () => {
 
     expect(logger.info).toHaveBeenCalledWith("Processed API-started job job-42");
   });
+
+  it("delegates athlete import jobs to the database processor", async () => {
+    let processJob:
+      | ((job: JobMessage<ApplicationJobData, ApplicationJobName>) => Promise<void>)
+      | undefined;
+    const processAthleteImport = vi.fn().mockResolvedValue(undefined);
+
+    createWorkerConsumer({
+      redisUrl: "redis://localhost:6379",
+      logger: { info: vi.fn(), error: vi.fn() },
+      processAthleteImport,
+      createWorker: (configuration) => {
+        processJob = configuration.processor;
+        return { waitUntilReady: vi.fn(), close: vi.fn() } as JobWorker;
+      },
+    });
+
+    await processJob?.({
+      id: "job-43",
+      name: applicationJobNames.athleteImport,
+      data: { importBatchId: "batch-42" },
+      attemptsMade: 1,
+    });
+
+    expect(processAthleteImport).toHaveBeenCalledWith("batch-42", 1);
+  });
 });

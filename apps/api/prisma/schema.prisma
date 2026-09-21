@@ -161,6 +161,15 @@ enum ImportRowState {
   IGNORED
 }
 
+enum AthleteImportState {
+  PREVIEW
+  QUEUED
+  PROCESSING
+  APPLIED
+  FAILED
+  EXPIRED
+}
+
 enum ExternalEntityType {
   ATHLETE
   COMPETITION_EVENT
@@ -231,6 +240,7 @@ model User {
   athleteMergesPerformed     AthleteMerge[]           @relation("AthleteMergeActor")
   settlementsCreated         OrganizationSettlement[] @relation("SettlementCreatedBy")
   importsCreated             ResultImportBatch[]      @relation("ResultImportCreatedBy")
+  athleteImportsCreated      AthleteImportBatch[]     @relation("AthleteImportCreatedBy")
   auditEntries               AuditEntry[]             @relation("AuditActor")
 
   @@unique([email])
@@ -355,6 +365,7 @@ model AthleticsSeason {
   athleteSeasons    AthleteSeason[]
   athleteCategories AthleteCategory[]
   competitions      Competition[]
+  athleteImports    AthleteImportBatch[]
 
   @@unique([provider, code])
   @@index([startsOn, endsOn])
@@ -501,6 +512,71 @@ model AthleteSeason {
   @@unique([athleteId, athleticsSeasonId])
   @@index([athleticsSeasonId, clubId])
   @@map("athlete_season")
+}
+
+model AthleteImportBatch {
+  id                String             @id @default(uuid()) @db.Uuid
+  provider          String
+  filename          String
+  checksum          String
+  state             AthleteImportState @default(PREVIEW)
+  seasonCode        String
+  seasonStartsOn    DateTime           @db.Date
+  seasonEndsOn      DateTime           @db.Date
+  athleticsSeasonId String?            @db.Uuid
+  athleticsSeason   AthleticsSeason?   @relation(fields: [athleticsSeasonId], references: [id], onDelete: Restrict)
+  createdByUserId   String?
+  createdBy         User?              @relation("AthleteImportCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  summary           Json
+  errorMessage      String?
+  workerJobId       String?
+  confirmedAt       DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  stagingExpiresAt  DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  rows  AthleteImportRow[]
+  clubs AthleteImportClub[]
+
+  @@unique([provider, seasonCode, checksum])
+  @@index([provider, seasonCode, state])
+  @@index([createdAt])
+  @@map("athlete_import_batch")
+}
+
+model AthleteImportRow {
+  id               String             @id @default(uuid()) @db.Uuid
+  importBatchId    String             @db.Uuid
+  importBatch      AthleteImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  sourceRow        Int
+  license          String
+  bib              Int
+  firstName        String
+  lastName         String
+  gender           String
+  birthDate        DateTime           @db.Date
+  clubExternalId   String
+  clubAbbreviation String
+
+  @@unique([importBatchId, license])
+  @@index([importBatchId, clubExternalId])
+  @@map("athlete_import_row")
+}
+
+model AthleteImportClub {
+  id            String             @id @default(uuid()) @db.Uuid
+  importBatchId String             @db.Uuid
+  importBatch   AthleteImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  externalId    String
+  name          String
+  abbreviation  String
+  countryCode   String             @db.Char(2)
+  active        Boolean            @default(true)
+
+  @@unique([importBatchId, externalId])
+  @@map("athlete_import_club")
 }
 
 model AthleteMerge {

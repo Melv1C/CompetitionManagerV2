@@ -36,6 +36,10 @@ _Avoid_: Athlete reassignment, silent deduplication
 A provider-scoped sporting period with a stable code and explicit start and end dates. Each Athletics Competition operates under one Athletics Season.
 _Avoid_: Calendar year, Competition date range
 
+**LRBA Season Calendar**:
+The default LRBA Athletics Season runs from November 1 through October 31 and is named for its ending year. Its Indoor / Cross-Country phase runs through March 31 and its Outdoor phase begins April 1; both phases share Athlete Season bibs and Club affiliations.
+_Avoid_: Separate Athlete Seasons for indoor and outdoor, inferred Competition date range
+
 **Athlete Season**:
 A record belonging to one Athlete and one Athletics Season that contains the Athlete's federation bib and Club affiliation for that period.
 _Avoid_: Athlete identity, Competition registration
@@ -209,8 +213,12 @@ An Athlete created for a specific Competition when no suitable federated Athlete
 _Avoid_: Guest User, temporary login
 
 **Federated Athlete**:
-An Athlete synchronized from the LBFA/Belgian athlete source through a provider boundary that may support other federations later. Synchronization updates the global Athlete and its Athlete Seasons without changing the snapshots preserved on past registrations.
+An Athlete synchronized from the LRBA athlete source through a provider boundary that may support other federations later. Synchronization updates the global Athlete and its Athlete Seasons without changing the snapshots preserved on past registrations.
 _Avoid_: One-day Athlete, User profile
+
+**LRBA Athlete Directory Import**:
+A platform-administrator initiated, confirmed synchronization of the LRBA athlete export into Athletes, Athlete External Identities, Athlete Seasons, and Clubs for one Athletics Season.
+_Avoid_: Development seed, live synchronization, Organization import
 
 **Registration Claim**:
 The exclusive right of a Registrant to manage an Athlete Registration for one Competition. Submission claims it atomically; free registrations confirm immediately, while paid registrations and capacity reservations remain pending for a limited checkout window and are released if payment expires.

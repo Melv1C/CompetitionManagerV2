@@ -10,13 +10,13 @@ import "varlock/auto-load";
 import { ENV } from "varlock/env";
 
 import { createApiShutdown, registerApiShutdown } from "@/lib/api-shutdown";
-import { createApiJobProducer } from "@/lib/job-producer";
+import { getApiJobProducer } from "@/lib/job-producer";
 import { logger } from "@/lib/logger";
 import { initializeSocketIO } from "@/lib/socket";
 import { routes } from "@/routes";
 
 const { printMetrics, registerMetrics } = prometheus();
-const jobProducer = createApiJobProducer();
+const jobProducer = getApiJobProducer();
 
 const app = new Hono()
   .use(

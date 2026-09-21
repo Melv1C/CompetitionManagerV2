@@ -9,15 +9,17 @@
     "env:validate": "varlock load",
     "start": "bun src/index.ts",
     "test": "vitest run --exclude '**/*.integration.test.ts'",
-    "test:integration": "vitest run src/api-to-worker.integration.test.ts"
+    "test:integration": "vitest run src/api-to-worker.integration.test.ts src/athlete-import-processor.integration.test.ts"
   },
   "dependencies": {
     "@repo/jobs": "workspace:*",
+    "pg": "^8.23.0",
     "varlock": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/pg": "^8.23.1",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -34,4 +34,19 @@ describe("API job producer", () => {
 
     expect(close).toHaveBeenCalledOnce();
   });
+
+  it("enqueues an athlete import with three attempts", async () => {
+    const enqueue = vi.fn().mockResolvedValue("athlete-import-batch-42");
+    const producer = createApiJobProducer({
+      queue: { enqueue, close: vi.fn() } as ApplicationJobQueue,
+    });
+
+    await producer.athleteImport("batch-42");
+
+    expect(enqueue).toHaveBeenCalledWith(
+      applicationJobNames.athleteImport,
+      { importBatchId: "batch-42" },
+      { attempts: 3 },
+    );
+  });
 });
