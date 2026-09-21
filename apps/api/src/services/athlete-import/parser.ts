@@ -84,7 +84,10 @@ export function parseLrbaAthleteExport(contents: string, today = new Date()): Lr
     let valid = true;
 
     const hasAthleteLicense = isAthleteLicense(license);
-    if (!athleteDataStarted && !hasAthleteLicense) continue;
+    const hasAthleteDetails = [lastName, gender, birthDate, clubExternalId, clubAbbreviation].some(
+      Boolean,
+    );
+    if (!athleteDataStarted && !hasAthleteLicense && !hasAthleteDetails) continue;
     athleteDataStarted = true;
 
     if (!hasAthleteLicense) {

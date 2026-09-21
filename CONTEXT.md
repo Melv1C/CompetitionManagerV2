@@ -217,7 +217,7 @@ An Athlete synchronized from the LRBA athlete source through a provider boundary
 _Avoid_: One-day Athlete, User profile
 
 **LRBA Athlete Directory Import**:
-A platform-administrator initiated, confirmed synchronization of the LRBA athlete export into Athletes, Athlete External Identities, Athlete Seasons, and Clubs for one Athletics Season.
+A confirmed synchronization of the LRBA athlete directory for one Athletics Season.
 _Avoid_: Development seed, live synchronization, Organization import
 
 **Registration Claim**:
