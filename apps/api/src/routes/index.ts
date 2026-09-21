@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdmin, isVerified, useAuth } from "@/middlewares/use-auth";
 import { useLogger } from "@/middlewares/use-logger";
 
+import { athleteImportsRoutes } from "./athlete-imports";
 import { healthRoutes } from "./health";
 import { managerCompetitionsRoutes } from "./manager-competitions";
 import { organizationsRoutes } from "./organizations";
@@ -26,6 +27,7 @@ export const routes = new Hono()
   //////////////////////////////////////////////////
   // Add routes with logging middleware applied here
   .route("/health", healthRoutes)
+  .route("/athlete-imports", athleteImportsRoutes)
   .route("/manager/organizations", managerCompetitionsRoutes)
   .route("/organizations", organizationsRoutes)
 

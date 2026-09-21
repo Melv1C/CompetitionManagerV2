@@ -148,13 +148,20 @@ export const applicationQueueName = "competition-manager";
 
 export const applicationJobNames = {
   apiStarted: "api.started",
+  athleteImport: "athlete.import",
 } as const;
 
 export type ApplicationJobName = (typeof applicationJobNames)[keyof typeof applicationJobNames];
 
-export interface ApplicationJobData {
+export interface ApiStartedJobData {
   readonly startedAt: string;
 }
+
+export interface AthleteImportJobData {
+  readonly importBatchId: string;
+}
+
+export type ApplicationJobData = ApiStartedJobData | AthleteImportJobData;
 
 export type ApplicationJobQueue = JobQueue<ApplicationJobData, ApplicationJobName>;
 

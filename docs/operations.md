@@ -29,9 +29,24 @@ requires authentication.
 The worker reports ready only after its BullMQ consumer connects to Redis. It does not expose an
 HTTP health endpoint.
 
+## LRBA athlete imports
+
+An LRBA Athlete Directory Import stores its filename, SHA-256 checksum, target season, actor,
+status, timestamps, and summary counts. Previewing does not retain the uploaded file or its rows.
+Every upload computes a fresh preview, including when its checksum matches an earlier import.
+Before the first Athlete, rows without a valid license or any last name, gender, birth date, or Club
+details are treated as export metadata and skipped. A row with Athlete details, or any malformed row
+after Athlete data starts, fails the whole preview.
+Confirmation stages normalized Athlete and Club rows for the worker. A successful transaction
+deletes those rows immediately. Failed staging expires after 24 hours, and the worker removes it
+during hourly cleanup. The raw CSV bytes are never persisted. Confirmation stores a unique worker
+job ID in the same transaction as the staged rows. The API reconciles queued imports with BullMQ
+at startup and every 30 seconds, so an API exit or temporary Redis outage cannot strand a batch
+between PostgreSQL and the queue.
+
 ## Shutdown
 
 On `SIGTERM` or `SIGINT`, the API closes its job producer and then stops its HTTP server. The
-worker closes its BullMQ consumer. Container orchestrators should allow both processes enough time
-to finish these handlers before forcing termination; the end-to-end worker currently uses a
-30-second stop grace period.
+worker closes its BullMQ consumer and PostgreSQL pool. Container orchestrators should allow both
+processes enough time to finish these handlers before forcing termination; the end-to-end worker
+currently uses a 30-second stop grace period.

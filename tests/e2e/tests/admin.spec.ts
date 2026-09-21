@@ -2,6 +2,51 @@ import { expect, test } from "@playwright/test";
 
 import { E2E_AUTH_FILES, E2E_ORGANIZATION_LOGOS, E2E_URLS } from "./constants";
 
+const LRBA_HEADERS = [
+  "db_licenses.licensenumber*",
+  "db_licenses.bib",
+  "db_licenses.id_for_federation",
+  "db_athletes.firstname",
+  "db_athletes.lastname",
+  "db_athletes.gender",
+  "db_athletes.birthdate",
+  "db_countries.iso3",
+  "db_teams.federationnumber",
+  "db_teams.abbreviation",
+].join("\t");
+
+function createLrbaExport(runId: string) {
+  const clubNumber = runId.slice(-9);
+  return [
+    LRBA_HEADERS,
+    ["0", "", "", "LRBA export metadata"].join("\t"),
+    [
+      `8${runId}`,
+      "501",
+      "",
+      "Alice",
+      "Import",
+      "F",
+      "2001-04-12",
+      "BEL",
+      clubNumber,
+      `E2E${runId.slice(-6)}`,
+    ].join("\t"),
+    [
+      `9${runId}`,
+      "502",
+      "",
+      "Benoit",
+      "Import",
+      "M",
+      "2000-09-03",
+      "BEL",
+      clubNumber,
+      `E2E${runId.slice(-6)}`,
+    ].join("\t"),
+  ].join("\n");
+}
+
 test("admin app redirects anonymous users to login", async ({ page }) => {
   await page.goto(E2E_URLS.admin);
 
@@ -63,6 +108,34 @@ test.describe("as admin", () => {
     await expect(managerPage).toHaveURL(/\/organizations\/[A-Za-z0-9]{32}\/competitions$/);
     await expect(managerPage.getByRole("heading", { name: "Competitions" })).toBeVisible();
     await ownerContext.close();
+  });
+
+  test("can preview and confirm an LRBA athlete directory import", async ({ page }) => {
+    const runId = Date.now().toString();
+    const filename = `athletes_lrba-e2e-${runId}.csv`;
+
+    await page.goto(`${E2E_URLS.admin}/athletes`);
+
+    await expect(page.getByRole("heading", { name: "LRBA athlete directory" })).toBeVisible();
+    await page.getByLabel("LRBA athlete export").setInputFiles({
+      name: filename,
+      mimeType: "text/csv",
+      buffer: Buffer.from(createLrbaExport(runId)),
+    });
+    await page.getByRole("button", { name: "Preview import" }).click();
+
+    await expect(page.getByRole("heading", { name: "Preview summary" })).toBeVisible();
+    await expect(page.getByText("2 rows", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm import" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Confirm import" }).click();
+
+    await expect(page.getByText("Import applied", { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    const historyRow = page.getByRole("row", { name: new RegExp(filename) });
+    await expect(historyRow).toContainText("applied");
+    await expect(historyRow).toContainText("2");
   });
 });
 

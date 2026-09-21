@@ -1,0 +1,7 @@
+interface:
+  display_name: "Prisma Zod contracts"
+  short_description: "Derive shared contracts from Prisma Zod"
+  default_prompt: "Use $prisma-zod-contracts to design or review this shared schema."
+
+policy:
+  allow_implicit_invocation: true

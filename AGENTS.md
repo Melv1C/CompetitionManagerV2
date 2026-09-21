@@ -31,6 +31,7 @@ This is a Bun and Turborepo monorepo. Read `README.md`, the relevant package's `
 - Add or update tests when behavior changes.
 - Update environment schemas when adding environment variables, then run `bun run env:generate`.
 - Keep secrets and local environment values out of version control.
+- When a shared Zod schema contains Prisma model fields or enums, read and follow `.agents/skills/prisma-zod-contracts/SKILL.md`.
 
 ## Verification
 

@@ -1,4 +1,5 @@
 import {
+  applicationJobNames,
   createApplicationJobWorker,
   type ApplicationJobData,
   type ApplicationJobName,
@@ -15,6 +16,7 @@ interface WorkerLogger {
 interface ApplicationWorkerConfiguration {
   redisUrl: string;
   logger: WorkerLogger;
+  processAthleteImport?: (importBatchId: string, attemptsMade: number) => Promise<void>;
   createWorker?: (configuration: {
     redisUrl: string;
     processor: (job: JobMessage<ApplicationJobData, ApplicationJobName>) => Promise<void>;
@@ -26,12 +28,24 @@ interface ApplicationWorkerConfiguration {
 export function createWorkerConsumer({
   redisUrl,
   logger,
+  processAthleteImport = async () => {
+    throw new Error("Athlete import processor is not configured");
+  },
   createWorker = createApplicationJobWorker,
 }: ApplicationWorkerConfiguration): JobWorker {
   return createWorker({
     redisUrl,
     async processor(job) {
-      logger.info(`Processed API-started job ${job.id}`);
+      if (job.name === applicationJobNames.apiStarted) {
+        logger.info(`Processed API-started job ${job.id}`);
+        return;
+      }
+      if (job.name === applicationJobNames.athleteImport && "importBatchId" in job.data) {
+        await processAthleteImport(job.data.importBatchId, job.attemptsMade);
+        logger.info(`Applied athlete import ${job.data.importBatchId}`);
+        return;
+      }
+      throw new Error(`Unsupported job ${job.name}`);
     },
     onError(error) {
       logger.error("Worker Redis error", error);

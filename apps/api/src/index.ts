@@ -10,13 +10,15 @@ import "varlock/auto-load";
 import { ENV } from "varlock/env";
 
 import { createApiShutdown, registerApiShutdown } from "@/lib/api-shutdown";
-import { createApiJobProducer } from "@/lib/job-producer";
+import { getApiJobProducer } from "@/lib/job-producer";
 import { logger } from "@/lib/logger";
 import { initializeSocketIO } from "@/lib/socket";
 import { routes } from "@/routes";
+import { createAthleteImportReconciler } from "@/services/athlete-import/reconciler";
 
 const { printMetrics, registerMetrics } = prometheus();
-const jobProducer = createApiJobProducer();
+const jobProducer = getApiJobProducer();
+const athleteImportReconciler = createAthleteImportReconciler({ producer: jobProducer });
 
 const app = new Hono()
   .use(
@@ -43,13 +45,18 @@ const httpServer = serve(
     void jobProducer.serverReady().catch((error) => {
       logger.error("Could not enqueue API-started job", { metadata: { error } });
     });
+    athleteImportReconciler.start();
   },
 );
 
 // Initialize Socket.IO with the HTTP server
 initializeSocketIO(httpServer as HTTPServer);
 
-const shutdown = createApiShutdown({ jobProducer, httpServer });
+const closeApi = createApiShutdown({ jobProducer, httpServer });
+const shutdown = async () => {
+  athleteImportReconciler.stop();
+  await closeApi();
+};
 
 registerApiShutdown({
   shutdown,

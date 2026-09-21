@@ -20,8 +20,22 @@ export function createApiJobProducer({
         startedAt: now().toISOString(),
       });
     },
+    async athleteImport(importBatchId: string, jobId: string) {
+      return queue.enqueue(
+        applicationJobNames.athleteImport,
+        { importBatchId },
+        { attempts: 3, jobId },
+      );
+    },
     async close() {
       await queue.close();
     },
   };
+}
+
+let sharedProducer: ReturnType<typeof createApiJobProducer> | undefined;
+
+export function getApiJobProducer() {
+  sharedProducer ??= createApiJobProducer();
+  return sharedProducer;
 }

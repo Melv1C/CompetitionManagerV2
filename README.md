@@ -8,10 +8,10 @@ The monorepo uses [Bun](https://bun.sh/) and [Turborepo](https://turbo.build/rep
 
 - The public frontend supports email/password sign-up, sign-in, and API health display.
 - The Organization manager requires a signed-in, email-verified User with at least one Organization Membership. Owners and Organization Staff can create resumable Competition Drafts, configure their Venue, contact, registration schedule, pricing, Events, eligibility, Rounds, and Start Groups, then publish a complete Competition.
-- The platform-admin application manages Users and Organizations and embeds Prisma Studio for authorized database access.
+- The platform-admin application manages Users and Organizations, previews and queues LRBA Athlete Directory Imports, and embeds Prisma Studio for authorized database access.
 - The PostgreSQL schema models the Competition, athlete, registration, pricing, result, interchange, payment, settlement, and audit domains. Competition setup and publication are implemented; registration, payment, result, and interchange workflows remain planned.
 - The API provides Better Auth endpoints, platform-admin Organization endpoints, health and Prometheus endpoints, and a Socket.IO endpoint that reads Better Auth sessions.
-- The API and worker share a Redis-backed BullMQ contract. The only current application job is an `api.started` delivery check.
+- The API and worker share a Redis-backed BullMQ contract for the `api.started` delivery check and confirmed LRBA Athlete Directory Imports.
 
 See [CONTEXT.md](./CONTEXT.md) for the planned domain language and [the architectural decision records](./docs/adr/) for accepted product and architecture decisions.
 
@@ -135,6 +135,10 @@ Run the Redis-backed BullMQ integration tests while the development Redis servic
 REDIS_URL=redis://127.0.0.1:6379/15 bun run test:integration
 ```
 
+Set `ATHLETE_IMPORT_TEST_DATABASE_URL` to a dedicated, migrated PostgreSQL test database to include
+the worker's destructive create-and-update import integration test. Never point it at a development
+or production database.
+
 Run the Playwright end-to-end suite:
 
 ```bash
@@ -153,12 +157,12 @@ CI performs clean-checkout generation, validates both Compose files, validates P
 | -------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | [.env.shared](./.env.shared)                             | `APP_ENV`, application ports, and derived API, frontend, manager, and admin URLs |
 | [apps/api/.env.schema](./apps/api/.env.schema)           | `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, and `LOKI_HOST`               |
-| [apps/worker/.env.schema](./apps/worker/.env.schema)     | `REDIS_URL`                                                                      |
+| [apps/worker/.env.schema](./apps/worker/.env.schema)     | `DATABASE_URL` and `REDIS_URL`                                                   |
 | [apps/frontend/.env.schema](./apps/frontend/.env.schema) | Imports the shared browser configuration                                         |
 | [apps/manager/.env.schema](./apps/manager/.env.schema)   | Imports the shared browser configuration                                         |
 | [apps/admin/.env.schema](./apps/admin/.env.schema)       | Imports the shared browser configuration                                         |
 
-Development and test defaults live in the schemas. Staging and production deployments must provide `MY_APP_API_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and `MY_APP_ADMIN_URL`. The API also requires its database, Redis, Better Auth secret, and Loki values; the worker requires Redis.
+Development and test defaults live in the schemas. Staging and production deployments must provide `MY_APP_API_URL`, `MY_APP_FRONTEND_URL`, `MY_APP_MANAGER_URL`, and `MY_APP_ADMIN_URL`. The API also requires its database, Redis, Better Auth secret, and Loki values; the worker requires the same PostgreSQL database and Redis.
 
 Keep secrets and local overrides out of version control.
 
@@ -183,7 +187,9 @@ Platform administrators create Organizations and assign an eligible verified Use
 
 ## Background jobs
 
-The API enqueues a typed `api.started` job after it starts listening. The worker waits for Redis before reporting ready, consumes the job, and closes its BullMQ worker on `SIGTERM` or `SIGINT`. Future domain jobs will use the same `@repo/jobs` contract.
+The API enqueues a typed `api.started` job after it starts listening. Confirmed LRBA Athlete Directory Imports enqueue an `athlete.import` job with the persisted import-batch ID. The worker applies each batch in one PostgreSQL transaction and retries it up to three times. It waits for Redis before reporting ready and closes its BullMQ worker and PostgreSQL pool on `SIGTERM` or `SIGINT`.
+
+Platform administrators upload the established LRBA tab-separated `.csv` export from the admin Athletes page. Previewing validates the whole file and reports create and update counts without changing Athlete data. Club federation numbers and abbreviations come from the export; existing Club names and countries remain unchanged. Confirmation re-uploads and verifies the same checksum, stages normalized rows for the worker, and creates the annual November-through-October LRBA Athletics Season when needed. The source file itself is not retained.
 
 ## Deployment
 
