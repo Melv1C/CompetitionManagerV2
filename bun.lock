@@ -180,11 +180,13 @@
       "version": "0.0.0",
       "dependencies": {
         "@repo/jobs": "workspace:*",
+        "pg": "^8.23.0",
         "varlock": "catalog:",
       },
       "devDependencies": {
         "@repo/typescript-config": "workspace:*",
         "@types/node": "catalog:",
+        "@types/pg": "^8.23.1",
         "tsdown": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
