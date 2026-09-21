@@ -1,0 +1,53 @@
+model Organization {
+  id            String       @id
+  name          String
+  slug          String
+  logo          String?
+  createdAt     DateTime
+  metadata      String?
+  deactivatedAt DateTime?
+  members       Member[]
+  invitations   Invitation[]
+
+  disciplines         Discipline[]
+  athleteCategories   AthleteCategory[]
+  competitions        Competition[]
+  athleteMerges       AthleteMerge[]
+  settlements         OrganizationSettlement[]
+  resultImportBatches ResultImportBatch[]
+  auditEntries        AuditEntry[]
+
+  @@unique([slug])
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
+}

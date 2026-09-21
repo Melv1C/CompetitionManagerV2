@@ -1,0 +1,16 @@
+model ExternalEntityMapping {
+  id               String             @id @default(uuid()) @db.Uuid
+  competitionId    String             @db.Uuid
+  competition      Competition        @relation(fields: [competitionId], references: [id], onDelete: Restrict)
+  provider         String
+  entityType       ExternalEntityType
+  externalId       String
+  internalEntityId String             @db.Uuid
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([competitionId, provider, entityType, externalId])
+  @@unique([competitionId, provider, entityType, internalEntityId])
+  @@index([internalEntityId])
+  @@map("external_entity_mapping")
+}

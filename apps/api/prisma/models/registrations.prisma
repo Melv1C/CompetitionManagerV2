@@ -1,0 +1,153 @@
+model AthleteRegistration {
+  id                       String                   @id @default(uuid()) @db.Uuid
+  competitionId            String                   @db.Uuid
+  competition              Competition              @relation(fields: [competitionId], references: [id], onDelete: Restrict)
+  athleteId                String                   @db.Uuid
+  athlete                  Athlete                  @relation(fields: [athleteId], references: [id], onDelete: Restrict)
+  state                    AthleteRegistrationState
+  controlledByUserId       String?
+  controlledBy             User?                    @relation("RegistrationController", fields: [controlledByUserId], references: [id], onDelete: SetNull)
+  createdByUserId          String?
+  createdBy                User?                    @relation("RegistrationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  checkedInAt              DateTime?
+  checkedInByUserId        String?
+  checkedInBy              User?                    @relation("RegistrationCheckedInBy", fields: [checkedInByUserId], references: [id], onDelete: SetNull)
+  bib                      Int?
+  bibSource                BibSource?
+  athleteFirstName         String
+  athleteLastName          String
+  athleteBirthDate         DateTime                 @db.Date
+  athleteGender            String
+  clubId                   String?                  @db.Uuid
+  clubNameSnapshot         String?
+  clubAbbreviationSnapshot String?
+  confirmedAt              DateTime?
+  expiredAt                DateTime?
+  cancelledAt              DateTime?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  eventEntries EventEntry[]
+  relayLegs    RelayLeg[]
+
+  @@unique([id, competitionId])
+  @@index([competitionId, athleteId, state])
+  @@index([controlledByUserId])
+  @@index([competitionId, bib])
+  @@map("athlete_registration")
+}
+
+model EventEntry {
+  id                      String                  @id @default(uuid()) @db.Uuid
+  competitionId           String                  @db.Uuid
+  athleteRegistrationId   String                  @db.Uuid
+  athleteRegistration     AthleteRegistration     @relation(fields: [athleteRegistrationId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  competitionEventId      String                  @db.Uuid
+  competitionEvent        CompetitionEvent        @relation(fields: [competitionEventId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  state                   EntryState
+  participationState      ParticipationState      @default(DECLARED)
+  personalBestValue       Int?
+  personalBestAchievedOn  DateTime?               @db.Date
+  personalBestSource      String?
+  athleteCategoryId       String?                 @db.Uuid
+  athleteCategory         AthleteCategory?        @relation(fields: [athleteCategoryId], references: [id], onDelete: Restrict)
+  categoryCodeSnapshot    String
+  categoryNameSnapshot    String
+  pricingTierId           String?                 @db.Uuid
+  pricingTier             CompetitionPricingTier? @relation(fields: [pricingTierId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  pricingTierNameSnapshot String?
+  priceCents              Int?
+  priceOverridden         Boolean                 @default(false)
+  priceOverrideReason     String?
+  capacityOverridden      Boolean                 @default(false)
+  capacityOverrideReason  String?
+  confirmedAt             DateTime?
+  cancelledAt             DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  waitlistEntry WaitlistEntry?
+  cartLine      RegistrationCartLine?
+  roundEntries  RoundEntry[]
+
+  @@unique([id, competitionEventId])
+  @@unique([id, competitionId])
+  @@unique([athleteRegistrationId, competitionEventId])
+  @@index([competitionEventId, state])
+  @@index([competitionId, athleteRegistrationId])
+  @@map("event_entry")
+}
+
+model RelayEntry {
+  id                       String                  @id @default(uuid()) @db.Uuid
+  competitionId            String                  @db.Uuid
+  competitionEventId       String                  @db.Uuid
+  competitionEvent         CompetitionEvent        @relation(fields: [competitionEventId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  controlledByUserId       String?
+  controlledBy             User?                   @relation("RelayController", fields: [controlledByUserId], references: [id], onDelete: SetNull)
+  clubId                   String                  @db.Uuid
+  club                     Club                    @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  clubNameSnapshot         String
+  clubAbbreviationSnapshot String?
+  athleteCategoryId        String?                 @db.Uuid
+  athleteCategory          AthleteCategory?        @relation(fields: [athleteCategoryId], references: [id], onDelete: Restrict)
+  categoryCodeSnapshot     String
+  categoryNameSnapshot     String
+  state                    EntryState
+  participationState       ParticipationState      @default(DECLARED)
+  pricingTierId            String?                 @db.Uuid
+  pricingTier              CompetitionPricingTier? @relation(fields: [pricingTierId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  pricingTierNameSnapshot  String?
+  priceCents               Int?
+  priceOverridden          Boolean                 @default(false)
+  priceOverrideReason      String?
+  capacityOverridden       Boolean                 @default(false)
+  capacityOverrideReason   String?
+  confirmedAt              DateTime?
+  cancelledAt              DateTime?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+
+  legs          RelayLeg[]
+  waitlistEntry WaitlistEntry?
+  cartLine      RegistrationCartLine?
+  roundEntries  RoundEntry[]
+
+  @@unique([id, competitionEventId])
+  @@unique([id, competitionId])
+  @@index([competitionEventId, state])
+  @@index([competitionId, clubId])
+  @@map("relay_entry")
+}
+
+model RelayLeg {
+  id                    String              @id @default(uuid()) @db.Uuid
+  competitionId         String              @db.Uuid
+  relayEntryId          String              @db.Uuid
+  relayEntry            RelayEntry          @relation(fields: [relayEntryId, competitionId], references: [id, competitionId], onDelete: Cascade)
+  athleteRegistrationId String              @db.Uuid
+  athleteRegistration   AthleteRegistration @relation(fields: [athleteRegistrationId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  legOrder              Int
+
+  @@unique([relayEntryId, legOrder])
+  @@unique([relayEntryId, athleteRegistrationId])
+  @@index([athleteRegistrationId, competitionId])
+  @@map("relay_leg")
+}
+
+model WaitlistEntry {
+  id             String        @id @default(uuid()) @db.Uuid
+  eventEntryId   String?       @unique @db.Uuid
+  eventEntry     EventEntry?   @relation(fields: [eventEntryId], references: [id], onDelete: Restrict)
+  relayEntryId   String?       @unique @db.Uuid
+  relayEntry     RelayEntry?   @relation(fields: [relayEntryId], references: [id], onDelete: Restrict)
+  state          WaitlistState @default(WAITING)
+  queuedAt       DateTime      @default(now())
+  offeredAt      DateTime?
+  offerExpiresAt DateTime?
+  convertedAt    DateTime?
+  cancelledAt    DateTime?
+
+  @@index([state, queuedAt])
+  @@map("waitlist_entry")
+}

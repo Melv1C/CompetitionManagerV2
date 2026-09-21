@@ -1,0 +1,36 @@
+model ResultImportBatch {
+  id                String           @id @default(uuid()) @db.Uuid
+  organizationId    String
+  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  competitionId     String           @db.Uuid
+  competition       Competition      @relation(fields: [competitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  state             ImportBatchState @default(PREVIEW)
+  sourceChecksum    String
+  normalizedSummary Json
+  createdByUserId   String?
+  createdBy         User?            @relation("ResultImportCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  previewExpiresAt  DateTime?
+  committedAt       DateTime?
+  createdAt         DateTime         @default(now())
+
+  rows ResultImportRow[]
+
+  @@unique([competitionId, sourceChecksum])
+  @@index([organizationId, state, createdAt])
+  @@map("result_import_batch")
+}
+
+model ResultImportRow {
+  id             String            @id @default(uuid()) @db.Uuid
+  importBatchId  String            @db.Uuid
+  importBatch    ResultImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  sourceRowKey   String
+  state          ImportRowState    @default(PENDING)
+  normalizedData Json
+  differences    Json?
+  error          String?
+
+  @@unique([importBatchId, sourceRowKey])
+  @@index([importBatchId, state])
+  @@map("result_import_row")
+}

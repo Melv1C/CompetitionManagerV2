@@ -1,0 +1,160 @@
+model AthleticsSeason {
+  id        String   @id @default(uuid()) @db.Uuid
+  provider  String
+  code      String
+  startsOn  DateTime @db.Date
+  endsOn    DateTime @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  athleteSeasons    AthleteSeason[]
+  athleteCategories AthleteCategory[]
+  competitions      Competition[]
+  athleteImports    AthleteImportBatch[]
+
+  @@unique([provider, code])
+  @@index([startsOn, endsOn])
+  @@map("athletics_season")
+}
+
+model Club {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  abbreviation String?
+  countryCode  String   @db.Char(2)
+  provider     String?
+  externalId   String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  athleteSeasons         AthleteSeason[]
+  competitionEligibility CompetitionClubEligibility[]
+  pricingTierAssignments CompetitionPricingTierClub[]
+  relayEntries           RelayEntry[]
+
+  @@unique([provider, externalId])
+  @@index([name])
+  @@map("club")
+}
+
+model Discipline {
+  id             String                @id @default(uuid()) @db.Uuid
+  organizationId String?
+  organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  code           String
+  measurement    DisciplineMeasurement
+  active         Boolean               @default(true)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  translations DisciplineTranslation[]
+  events       CompetitionEvent[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active])
+  @@map("discipline")
+}
+
+model DisciplineTranslation {
+  id           String     @id @default(uuid()) @db.Uuid
+  disciplineId String     @db.Uuid
+  discipline   Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  locale       AppLocale
+  name         String
+  abbreviation String?
+
+  @@unique([disciplineId, locale])
+  @@map("discipline_translation")
+}
+
+model AthleteCategory {
+  id                String           @id @default(uuid()) @db.Uuid
+  organizationId    String?
+  organization      Organization?    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  athleticsSeasonId String?          @db.Uuid
+  athleticsSeason   AthleticsSeason? @relation(fields: [athleticsSeasonId], references: [id], onDelete: Restrict)
+  provider          String?
+  code              String
+  gender            String
+  minimumAge        Int?
+  maximumAge        Int?
+  active            Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  translations     AthleteCategoryTranslation[]
+  eventEligibility CompetitionEventEligibility[]
+  eventEntries     EventEntry[]
+  relayEntries     RelayEntry[]
+
+  @@unique([organizationId, athleticsSeasonId, code])
+  @@index([organizationId, active])
+  @@index([athleticsSeasonId])
+  @@map("athlete_category")
+}
+
+model AthleteCategoryTranslation {
+  id                String          @id @default(uuid()) @db.Uuid
+  athleteCategoryId String          @db.Uuid
+  athleteCategory   AthleteCategory @relation(fields: [athleteCategoryId], references: [id], onDelete: Cascade)
+  locale            AppLocale
+  name              String
+  abbreviation      String?
+
+  @@unique([athleteCategoryId, locale])
+  @@map("athlete_category_translation")
+}
+
+model Athlete {
+  id                      String       @id @default(uuid()) @db.Uuid
+  firstName               String
+  lastName                String
+  birthDate               DateTime     @db.Date
+  gender                  String
+  createdForCompetitionId String?      @db.Uuid
+  createdForCompetition   Competition? @relation("OneDayAthletes", fields: [createdForCompetitionId], references: [id], onDelete: Restrict)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  externalIdentities AthleteExternalIdentity[]
+  seasons            AthleteSeason[]
+  registrations      AthleteRegistration[]
+  survivingMerges    AthleteMerge[]            @relation("SurvivingAthlete")
+
+  @@index([lastName, firstName, birthDate])
+  @@index([createdForCompetitionId])
+  @@map("athlete")
+}
+
+model AthleteExternalIdentity {
+  id             String   @id @default(uuid()) @db.Uuid
+  athleteId      String   @db.Uuid
+  athlete        Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  provider       String
+  externalId     String
+  displayLicense String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([athleteId])
+  @@map("athlete_external_identity")
+}
+
+model AthleteSeason {
+  id                String          @id @default(uuid()) @db.Uuid
+  athleteId         String          @db.Uuid
+  athlete           Athlete         @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  athleticsSeasonId String          @db.Uuid
+  athleticsSeason   AthleticsSeason @relation(fields: [athleticsSeasonId], references: [id], onDelete: Restrict)
+  clubId            String?         @db.Uuid
+  club              Club?           @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  bib               Int?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([athleteId, athleticsSeasonId])
+  @@index([athleticsSeasonId, clubId])
+  @@map("athlete_season")
+}
