@@ -1,0 +1,195 @@
+enum AppLocale {
+  EN
+  FR
+  NL
+}
+
+enum CompetitionLifecycleState {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum CompetitionRegistrationState {
+  SCHEDULED
+  OPEN
+  CLOSED
+}
+
+enum DisciplineMeasurement {
+  TIME
+  DISTANCE
+  HEIGHT
+  POINTS
+}
+
+enum CompetitionEventKind {
+  INDIVIDUAL
+  COMBINED
+  RELAY
+}
+
+enum ResultEntryMode {
+  ATHLETICS_MANAGER
+  COMPETITION_MANAGER_WEB
+}
+
+enum RoundStatus {
+  NOT_STARTED
+  LIVE
+  FINISHED
+}
+
+enum SeedingStatus {
+  NOT_GENERATED
+  CURRENT
+  STALE
+}
+
+enum AthleteRegistrationState {
+  PENDING_PAYMENT
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+enum EntryState {
+  PENDING
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+}
+
+enum ParticipationState {
+  DECLARED
+  WITHDRAWN
+  DID_NOT_START
+  STARTED
+}
+
+enum BibSource {
+  ATHLETE_SEASON
+  COMPETITION_RANGE
+  MANUAL
+}
+
+enum AdvancementState {
+  NOT_APPLICABLE
+  PENDING
+  PROPOSED
+  CONFIRMED
+  ELIMINATED
+}
+
+enum ResultOutcome {
+  VALID
+  DID_NOT_START
+  DID_NOT_FINISH
+  DISQUALIFIED
+  NO_MARK
+}
+
+enum ResultAttemptStatus {
+  VALID
+  FOUL
+  PASS
+  NO_ATTEMPT
+}
+
+enum WaitlistState {
+  WAITING
+  OFFERED
+  CONVERTED
+  EXPIRED
+  CANCELLED
+}
+
+enum RegistrationCartState {
+  PENDING_PAYMENT
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+enum RegistrationPaymentState {
+  PENDING
+  SUCCEEDED
+  CANCELLED
+}
+
+enum PaymentAttemptState {
+  OPEN
+  SUCCEEDED
+  EXPIRED
+  FAILED
+}
+
+enum SettlementState {
+  DRAFT
+  SUBMITTED
+  PAID
+  FAILED
+}
+
+enum ImportBatchState {
+  PREVIEW
+  APPLIED
+  EXPIRED
+}
+
+enum ImportRowState {
+  PENDING
+  APPLIED
+  UNRESOLVED
+  IGNORED
+}
+
+enum AthleteImportState {
+  PREVIEW
+  QUEUED
+  PROCESSING
+  APPLIED
+  FAILED
+  EXPIRED
+}
+
+enum ExternalEntityType {
+  ATHLETE
+  COMPETITION_EVENT
+  ROUND
+  START_GROUP
+  ROUND_ENTRY
+  RESULT
+}
+
+enum AuditEntityType {
+  ORGANIZATION
+  ATHLETE
+  COMPETITION
+  COMPETITION_EVENT
+  ROUND
+  ATHLETE_REGISTRATION
+  EVENT_ENTRY
+  RELAY_ENTRY
+  REGISTRATION_CART
+  REGISTRATION_PAYMENT
+  ORGANIZATION_SETTLEMENT
+  RESULT_IMPORT_BATCH
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  STATE_TRANSITION
+  OVERRIDE
+  CANCEL
+  TRANSFER
+  MERGE
+  REOPEN
+  OFFICIALIZE
+  REVOKE_OFFICIALIZATION
+  IMPORT
+  DELETE
+}

@@ -1,0 +1,275 @@
+model Competition {
+  id                         String                       @id @default(uuid()) @db.Uuid
+  organizationId             String
+  organization               Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  athleticsSeasonId          String                       @db.Uuid
+  athleticsSeason            AthleticsSeason              @relation(fields: [athleticsSeasonId], references: [id], onDelete: Restrict)
+  primaryLocale              AppLocale                    @default(EN)
+  lifecycleState             CompetitionLifecycleState    @default(DRAFT)
+  registrationState          CompetitionRegistrationState @default(SCHEDULED)
+  startsAt                   DateTime?
+  endsAt                     DateTime?
+  timeZone                   String?
+  registrationOpensAt        DateTime?
+  registrationClosesAt       DateTime?
+  contactName                String?
+  contactEmail               String?
+  contactPhone               String?
+  maxEventEntriesPerAthlete  Int?
+  oneDayRegistrationEnabled  Boolean                      @default(false)
+  oneDayBibStart             Int?
+  oneDayBibEnd               Int?
+  capacityReservationMinutes Int                          @default(15)
+  settlementDelayDays        Int                          @default(0)
+  publishedAt                DateTime?
+  archivedAt                 DateTime?
+  officializedAt             DateTime?
+  officializedByUserId       String?
+  officializedBy             User?                        @relation("CompetitionOfficializedBy", fields: [officializedByUserId], references: [id], onDelete: SetNull)
+  createdByUserId            String?
+  createdBy                  User?                        @relation("CompetitionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUserId            String?
+  updatedBy                  User?                        @relation("CompetitionUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+
+  venue                CompetitionVenue?
+  translations         CompetitionTranslation[]
+  pricingTiers         CompetitionPricingTier[]
+  clubEligibility      CompetitionClubEligibility[]
+  events               CompetitionEvent[]
+  oneDayAthletes       Athlete[]                    @relation("OneDayAthletes")
+  athleteRegistrations AthleteRegistration[]
+  registrationCarts    RegistrationCart[]
+  settlements          OrganizationSettlement[]
+  resultImportBatches  ResultImportBatch[]
+  externalMappings     ExternalEntityMapping[]
+
+  @@unique([id, organizationId])
+  @@index([organizationId, lifecycleState, startsAt])
+  @@index([registrationState, registrationOpensAt, registrationClosesAt])
+  @@map("competition")
+}
+
+model CompetitionVenue {
+  competitionId String      @id @db.Uuid
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  name          String
+  addressLine1  String
+  addressLine2  String?
+  postalCode    String
+  city          String
+  region        String?
+  countryCode   String      @db.Char(2)
+  latitude      Decimal?    @db.Decimal(9, 6)
+  longitude     Decimal?    @db.Decimal(9, 6)
+
+  @@map("competition_venue")
+}
+
+model CompetitionTranslation {
+  id            String      @id @default(uuid()) @db.Uuid
+  competitionId String      @db.Uuid
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  locale        AppLocale
+  name          String
+  description   String      @db.Text
+
+  @@unique([competitionId, locale])
+  @@map("competition_translation")
+}
+
+model CompetitionPricingTier {
+  id            String      @id @default(uuid()) @db.Uuid
+  competitionId String      @db.Uuid
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  name          String
+  isDefault     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  clubAssignments CompetitionPricingTierClub[]
+  eventPrices     CompetitionEventPrice[]
+  eventEntries    EventEntry[]
+  relayEntries    RelayEntry[]
+
+  @@unique([id, competitionId])
+  @@unique([competitionId, name])
+  @@index([competitionId, isDefault])
+  @@map("competition_pricing_tier")
+}
+
+model CompetitionPricingTierClub {
+  id            String                 @id @default(uuid()) @db.Uuid
+  competitionId String                 @db.Uuid
+  pricingTierId String                 @db.Uuid
+  pricingTier   CompetitionPricingTier @relation(fields: [pricingTierId, competitionId], references: [id, competitionId], onDelete: Cascade)
+  clubId        String                 @db.Uuid
+  club          Club                   @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  createdAt     DateTime               @default(now())
+
+  @@unique([competitionId, clubId])
+  @@index([pricingTierId, competitionId])
+  @@map("competition_pricing_tier_club")
+}
+
+model CompetitionClubEligibility {
+  competitionId String      @db.Uuid
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  clubId        String      @db.Uuid
+  club          Club        @relation(fields: [clubId], references: [id], onDelete: Restrict)
+
+  @@id([competitionId, clubId])
+  @@map("competition_club_eligibility")
+}
+
+model CompetitionEvent {
+  id              String               @id @default(uuid()) @db.Uuid
+  competitionId   String               @db.Uuid
+  competition     Competition          @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  disciplineId    String               @db.Uuid
+  discipline      Discipline           @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  kind            CompetitionEventKind @default(INDIVIDUAL)
+  resultEntryMode ResultEntryMode      @default(COMPETITION_MANAGER_WEB)
+  registerable    Boolean              @default(true)
+  capacity        Int?
+  relayLegCount   Int?
+  active          Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  translations       CompetitionEventTranslation[]
+  eligibility        CompetitionEventEligibility[]
+  prices             CompetitionEventPrice[]
+  combinedComponents CombinedEventComponent[]      @relation("CombinedParent")
+  combinedParents    CombinedEventComponent[]      @relation("CombinedChild")
+  rounds             Round[]
+  eventEntries       EventEntry[]
+  relayEntries       RelayEntry[]
+
+  @@unique([id, competitionId])
+  @@index([competitionId, active])
+  @@index([disciplineId])
+  @@map("competition_event")
+}
+
+model CompetitionEventTranslation {
+  id                 String           @id @default(uuid()) @db.Uuid
+  competitionEventId String           @db.Uuid
+  competitionEvent   CompetitionEvent @relation(fields: [competitionEventId], references: [id], onDelete: Cascade)
+  locale             AppLocale
+  name               String
+  description        String?          @db.Text
+
+  @@unique([competitionEventId, locale])
+  @@map("competition_event_translation")
+}
+
+model CompetitionEventEligibility {
+  competitionEventId String           @db.Uuid
+  competitionEvent   CompetitionEvent @relation(fields: [competitionEventId], references: [id], onDelete: Cascade)
+  athleteCategoryId  String           @db.Uuid
+  athleteCategory    AthleteCategory  @relation(fields: [athleteCategoryId], references: [id], onDelete: Restrict)
+
+  @@id([competitionEventId, athleteCategoryId])
+  @@map("competition_event_eligibility")
+}
+
+model CompetitionEventPrice {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  competitionId      String                 @db.Uuid
+  competitionEventId String                 @db.Uuid
+  competitionEvent   CompetitionEvent       @relation(fields: [competitionEventId, competitionId], references: [id, competitionId], onDelete: Cascade)
+  pricingTierId      String                 @db.Uuid
+  pricingTier        CompetitionPricingTier @relation(fields: [pricingTierId, competitionId], references: [id, competitionId], onDelete: Cascade)
+  priceCents         Int
+
+  @@unique([competitionEventId, pricingTierId])
+  @@index([pricingTierId, competitionId])
+  @@map("competition_event_price")
+}
+
+model CombinedEventComponent {
+  id                          String              @id @default(uuid()) @db.Uuid
+  competitionId               String              @db.Uuid
+  combinedCompetitionEventId  String              @db.Uuid
+  combinedCompetitionEvent    CompetitionEvent    @relation("CombinedParent", fields: [combinedCompetitionEventId, competitionId], references: [id, competitionId], onDelete: Cascade)
+  componentCompetitionEventId String              @unique @db.Uuid
+  componentCompetitionEvent   CompetitionEvent    @relation("CombinedChild", fields: [componentCompetitionEventId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  sequence                    Int
+  scoringRuleVersionId        String?             @db.Uuid
+  scoringRuleVersion          ScoringRuleVersion? @relation(fields: [scoringRuleVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([combinedCompetitionEventId, sequence])
+  @@index([competitionId])
+  @@map("combined_event_component")
+}
+
+model Round {
+  id                 String           @id @default(uuid()) @db.Uuid
+  competitionEventId String           @db.Uuid
+  competitionEvent   CompetitionEvent @relation(fields: [competitionEventId], references: [id], onDelete: Cascade)
+  sequence           Int
+  label              String
+  scheduledStartAt   DateTime?
+  status             RoundStatus      @default(NOT_STARTED)
+  seedingStatus      SeedingStatus    @default(NOT_GENERATED)
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  startGroups              StartGroup[]
+  roundEntries             RoundEntry[]
+  advancementRule          AdvancementRule?  @relation("AdvancementSource")
+  incomingAdvancementRules AdvancementRule[] @relation("AdvancementTarget")
+
+  @@unique([id, competitionEventId])
+  @@unique([competitionEventId, sequence])
+  @@index([status, scheduledStartAt])
+  @@map("round")
+}
+
+model StartGroup {
+  id               String    @id @default(uuid()) @db.Uuid
+  roundId          String    @db.Uuid
+  round            Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  sequence         Int
+  label            String
+  scheduledStartAt DateTime?
+
+  roundEntries RoundEntry[]
+
+  @@unique([id, roundId])
+  @@unique([roundId, sequence])
+  @@map("start_group")
+}
+
+model AdvancementRule {
+  id                         String @id @default(uuid()) @db.Uuid
+  competitionEventId         String @db.Uuid
+  sourceRoundId              String @unique @db.Uuid
+  sourceRound                Round  @relation("AdvancementSource", fields: [sourceRoundId, competitionEventId], references: [id, competitionEventId], onDelete: Cascade)
+  targetRoundId              String @db.Uuid
+  targetRound                Round  @relation("AdvancementTarget", fields: [targetRoundId, competitionEventId], references: [id, competitionEventId], onDelete: Restrict)
+  automaticPlaceCount        Int    @default(0)
+  additionalPerformanceCount Int    @default(0)
+
+  @@unique([sourceRoundId, competitionEventId])
+  @@index([targetRoundId, competitionEventId])
+  @@map("advancement_rule")
+}
+
+model ScoringRuleVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  version   Int
+  formula   Json
+  createdAt DateTime @default(now())
+
+  combinedComponents CombinedEventComponent[]
+  roundResults       RoundResult[]
+
+  @@unique([name, version])
+  @@map("scoring_rule_version")
+}

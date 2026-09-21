@@ -1,0 +1,182 @@
+model CheckoutFeeSchedule {
+  id                     String    @id @default(uuid()) @db.Uuid
+  version                Int       @unique
+  fixedFeeCents          Int
+  variableFeeBasisPoints Int
+  activeFrom             DateTime
+  retiredAt              DateTime?
+  createdAt              DateTime  @default(now())
+
+  registrationCarts RegistrationCart[]
+
+  @@index([activeFrom, retiredAt])
+  @@map("checkout_fee_schedule")
+}
+
+model RegistrationCart {
+  id                        String                @id @default(uuid()) @db.Uuid
+  organizationId            String
+  competitionId             String                @db.Uuid
+  competition               Competition           @relation(fields: [competitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  submittedByUserId         String?
+  submittedBy               User?                 @relation("CartSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
+  state                     RegistrationCartState
+  feeScheduleId             String?               @db.Uuid
+  feeSchedule               CheckoutFeeSchedule?  @relation(fields: [feeScheduleId], references: [id], onDelete: Restrict)
+  feeFixedCentsSnapshot     Int
+  feeBasisPointsSnapshot    Int
+  eventEntriesSubtotalCents Int
+  checkoutFeeCents          Int
+  totalCents                Int
+  currency                  String                @default("EUR") @db.Char(3)
+  submittedAt               DateTime              @default(now())
+  expiresAt                 DateTime?
+  confirmedAt               DateTime?
+  expiredAt                 DateTime?
+
+  lines   RegistrationCartLine[]
+  payment RegistrationPayment?
+
+  @@unique([id, competitionId, organizationId])
+  @@index([competitionId, state, submittedAt])
+  @@index([submittedByUserId])
+  @@map("registration_cart")
+}
+
+model RegistrationCartLine {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String
+  competitionId  String           @db.Uuid
+  cartId         String           @db.Uuid
+  cart           RegistrationCart @relation(fields: [cartId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
+  eventEntryId   String?          @unique @db.Uuid
+  eventEntry     EventEntry?      @relation(fields: [eventEntryId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  relayEntryId   String?          @unique @db.Uuid
+  relayEntry     RelayEntry?      @relation(fields: [relayEntryId, competitionId], references: [id, competitionId], onDelete: Restrict)
+  unitPriceCents Int
+
+  paymentAllocation PaymentAllocation?
+
+  @@unique([id, cartId, competitionId, organizationId])
+  @@unique([eventEntryId, competitionId])
+  @@unique([relayEntryId, competitionId])
+  @@index([cartId])
+  @@map("registration_cart_line")
+}
+
+model RegistrationPayment {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  organizationId          String
+  competitionId           String                   @db.Uuid
+  cartId                  String                   @unique @db.Uuid
+  cart                    RegistrationCart         @relation(fields: [cartId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
+  payerUserId             String?
+  payer                   User?                    @relation("PaymentPayer", fields: [payerUserId], references: [id], onDelete: SetNull)
+  payerNameSnapshot       String
+  payerEmailSnapshot      String
+  state                   RegistrationPaymentState @default(PENDING)
+  eventEntriesAmountCents Int
+  checkoutFeeCents        Int
+  totalCents              Int
+  currency                String                   @default("EUR") @db.Char(3)
+  succeededAt             DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  attempts    PaymentAttempt[]
+  allocations PaymentAllocation[]
+
+  @@unique([cartId, competitionId, organizationId])
+  @@unique([id, cartId, competitionId, organizationId])
+  @@index([payerUserId, createdAt])
+  @@map("registration_payment")
+}
+
+model PaymentAttempt {
+  id                String              @id @default(uuid()) @db.Uuid
+  paymentId         String              @db.Uuid
+  payment           RegistrationPayment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  providerSessionId String              @unique
+  state             PaymentAttemptState @default(OPEN)
+  checkoutUrl       String?
+  expiresAt         DateTime
+  succeededAt       DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime            @default(now())
+
+  providerEvents PaymentProviderEvent[]
+
+  @@index([paymentId, state])
+  @@map("payment_attempt")
+}
+
+model PaymentProviderEvent {
+  providerEventId  String          @id
+  paymentAttemptId String?         @db.Uuid
+  paymentAttempt   PaymentAttempt? @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict)
+  eventType        String
+  processedAt      DateTime        @default(now())
+
+  @@index([paymentAttemptId])
+  @@map("payment_provider_event")
+}
+
+model PaymentAllocation {
+  id              String               @id @default(uuid()) @db.Uuid
+  organizationId  String
+  competitionId   String               @db.Uuid
+  cartId          String               @db.Uuid
+  paymentId       String               @db.Uuid
+  payment         RegistrationPayment  @relation(fields: [paymentId, cartId, competitionId, organizationId], references: [id, cartId, competitionId, organizationId], onDelete: Restrict)
+  cartLineId      String               @unique @db.Uuid
+  cartLine        RegistrationCartLine @relation(fields: [cartLineId, cartId, competitionId, organizationId], references: [id, cartId, competitionId, organizationId], onDelete: Restrict)
+  eventPriceCents Int
+
+  settlementLines SettlementLine[]
+
+  @@unique([cartLineId, cartId, competitionId, organizationId])
+  @@unique([id, competitionId, organizationId])
+  @@index([paymentId])
+  @@map("payment_allocation")
+}
+
+model OrganizationSettlement {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  organizationId     String
+  organization       Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  competitionId      String                   @db.Uuid
+  competition        Competition              @relation(fields: [competitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  state              SettlementState          @default(DRAFT)
+  amountCents        Int
+  currency           String                   @default("EUR") @db.Char(3)
+  providerTransferId String?                  @unique
+  adjustmentOfId     String?                  @db.Uuid
+  adjustmentOf       OrganizationSettlement?  @relation("SettlementAdjustment", fields: [adjustmentOfId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
+  adjustments        OrganizationSettlement[] @relation("SettlementAdjustment")
+  createdByUserId    String?
+  createdBy          User?                    @relation("SettlementCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  submittedAt        DateTime?
+  paidAt             DateTime?
+  createdAt          DateTime                 @default(now())
+
+  lines SettlementLine[]
+
+  @@unique([id, competitionId, organizationId])
+  @@index([organizationId, competitionId, state])
+  @@map("organization_settlement")
+}
+
+model SettlementLine {
+  id                  String                 @id @default(uuid()) @db.Uuid
+  organizationId      String
+  competitionId       String                 @db.Uuid
+  settlementId        String                 @db.Uuid
+  settlement          OrganizationSettlement @relation(fields: [settlementId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
+  paymentAllocationId String                 @db.Uuid
+  paymentAllocation   PaymentAllocation      @relation(fields: [paymentAllocationId, competitionId, organizationId], references: [id, competitionId, organizationId], onDelete: Restrict)
+  amountCents         Int
+
+  @@unique([settlementId, paymentAllocationId])
+  @@index([paymentAllocationId])
+  @@map("settlement_line")
+}

@@ -4,7 +4,7 @@
   "globalEnv": ["APP_ENV"],
   "globalDependencies": [
     ".env.shared",
-    "apps/api/prisma/schema.prisma",
+    "apps/api/prisma/**/*.prisma",
     "apps/api/prisma/zod-generator.config.json"
   ],
   "tasks": {

@@ -1,0 +1,60 @@
+model RoundEntry {
+  id                 String             @id @default(uuid()) @db.Uuid
+  competitionEventId String             @db.Uuid
+  roundId            String             @db.Uuid
+  round              Round              @relation(fields: [roundId, competitionEventId], references: [id, competitionEventId], onDelete: Cascade)
+  startGroupId       String?            @db.Uuid
+  startGroup         StartGroup?        @relation(fields: [startGroupId, roundId], references: [id, roundId], onDelete: Restrict)
+  eventEntryId       String?            @db.Uuid
+  eventEntry         EventEntry?        @relation(fields: [eventEntryId, competitionEventId], references: [id, competitionEventId], onDelete: Restrict)
+  relayEntryId       String?            @db.Uuid
+  relayEntry         RelayEntry?        @relation(fields: [relayEntryId, competitionEventId], references: [id, competitionEventId], onDelete: Restrict)
+  laneOrOrder        Int?
+  participationState ParticipationState @default(DECLARED)
+  advancementState   AdvancementState   @default(NOT_APPLICABLE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  result RoundResult?
+
+  @@unique([roundId, eventEntryId])
+  @@unique([roundId, relayEntryId])
+  @@index([roundId, startGroupId, laneOrOrder])
+  @@map("round_entry")
+}
+
+model RoundResult {
+  id                   String              @id @default(uuid()) @db.Uuid
+  roundEntryId         String              @unique @db.Uuid
+  roundEntry           RoundEntry          @relation(fields: [roundEntryId], references: [id], onDelete: Restrict)
+  outcome              ResultOutcome
+  performanceValue     Int?
+  windHundredths       Int?
+  acceptedPlace        Int?
+  placeOverrideReason  String?
+  points               Int?
+  scoringRuleVersionId String?             @db.Uuid
+  scoringRuleVersion   ScoringRuleVersion? @relation(fields: [scoringRuleVersionId], references: [id], onDelete: Restrict)
+  source               ResultEntryMode
+  acceptedAt           DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  attempts ResultAttempt[]
+
+  @@index([outcome, acceptedPlace])
+  @@map("round_result")
+}
+
+model ResultAttempt {
+  id               String              @id @default(uuid()) @db.Uuid
+  roundResultId    String              @db.Uuid
+  roundResult      RoundResult         @relation(fields: [roundResultId], references: [id], onDelete: Cascade)
+  sequence         Int
+  status           ResultAttemptStatus
+  performanceValue Int?
+  windHundredths   Int?
+
+  @@unique([roundResultId, sequence])
+  @@map("result_attempt")
+}
