@@ -21,6 +21,9 @@ function toIsoDate(value: Date | string) {
 }
 
 async function applyImport(client: PoolClient, batchId: string) {
+  // Keep this as parameterized, set-based SQL. The advisory transaction lock, temporary target
+  // table, and bulk upserts are PostgreSQL operations that Prisma would still expose as raw SQL;
+  // replacing them with per-row client calls would make large imports slower and less atomic.
   await client.query("BEGIN");
   try {
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [LRBA_PROVIDER_LOCK]);

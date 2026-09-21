@@ -1,13 +1,9 @@
 import * as z from "zod";
 
-export const AthleteImportState$ = z.enum([
-  "PREVIEW",
-  "QUEUED",
-  "PROCESSING",
-  "APPLIED",
-  "FAILED",
-  "EXPIRED",
-]);
+import { AthleteImportStateSchema } from "../generated/prisma-zod/schemas/enums/AthleteImportState.schema";
+import { AthleteImportBatchSchema } from "../generated/prisma-zod/schemas/models/AthleteImportBatch.schema";
+
+export const AthleteImportState$ = AthleteImportStateSchema;
 
 export const AthleteImportSeason$ = z.object({
   code: z.string().trim(),
@@ -31,11 +27,24 @@ export const AthleteImportSummary$ = z.object({
   clubsUnchanged: z.int().nonnegative(),
 });
 
-export const AthleteImportBatch$ = z.object({
-  id: z.uuid(),
-  provider: z.literal("LRBA"),
-  filename: z.string().trim(),
-  checksum: z.string().trim(),
+const AthleteImportBatchFields$ = AthleteImportBatchSchema.pick({
+  id: true,
+  provider: true,
+  filename: true,
+  checksum: true,
+  state: true,
+  errorMessage: true,
+  createdAt: true,
+  confirmedAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const AthleteImportBatch$ = AthleteImportBatchFields$.extend({
+  id: AthleteImportBatchSchema.shape.id.pipe(z.uuid()),
+  provider: AthleteImportBatchSchema.shape.provider.pipe(z.literal("LRBA")),
+  filename: AthleteImportBatchSchema.shape.filename.trim(),
+  checksum: AthleteImportBatchSchema.shape.checksum.trim(),
   state: AthleteImportState$,
   season: AthleteImportSeason$,
   summary: AthleteImportSummary$,
