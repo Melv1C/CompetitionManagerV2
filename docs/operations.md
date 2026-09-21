@@ -33,9 +33,13 @@ HTTP health endpoint.
 
 An LRBA Athlete Directory Import stores its filename, SHA-256 checksum, target season, actor,
 status, timestamps, and summary counts. Previewing does not retain the uploaded file or its rows.
+Every upload computes a fresh preview, including when its checksum matches an earlier import.
 Confirmation stages normalized Athlete and Club rows for the worker. A successful transaction
 deletes those rows immediately. Failed staging expires after 24 hours, and the worker removes it
-during hourly cleanup. The raw CSV bytes are never persisted.
+during hourly cleanup. The raw CSV bytes are never persisted. Confirmation stores a unique worker
+job ID in the same transaction as the staged rows. The API reconciles queued imports with BullMQ
+at startup and every 30 seconds, so an API exit or temporary Redis outage cannot strand a batch
+between PostgreSQL and the queue.
 
 ## Shutdown
 

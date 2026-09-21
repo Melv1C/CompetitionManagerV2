@@ -540,7 +540,6 @@ model AthleteImportBatch {
   rows  AthleteImportRow[]
   clubs AthleteImportClub[]
 
-  @@unique([provider, seasonCode, checksum])
   @@index([provider, seasonCode, state])
   @@index([createdAt])
   @@map("athlete_import_batch")

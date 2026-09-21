@@ -14,9 +14,44 @@ import { getApiJobProducer } from "@/lib/job-producer";
 import { logger } from "@/lib/logger";
 import { initializeSocketIO } from "@/lib/socket";
 import { routes } from "@/routes";
+import { athleteImportService } from "@/services/athlete-import/service";
 
 const { printMetrics, registerMetrics } = prometheus();
 const jobProducer = getApiJobProducer();
+const ATHLETE_IMPORT_RECONCILIATION_INTERVAL_MS = 30_000;
+let athleteImportReconciliationTimer: ReturnType<typeof setInterval> | undefined;
+let athleteImportReconciliationRunning = false;
+
+async function reconcileQueuedAthleteImports() {
+  if (athleteImportReconciliationRunning) return;
+  athleteImportReconciliationRunning = true;
+  try {
+    const result = await athleteImportService.reconcileQueuedImports((batchId, jobId) =>
+      jobProducer.athleteImport(batchId, jobId),
+    );
+    for (const { batchId, error } of result.errors) {
+      logger.error(`Could not dispatch queued athlete import ${batchId}`, {
+        metadata: { error },
+      });
+    }
+  } catch (error) {
+    logger.error("Could not reconcile queued athlete imports", { metadata: { error } });
+  } finally {
+    athleteImportReconciliationRunning = false;
+  }
+}
+
+function startAthleteImportReconciliation() {
+  void reconcileQueuedAthleteImports();
+  athleteImportReconciliationTimer = setInterval(
+    () => void reconcileQueuedAthleteImports(),
+    ATHLETE_IMPORT_RECONCILIATION_INTERVAL_MS,
+  );
+}
+
+function stopAthleteImportReconciliation() {
+  if (athleteImportReconciliationTimer) clearInterval(athleteImportReconciliationTimer);
+}
 
 const app = new Hono()
   .use(
@@ -43,13 +78,18 @@ const httpServer = serve(
     void jobProducer.serverReady().catch((error) => {
       logger.error("Could not enqueue API-started job", { metadata: { error } });
     });
+    startAthleteImportReconciliation();
   },
 );
 
 // Initialize Socket.IO with the HTTP server
 initializeSocketIO(httpServer as HTTPServer);
 
-const shutdown = createApiShutdown({ jobProducer, httpServer });
+const closeApi = createApiShutdown({ jobProducer, httpServer });
+const shutdown = async () => {
+  stopAthleteImportReconciliation();
+  await closeApi();
+};
 
 registerApiShutdown({
   shutdown,

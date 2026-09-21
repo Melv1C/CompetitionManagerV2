@@ -1,0 +1,1 @@
+DROP INDEX "athlete_import_batch_provider_seasonCode_checksum_key";

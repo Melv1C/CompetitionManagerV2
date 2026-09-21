@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { AthleteImportSummary$, type AthleteImportSummary } from "@repo/utils";
 
 import { prisma } from "@/lib/prisma";
@@ -20,6 +22,7 @@ type AthleteImportDatabase = typeof prisma;
 interface AthleteImportServiceConfiguration {
   db?: AthleteImportDatabase;
   now?: () => Date;
+  createWorkerJobId?: () => string;
 }
 
 interface PreviewInput {
@@ -34,8 +37,10 @@ interface ConfirmInput {
   batchId: string;
   checksum: string;
   rows: LrbaAthleteRow[];
-  enqueue: (batchId: string) => Promise<string>;
+  enqueue: (batchId: string, jobId: string) => Promise<string>;
 }
+
+type EnqueueAthleteImport = ConfirmInput["enqueue"];
 
 function chunks<T>(values: T[], size: number) {
   const result: T[][] = [];
@@ -48,6 +53,7 @@ function chunks<T>(values: T[], size: number) {
 export function createAthleteImportService({
   db = prisma,
   now = () => new Date(),
+  createWorkerJobId = () => `athlete-import-${randomUUID()}`,
 }: AthleteImportServiceConfiguration = {}) {
   async function listSeasons() {
     const defaultSeason = getDefaultLrbaSeason(now());
@@ -183,17 +189,6 @@ export function createAthleteImportService({
   }
 
   async function preview(input: PreviewInput) {
-    const existingBatch = await db.athleteImportBatch.findUnique({
-      where: {
-        provider_seasonCode_checksum: {
-          provider: LRBA_PROVIDER,
-          seasonCode: input.season.code,
-          checksum: input.checksum,
-        },
-      },
-    });
-    if (existingBatch) return existingBatch;
-
     const clubs = deriveLrbaClubs(input.rows);
     const summary = await buildSummary(input.rows, clubs, input.season);
     const existingSeason = await db.athleticsSeason.findUnique({
@@ -216,10 +211,78 @@ export function createAthleteImportService({
     });
   }
 
+  async function dispatchQueuedBatch(
+    batch: { id: string; state: string; workerJobId: string | null },
+    enqueue: EnqueueAthleteImport,
+  ) {
+    if (batch.state !== "QUEUED") return null;
+
+    let workerJobId = batch.workerJobId;
+    if (!batch.workerJobId) {
+      const proposedWorkerJobId = createWorkerJobId();
+      await db.athleteImportBatch.updateMany({
+        where: { id: batch.id, workerJobId: null },
+        data: { workerJobId: proposedWorkerJobId },
+      });
+      const persisted = await db.athleteImportBatch.findUnique({
+        where: { id: batch.id },
+        select: { workerJobId: true },
+      });
+      workerJobId = persisted?.workerJobId ?? null;
+    }
+    if (!workerJobId) {
+      const error = new Error(`Athlete import ${batch.id} has no persisted worker job ID`);
+      await db.athleteImportBatch.updateMany({
+        where: { id: batch.id, state: "QUEUED" },
+        data: { errorMessage: `Waiting for job dispatch: ${error.message}` },
+      });
+      return error;
+    }
+
+    try {
+      const enqueuedJobId = await enqueue(batch.id, workerJobId);
+      if (enqueuedJobId !== workerJobId) {
+        throw new Error(
+          `BullMQ returned job ${enqueuedJobId} for athlete import dispatch ${workerJobId}`,
+        );
+      }
+      await db.athleteImportBatch.updateMany({
+        where: { id: batch.id, errorMessage: { startsWith: "Waiting for job dispatch:" } },
+        data: { errorMessage: null },
+      });
+      return null;
+    } catch (error) {
+      const dispatchError =
+        error instanceof Error ? error : new Error("Could not enqueue athlete import");
+      await db.athleteImportBatch.updateMany({
+        where: { id: batch.id, state: "QUEUED" },
+        data: { errorMessage: `Waiting for job dispatch: ${dispatchError.message}` },
+      });
+      return dispatchError;
+    }
+  }
+
+  async function reconcileQueuedImports(enqueue: EnqueueAthleteImport) {
+    const queued = await db.athleteImportBatch.findMany({
+      where: { state: "QUEUED" },
+      select: { id: true, state: true, workerJobId: true },
+    });
+    const errors: Array<{ batchId: string; error: Error }> = [];
+    for (const batch of queued) {
+      const error = await dispatchQueuedBatch(batch, enqueue);
+      if (error) errors.push({ batchId: batch.id, error });
+    }
+    return { queued: queued.length, errors };
+  }
+
   async function confirm(input: ConfirmInput) {
     const batch = await getBatch(input.batchId);
     if (!batch) return null;
-    if (["QUEUED", "PROCESSING", "APPLIED"].includes(batch.state)) return batch;
+    if (batch.state === "QUEUED") {
+      await dispatchQueuedBatch(batch, input.enqueue);
+      return getBatch(batch.id);
+    }
+    if (["PROCESSING", "APPLIED"].includes(batch.state)) return batch;
     if (batch.checksum !== input.checksum) {
       throw new Error("The selected file does not match the previewed LRBA export");
     }
@@ -240,6 +303,7 @@ export function createAthleteImportService({
     const clubs = deriveLrbaClubs(input.rows);
     const confirmedAt = now();
     const stagingExpiresAt = new Date(confirmedAt.getTime() + STAGING_RETENTION_MS);
+    const workerJobId = createWorkerJobId();
 
     await db.$transaction(async (transaction) => {
       await transaction.athleteImportRow.deleteMany({ where: { importBatchId: batch.id } });
@@ -270,28 +334,16 @@ export function createAthleteImportService({
           confirmedAt,
           stagingExpiresAt,
           errorMessage: null,
-          workerJobId: null,
+          workerJobId,
         },
       });
     });
 
-    try {
-      const workerJobId = await input.enqueue(batch.id);
-      return await db.athleteImportBatch.update({
-        where: { id: batch.id },
-        data: { workerJobId },
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not enqueue athlete import";
-      await db.athleteImportBatch.update({
-        where: { id: batch.id },
-        data: { state: "FAILED", errorMessage: message },
-      });
-      throw error;
-    }
+    await dispatchQueuedBatch({ id: batch.id, state: "QUEUED", workerJobId }, input.enqueue);
+    return getBatch(batch.id);
   }
 
-  return { listSeasons, listBatches, getBatch, preview, confirm };
+  return { listSeasons, listBatches, getBatch, preview, confirm, reconcileQueuedImports };
 }
 
 export const athleteImportService = createAthleteImportService();

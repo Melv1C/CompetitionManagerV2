@@ -41,12 +41,12 @@ describe("API job producer", () => {
       queue: { enqueue, close: vi.fn() } as ApplicationJobQueue,
     });
 
-    await producer.athleteImport("batch-42");
+    await producer.athleteImport("batch-42", "athlete-import-dispatch-42");
 
     expect(enqueue).toHaveBeenCalledWith(
       applicationJobNames.athleteImport,
       { importBatchId: "batch-42" },
-      { attempts: 3 },
+      { attempts: 3, jobId: "athlete-import-dispatch-42" },
     );
   });
 });

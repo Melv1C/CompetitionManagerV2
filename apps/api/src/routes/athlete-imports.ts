@@ -156,7 +156,7 @@ export const athleteImportsRoutes = new Hono()
         batchId,
         checksum: upload.checksum,
         rows: upload.rows,
-        enqueue: (id) => getApiJobProducer().athleteImport(id),
+        enqueue: (id, jobId) => getApiJobProducer().athleteImport(id, jobId),
       });
       if (!batch) return c.json({ error: "Athlete import was not found" }, 404);
       return c.json(serializeBatch(batch)!);
