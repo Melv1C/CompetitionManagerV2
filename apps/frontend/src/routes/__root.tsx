@@ -15,7 +15,7 @@ const queryClient = new QueryClient();
 export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
     if (
-      /^\/(?:$|[1-5]\/?$|competitions(?:\/.*)?|results\/?$|registrations(?:\/.*)?|register\/?$|profile\/?)$/.test(
+      /^\/(?:$|competitions(?:\/.*)?|results\/?$|registrations(?:\/.*)?|register\/?$|profile\/?)$/.test(
         location.pathname,
       )
     ) {
