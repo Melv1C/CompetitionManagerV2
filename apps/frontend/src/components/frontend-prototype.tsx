@@ -62,50 +62,40 @@ import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarDays,
   Check,
   ChevronDown,
-  CircleCheck,
   CircleDollarSign,
   Clock3,
   CreditCard,
-  Flag,
   Languages,
   ListFilter,
   LockKeyhole,
   LogOut,
   MailCheck,
-  MapPin,
   Menu,
   Plus,
   Search,
-  Settings2,
   ShieldCheck,
-  Trophy,
   UserRound,
   Wind,
   X,
 } from "lucide-react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { PrototypeSessionContext, usePrototypeSession } from "@/features/layout";
 import { frontendLanguageStorageKey, languageLocales } from "@/lib/frontend-i18n";
-
-type SessionContextValue = { signedIn: boolean; setSignedIn: (value: boolean) => void };
-const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function MockSessionProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   return (
-    <SessionContext.Provider value={{ signedIn, setSignedIn }}>{children}</SessionContext.Provider>
+    <PrototypeSessionContext.Provider value={{ signedIn, setSignedIn }}>
+      {children}
+    </PrototypeSessionContext.Provider>
   );
 }
 
-function useMockSession() {
-  const value = useContext(SessionContext);
-  if (!value) throw new Error("MockSessionProvider is missing");
-  return value;
-}
+const useMockSession = usePrototypeSession;
 
 const competitions = [
   {
@@ -384,15 +374,6 @@ function formatDate(
   );
 }
 
-function formatDateRange(start: string, end: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).formatRange(dateFromIso(start), dateFromIso(end));
-}
-
 function useFrontendLocale() {
   const { i18n } = useTranslation();
   return localeFor(i18n.resolvedLanguage ?? i18n.language);
@@ -657,51 +638,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
   );
 }
 
-function StatusBadge({
-  status,
-  opensAt,
-}: {
-  status: "open" | "soon" | "closed";
-  opensAt?: string;
-}) {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-  if (status === "open")
-    return <Badge className="bg-accent text-accent-foreground">{t("common.open")}</Badge>;
-  if (status === "soon")
-    return (
-      <Badge variant="secondary">
-        {t("competitions.opens")}{" "}
-        {opensAt && formatDate(opensAt, locale, { day: "numeric", month: "short" })}
-      </Badge>
-    );
-  return <Badge variant="outline">{t("common.closed")}</Badge>;
-}
-
-function CompetitionRegistrationNote({
-  note,
-}: {
-  note: (typeof competitions)[number]["registrationNote"];
-}) {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-
-  if (note.type === "places")
-    return (
-      <>
-        {note.count} {t("competitions.places")}
-      </>
-    );
-  if (note.type === "waitlist") return <>{t("competitions.waitlist")}</>;
-
-  return (
-    <>
-      {t(note.type === "opens" ? "competitions.opens" : "competitions.closes")}{" "}
-      {"date" in note && formatDate(note.date, locale, { day: "numeric", month: "short" })}
-    </>
-  );
-}
-
 function LivePip() {
   return (
     <span className="relative flex size-2">
@@ -769,79 +705,6 @@ function PageIntro({
   );
 }
 
-function CompetitionCard({
-  competition,
-  compact = false,
-}: {
-  competition: (typeof competitions)[number];
-  compact?: boolean;
-}) {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-  return (
-    <Card
-      className={cn(
-        "group transition-transform hover:-translate-y-0.5",
-        competition.featured && "ring-primary/30",
-      )}
-    >
-      <CardHeader className="grid grid-cols-[58px_1fr_auto] gap-4">
-        <div className="bg-secondary flex h-16 flex-col items-center justify-center rounded-lg font-mono leading-none">
-          <strong className="text-2xl">
-            {formatDate(competition.date, locale, { day: "2-digit" })}
-          </strong>
-          <span className="text-muted-foreground mt-1 text-[10px] font-bold tracking-[0.12em]">
-            {formatDate(competition.date, locale, { month: "short" }).toLocaleUpperCase(locale)}
-          </span>
-        </div>
-        <div className="min-w-0">
-          <StatusBadge status={competition.status} opensAt={competition.registrationOpens} />
-          <CardTitle className="mt-2 text-lg">{competition.title}</CardTitle>
-          <CardDescription>{competition.organization}</CardDescription>
-        </div>
-        {competition.featured && (
-          <Badge variant="outline" className="hidden self-start sm:flex">
-            <Flag /> Featured
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className={cn("grid gap-3 text-sm", !compact && "sm:grid-cols-2")}>
-        <p className="text-muted-foreground flex items-start gap-2">
-          <MapPin className="mt-0.5 size-4" />
-          {competition.place}
-        </p>
-        <p className="text-muted-foreground flex items-start gap-2">
-          <Trophy className="mt-0.5 size-4" />
-          {competition.scope}
-        </p>
-      </CardContent>
-      <CardFooter className="justify-between gap-3">
-        <div>
-          <span className="text-muted-foreground block text-xs">
-            <CompetitionRegistrationNote note={competition.registrationNote} />
-          </span>
-          <strong className="text-sm">
-            {t("common.from")} {competition.price}/{t("common.event")}
-          </strong>
-        </div>
-        <Link
-          to="/competitions/$competitionId"
-          params={{ competitionId: competition.id }}
-          className={cn(
-            buttonVariants({
-              variant: competition.status === "open" ? "default" : "outline",
-            }),
-            "min-h-11 md:min-h-8",
-          )}
-        >
-          {competition.status === "open" ? t("common.register") : t("common.details")}
-          <ArrowRight />
-        </Link>
-      </CardFooter>
-    </Card>
-  );
-}
-
 const latestResults = [
   {
     date: "2027-05-18",
@@ -869,434 +732,6 @@ const latestResults = [
   },
 ] as const;
 
-export function HomePage() {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-  return (
-    <SiteShell>
-      <LiveRail />
-      <main>
-        <section className="bg-background relative overflow-hidden border-b">
-          <div
-            aria-hidden="true"
-            className="border-primary/20 ring-primary/5 pointer-events-none absolute -right-24 -bottom-52 size-[520px] rounded-full border ring-[42px]"
-          />
-          <div className="relative mx-auto grid max-w-[1240px] gap-10 px-4 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:px-6 lg:py-20">
-            <div>
-              <p className="text-primary mb-4 text-xs font-bold tracking-[0.18em] uppercase">
-                {t("home.eyebrow")}
-              </p>
-              <h1 className="max-w-3xl text-5xl leading-[0.94] font-semibold tracking-[-0.065em] sm:text-7xl">
-                {t("home.title")}
-              </h1>
-              <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-8">
-                {t("home.intro")}
-              </p>
-              <div className="mt-8 grid max-w-xl gap-2 sm:grid-cols-[1fr_auto]">
-                <div className="relative flex-1">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input className="bg-card h-11 pl-10" placeholder={t("home.search")} />
-                </div>
-                <Link
-                  to="/competitions"
-                  className={cn(buttonVariants({ size: "lg" }), "min-h-11 w-full sm:w-auto")}
-                >
-                  {t("common.search")}
-                </Link>
-              </div>
-            </div>
-            <Card className="bg-card/90 self-end shadow-xl">
-              <CardHeader>
-                <div className="text-chart-5 flex items-center gap-2 text-xs font-bold tracking-[0.14em] uppercase">
-                  <LivePip /> Brussels Indoor
-                </div>
-                <CardTitle className="text-2xl">Women · 60 m final</CardTitle>
-                <CardDescription>{t("home.updated")}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {athletes.slice(0, 3).map((a) => (
-                  <div
-                    key={a.bib}
-                    className="grid grid-cols-[28px_1fr_auto] items-center gap-3 border-t py-3 first:border-t-0"
-                  >
-                    <b className="font-mono text-lg">{a.place}</b>
-                    <span>
-                      <strong className="block">{a.name}</strong>
-                      <small className="text-muted-foreground">{a.club}</small>
-                    </span>
-                    <strong className="font-mono text-xl tracking-tight">{a.result}</strong>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-        <section className="mx-auto max-w-[1240px] px-4 py-14 lg:px-6">
-          <div className="mb-7 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm">{t("home.nextHint")}</p>
-              <h2 className="text-3xl font-semibold tracking-[-0.045em]">{t("home.next")}</h2>
-            </div>
-            <Link
-              to="/competitions"
-              className={cn(buttonVariants({ variant: "outline" }), "min-h-11 sm:min-h-8")}
-            >
-              {t("home.browse")}
-              <ArrowRight />
-            </Link>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {competitions.slice(0, 3).map((c) => (
-              <CompetitionCard key={c.id} competition={c} compact />
-            ))}
-          </div>
-        </section>
-        <section className="bg-card border-y">
-          <div className="mx-auto max-w-[1240px] px-4 py-14 lg:px-6">
-            <div className="mb-7 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm">{t("home.latestHint")}</p>
-                <h2 className="text-3xl font-semibold tracking-[-0.045em]">{t("home.latest")}</h2>
-              </div>
-              <Link
-                to="/results"
-                className={cn(buttonVariants({ variant: "outline" }), "min-h-11 sm:min-h-8")}
-              >
-                {t("home.allResults")}
-                <ArrowRight />
-              </Link>
-            </div>
-            <div className="grid border-y md:grid-cols-3">
-              {latestResults.map((result, index) => (
-                <Link
-                  to="/results"
-                  key={result.title}
-                  className={cn(
-                    "group py-6 md:px-6",
-                    index > 0 && "border-t md:border-l md:border-t-0",
-                    index === 0 && "md:pl-0",
-                  )}
-                >
-                  <span className="text-muted-foreground font-mono text-xs uppercase">
-                    {formatDate(result.date, locale, { day: "numeric", month: "short" })}
-                  </span>
-                  <h3 className="mt-3 text-lg font-semibold">{result.title}</h3>
-                  <p className="text-muted-foreground text-sm">{result.organization}</p>
-                  <div className="mt-5 flex items-end justify-between gap-3">
-                    <span className="text-sm">
-                      <b className="block">{result.winner}</b>
-                      {result.event}
-                    </span>
-                    <strong className="text-primary font-mono text-xl">{result.mark}</strong>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      </main>
-    </SiteShell>
-  );
-}
-
-export function CompetitionsPage() {
-  const { t } = useTranslation();
-  return (
-    <SiteShell>
-      <main>
-        <PageIntro
-          eyebrow={t("competitions.eyebrow")}
-          title={t("competitions.title")}
-          intro={t("competitions.intro")}
-        />
-        <section className="mx-auto max-w-[1240px] px-4 lg:px-6">
-          <div className="bg-card mb-6 grid gap-3 rounded-xl border p-3 md:grid-cols-[1fr_auto_auto_auto]">
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input className="h-10 pl-10" placeholder={t("home.search")} />
-            </div>
-            <Select defaultValue="all">
-              <SelectTrigger className="h-10 w-full md:w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("competitions.allRegions")}</SelectItem>
-                <SelectItem value="brussels">Brussels</SelectItem>
-                <SelectItem value="flanders">Flanders</SelectItem>
-                <SelectItem value="wallonia">Wallonia</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="h-10 w-full md:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("competitions.allDisciplines")}</SelectItem>
-                <SelectItem value="track">Track</SelectItem>
-                <SelectItem value="field">Field</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" className="h-10">
-              <ListFilter />
-              {t("competitions.filters")}
-            </Button>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {competitions.map((c) => (
-              <CompetitionCard key={c.id} competition={c} compact />
-            ))}
-          </div>
-        </section>
-      </main>
-    </SiteShell>
-  );
-}
-
-function CompetitionHeading({ competition }: { competition: (typeof competitions)[number] }) {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-  const hasRegistration = competition.id === "brussels-open";
-  return (
-    <div className="bg-card border-b">
-      <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
-        <Link
-          to="/competitions"
-          className="text-muted-foreground hover:text-foreground mb-5 inline-flex items-center gap-2 text-sm"
-        >
-          <ArrowLeft className="size-4" />
-          {t("detail.back")}
-        </Link>
-        <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <StatusBadge status={competition.status} opensAt={competition.registrationOpens} />
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">
-              {competition.title}
-            </h1>
-            <p className="text-muted-foreground mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <span className="flex items-center gap-2">
-                <CalendarDays className="size-4" />
-                {formatDate(competition.date, locale)}
-              </span>
-              <span className="flex items-center gap-2">
-                <MapPin className="size-4" />
-                {competition.place}
-              </span>
-              <span className="flex items-center gap-2">
-                <Flag className="size-4" />
-                {competition.organization}
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {hasRegistration && (
-              <Link
-                to="/registrations/$registrationId"
-                params={{ registrationId: "registration-1" }}
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "min-h-11 w-full sm:w-auto",
-                )}
-              >
-                {t("detail.manage")}
-              </Link>
-            )}
-            <Link
-              to="/register"
-              className={cn(buttonVariants({ size: "lg" }), "min-h-11 w-full sm:w-auto")}
-            >
-              {t("detail.registerAthlete")}
-              <ArrowRight />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function CompetitionDetailPage() {
-  const { t } = useTranslation();
-  const locale = useFrontendLocale();
-  const { competitionId } = useParams({ strict: false });
-  const competition = competitionFromId(competitionId ?? "brussels-open");
-
-  if (!competition) {
-    return (
-      <SiteShell>
-        <main className="mx-auto max-w-[760px] px-4 py-16 lg:px-6">
-          <h1 className="text-3xl font-semibold">{t("competitions.notFound")}</h1>
-          <Link
-            to="/competitions"
-            className={cn(buttonVariants({ variant: "outline" }), "mt-6 min-h-11")}
-          >
-            <ArrowLeft /> {t("detail.back")}
-          </Link>
-        </main>
-      </SiteShell>
-    );
-  }
-
-  const hasRegistration = competition.id === "brussels-open";
-  return (
-    <SiteShell>
-      <main>
-        <CompetitionHeading competition={competition} />
-        <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
-          <Tabs defaultValue="schedule">
-            <TabsList
-              variant="line"
-              className="mb-8 w-full justify-start overflow-x-auto border-b pb-3"
-            >
-              <TabsTrigger value="overview">{t("detail.overview")}</TabsTrigger>
-              <TabsTrigger value="schedule">{t("detail.schedule")}</TabsTrigger>
-              <TabsTrigger value="participants">
-                {t("detail.participants")} <Badge variant="secondary">86</Badge>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview">
-              <div className={cn("grid gap-5", hasRegistration && "lg:grid-cols-[1fr_360px]")}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">{t("detail.about")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-muted-foreground space-y-6 text-sm leading-6">
-                    <p>
-                      A full afternoon of track and field for U18, U23 and senior athletes.
-                      Electronic timing is available for all track events.
-                    </p>
-                    <div className="grid gap-5 border-t pt-6 sm:grid-cols-2">
-                      <Info
-                        label={t("detail.registrationWindow")}
-                        value={formatDateRange(
-                          competition.registrationOpens,
-                          competition.registrationCloses,
-                          locale,
-                        )}
-                      />
-                      <Info label={t("detail.eligibility")} value="U18, U23 and Senior" />
-                      <Info label={t("detail.pricing")} value="€6 per event" />
-                      <Info label={t("detail.contact")} value="meeting@rba.be" />
-                    </div>
-                  </CardContent>
-                </Card>
-                {hasRegistration && <RegistrationSummary />}
-              </div>
-            </TabsContent>
-            <TabsContent value="schedule">
-              <div className={cn("grid gap-5", hasRegistration && "lg:grid-cols-[1fr_290px]")}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">{t("detail.scheduleTitle")}</CardTitle>
-                    <CardDescription>{t("detail.scheduleHint")}</CardDescription>
-                    <CardAction>
-                      <Button variant="outline" size="sm">
-                        <Settings2 />
-                        {t("detail.allRounds")}
-                      </Button>
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent className="px-0">
-                    <div className="divide-y">
-                      {schedule.map((item) => (
-                        <Link
-                          key={`${item.time}-${item.discipline}-${item.round}`}
-                          to="/competitions/$competitionId/events/$eventId"
-                          params={{ competitionId: competition.id, eventId: item.eventId }}
-                          className="group hover:bg-muted/55 grid grid-cols-[64px_1fr_auto] items-center gap-4 px-4 py-4"
-                        >
-                          <time className="font-mono text-lg font-semibold">{item.time}</time>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <strong>{item.discipline}</strong>
-                              {item.state === "live" && (
-                                <Badge className="bg-chart-5 text-white">
-                                  <LivePip /> {t("common.live")}
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-muted-foreground mt-1 text-sm">
-                              {item.round} · {item.athletes} {t("detail.athletes")}
-                              {item.groups > 1 &&
-                                ` · ${item.groups} ${t("common.heat").toLowerCase()}s`}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {item.groups > 1 && (
-                              <Badge variant="outline" className="hidden sm:flex">
-                                <Clock3 />
-                                {t("detail.sequential")}
-                              </Badge>
-                            )}
-                            <ArrowRight className="text-muted-foreground size-4 transition-transform group-hover:translate-x-1" />
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                {hasRegistration && <RegistrationSummary />}
-              </div>
-            </TabsContent>
-            <TabsContent value="participants">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl">{t("detail.participantsTitle")}</CardTitle>
-                  <CardAction>
-                    <div className="relative">
-                      <Search className="text-muted-foreground absolute top-1/2 left-2 size-4 -translate-y-1/2" />
-                      <Input className="pl-8" placeholder={t("common.search")} />
-                    </div>
-                  </CardAction>
-                </CardHeader>
-                <CardContent className="px-0">
-                  <p className="text-muted-foreground border-y px-4 py-2 text-xs sm:hidden">
-                    {t("common.scrollHint")}
-                  </p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("common.bib")}</TableHead>
-                        <TableHead>{t("common.athlete")}</TableHead>
-                        <TableHead>{t("common.club")}</TableHead>
-                        <TableHead>{t("common.category")}</TableHead>
-                        <TableHead>{t("common.events")}</TableHead>
-                        <TableHead>{t("common.personalBest")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {athletes.map((a) => (
-                        <TableRow key={a.bib}>
-                          <TableCell className="font-mono">{a.bib}</TableCell>
-                          <TableCell className="font-medium">{a.name}</TableCell>
-                          <TableCell>{a.club}</TableCell>
-                          <TableCell>{a.category}</TableCell>
-                          <TableCell>
-                            <Link
-                              to="/competitions/$competitionId/events/$eventId"
-                              params={{
-                                competitionId: competition.id,
-                                eventId: "women-100m",
-                              }}
-                              className="text-primary hover:underline"
-                            >
-                              Women · 100 m
-                            </Link>
-                          </TableCell>
-                          <TableCell className="font-mono">{a.pb}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    </SiteShell>
-  );
-}
-
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -1305,44 +740,6 @@ function Info({ label, value }: { label: string; value: string }) {
       </span>
       <strong className="text-foreground mt-1 block">{value}</strong>
     </div>
-  );
-}
-
-function RegistrationSummary() {
-  const { t } = useTranslation();
-  return (
-    <Card className="ring-primary/25 h-fit">
-      <CardHeader>
-        <CardDescription>{t("detail.yourRegistration")}</CardDescription>
-        <CardTitle>Mila Morgan</CardTitle>
-        <CardAction>
-          <Badge className="bg-accent text-accent-foreground">
-            <CircleCheck />
-            {t("detail.confirmed")}
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="bg-muted rounded-lg p-3">
-          <strong className="block">Women · 100 m</strong>
-          <span className="text-muted-foreground text-sm">PB 12.08 · U18</span>
-        </div>
-        <div className="bg-muted rounded-lg p-3">
-          <strong className="block">Women · Long jump</strong>
-          <span className="text-muted-foreground text-sm">PB 5.42 m · U18</span>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Link
-          to="/registrations/$registrationId"
-          params={{ registrationId: "registration-1" }}
-          className={cn(buttonVariants({ variant: "outline" }), "min-h-11 w-full md:min-h-8")}
-        >
-          {t("detail.manage")}
-          <ArrowRight />
-        </Link>
-      </CardFooter>
-    </Card>
   );
 }
 
@@ -1360,6 +757,7 @@ export function EventDetailPage() {
           <h1 className="text-3xl font-semibold">{t("eventPage.notFound")}</h1>
           <Link
             to="/competitions"
+            search={{ q: undefined, disciplineId: undefined }}
             className={cn(buttonVariants({ variant: "outline" }), "mt-6 min-h-11")}
           >
             <ArrowLeft /> {t("detail.back")}
