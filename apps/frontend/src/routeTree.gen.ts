@@ -10,12 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompetitionsRouteImport } from './routes/competitions'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RegistrationsRouteImport } from './routes/registrations'
+import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions.index'
+import { Route as CompetitionsCompetitionIdRouteImport } from './routes/competitions.$competitionId'
+import { Route as RegistrationsIndexRouteImport } from './routes/registrations.index'
+import { Route as RegistrationsRegistrationIdRouteImport } from './routes/registrations.$registrationId'
+import { Route as CompetitionsCompetitionIdIndexRouteImport } from './routes/competitions.$competitionId.index'
+import { Route as CompetitionsCompetitionIdEventsEventIdRouteImport } from './routes/competitions.$competitionId.events.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionsRoute = CompetitionsRouteImport.update({
+  id: '/competitions',
+  path: '/competitions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -23,39 +39,168 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistrationsRoute = RegistrationsRouteImport.update({
+  id: '/registrations',
+  path: '/registrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRoute = ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompetitionsRoute,
+} as any)
+const CompetitionsCompetitionIdRoute =
+  CompetitionsCompetitionIdRouteImport.update({
+    id: '/$competitionId',
+    path: '/$competitionId',
+    getParentRoute: () => CompetitionsRoute,
+  } as any)
+const RegistrationsIndexRoute = RegistrationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RegistrationsRoute,
+} as any)
+const RegistrationsRegistrationIdRoute =
+  RegistrationsRegistrationIdRouteImport.update({
+    id: '/$registrationId',
+    path: '/$registrationId',
+    getParentRoute: () => RegistrationsRoute,
+  } as any)
+const CompetitionsCompetitionIdIndexRoute =
+  CompetitionsCompetitionIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CompetitionsCompetitionIdRoute,
+  } as any)
+const CompetitionsCompetitionIdEventsEventIdRoute =
+  CompetitionsCompetitionIdEventsEventIdRouteImport.update({
+    id: '/events/$eventId',
+    path: '/events/$eventId',
+    getParentRoute: () => CompetitionsCompetitionIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
+  '/registrations': typeof RegistrationsRouteWithChildren
+  '/results': typeof ResultsRoute
   '/sign-up': typeof SignUpRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdRouteWithChildren
+  '/registrations/$registrationId': typeof RegistrationsRegistrationIdRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/registrations/': typeof RegistrationsIndexRoute
+  '/competitions/$competitionId/': typeof CompetitionsCompetitionIdIndexRoute
+  '/competitions/$competitionId/events/$eventId': typeof CompetitionsCompetitionIdEventsEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
+  '/results': typeof ResultsRoute
   '/sign-up': typeof SignUpRoute
+  '/registrations/$registrationId': typeof RegistrationsRegistrationIdRoute
+  '/competitions': typeof CompetitionsIndexRoute
+  '/registrations': typeof RegistrationsIndexRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdIndexRoute
+  '/competitions/$competitionId/events/$eventId': typeof CompetitionsCompetitionIdEventsEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/competitions': typeof CompetitionsRouteWithChildren
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
+  '/registrations': typeof RegistrationsRouteWithChildren
+  '/results': typeof ResultsRoute
   '/sign-up': typeof SignUpRoute
+  '/competitions/$competitionId': typeof CompetitionsCompetitionIdRouteWithChildren
+  '/registrations/$registrationId': typeof RegistrationsRegistrationIdRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/registrations/': typeof RegistrationsIndexRoute
+  '/competitions/$competitionId/': typeof CompetitionsCompetitionIdIndexRoute
+  '/competitions/$competitionId/events/$eventId': typeof CompetitionsCompetitionIdEventsEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/sign-up'
+  fullPaths:
+    | '/'
+    | '/competitions'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/registrations'
+    | '/results'
+    | '/sign-up'
+    | '/competitions/$competitionId'
+    | '/registrations/$registrationId'
+    | '/competitions/'
+    | '/registrations/'
+    | '/competitions/$competitionId/'
+    | '/competitions/$competitionId/events/$eventId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/sign-up'
-  id: '__root__' | '/' | '/login' | '/sign-up'
+  to:
+    | '/'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/results'
+    | '/sign-up'
+    | '/registrations/$registrationId'
+    | '/competitions'
+    | '/registrations'
+    | '/competitions/$competitionId'
+    | '/competitions/$competitionId/events/$eventId'
+  id:
+    | '__root__'
+    | '/'
+    | '/competitions'
+    | '/login'
+    | '/profile'
+    | '/register'
+    | '/registrations'
+    | '/results'
+    | '/sign-up'
+    | '/competitions/$competitionId'
+    | '/registrations/$registrationId'
+    | '/competitions/'
+    | '/registrations/'
+    | '/competitions/$competitionId/'
+    | '/competitions/$competitionId/events/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CompetitionsRoute: typeof CompetitionsRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
+  RegisterRoute: typeof RegisterRoute
+  RegistrationsRoute: typeof RegistrationsRouteWithChildren
+  ResultsRoute: typeof ResultsRoute
   SignUpRoute: typeof SignUpRoute
 }
 
@@ -68,11 +213,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions': {
+      id: '/competitions'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registrations': {
+      id: '/registrations'
+      path: '/registrations'
+      fullPath: '/registrations'
+      preLoaderRoute: typeof RegistrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-up': {
@@ -82,12 +262,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/competitions/$competitionId': {
+      id: '/competitions/$competitionId'
+      path: '/$competitionId'
+      fullPath: '/competitions/$competitionId'
+      preLoaderRoute: typeof CompetitionsCompetitionIdRouteImport
+      parentRoute: typeof CompetitionsRoute
+    }
+    '/registrations/': {
+      id: '/registrations/'
+      path: '/'
+      fullPath: '/registrations/'
+      preLoaderRoute: typeof RegistrationsIndexRouteImport
+      parentRoute: typeof RegistrationsRoute
+    }
+    '/registrations/$registrationId': {
+      id: '/registrations/$registrationId'
+      path: '/$registrationId'
+      fullPath: '/registrations/$registrationId'
+      preLoaderRoute: typeof RegistrationsRegistrationIdRouteImport
+      parentRoute: typeof RegistrationsRoute
+    }
+    '/competitions/$competitionId/': {
+      id: '/competitions/$competitionId/'
+      path: '/'
+      fullPath: '/competitions/$competitionId/'
+      preLoaderRoute: typeof CompetitionsCompetitionIdIndexRouteImport
+      parentRoute: typeof CompetitionsCompetitionIdRoute
+    }
+    '/competitions/$competitionId/events/$eventId': {
+      id: '/competitions/$competitionId/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/competitions/$competitionId/events/$eventId'
+      preLoaderRoute: typeof CompetitionsCompetitionIdEventsEventIdRouteImport
+      parentRoute: typeof CompetitionsCompetitionIdRoute
+    }
   }
 }
 
+interface CompetitionsCompetitionIdRouteChildren {
+  CompetitionsCompetitionIdIndexRoute: typeof CompetitionsCompetitionIdIndexRoute
+  CompetitionsCompetitionIdEventsEventIdRoute: typeof CompetitionsCompetitionIdEventsEventIdRoute
+}
+
+const CompetitionsCompetitionIdRouteChildren: CompetitionsCompetitionIdRouteChildren =
+  {
+    CompetitionsCompetitionIdIndexRoute: CompetitionsCompetitionIdIndexRoute,
+    CompetitionsCompetitionIdEventsEventIdRoute:
+      CompetitionsCompetitionIdEventsEventIdRoute,
+  }
+
+const CompetitionsCompetitionIdRouteWithChildren =
+  CompetitionsCompetitionIdRoute._addFileChildren(
+    CompetitionsCompetitionIdRouteChildren,
+  )
+
+interface CompetitionsRouteChildren {
+  CompetitionsCompetitionIdRoute: typeof CompetitionsCompetitionIdRouteWithChildren
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
+}
+
+const CompetitionsRouteChildren: CompetitionsRouteChildren = {
+  CompetitionsCompetitionIdRoute: CompetitionsCompetitionIdRouteWithChildren,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
+}
+
+const CompetitionsRouteWithChildren = CompetitionsRoute._addFileChildren(
+  CompetitionsRouteChildren,
+)
+
+interface RegistrationsRouteChildren {
+  RegistrationsRegistrationIdRoute: typeof RegistrationsRegistrationIdRoute
+  RegistrationsIndexRoute: typeof RegistrationsIndexRoute
+}
+
+const RegistrationsRouteChildren: RegistrationsRouteChildren = {
+  RegistrationsRegistrationIdRoute: RegistrationsRegistrationIdRoute,
+  RegistrationsIndexRoute: RegistrationsIndexRoute,
+}
+
+const RegistrationsRouteWithChildren = RegistrationsRoute._addFileChildren(
+  RegistrationsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CompetitionsRoute: CompetitionsRouteWithChildren,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
+  RegisterRoute: RegisterRoute,
+  RegistrationsRoute: RegistrationsRouteWithChildren,
+  ResultsRoute: ResultsRoute,
   SignUpRoute: SignUpRoute,
 }
 export const routeTree = rootRouteImport
