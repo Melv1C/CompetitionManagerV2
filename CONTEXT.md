@@ -123,7 +123,7 @@ An independently operated and scheduled stage of a Competition Event, such as a 
 _Avoid_: Competition Event, attempt
 
 **Start Group**:
-An ordered group of Event Entries operated together within one Round. The interface may call it a heat for track disciplines or a flight for field disciplines.
+An ordered group of Event Entries operated together within one Round. The interface may call it a heat for track disciplines or a flight for field disciplines. A Start Group has no independent scheduled time: Start Groups run sequentially from their Round's scheduled time.
 _Avoid_: Round, Competition Event, athlete category
 
 **Round Entry**:

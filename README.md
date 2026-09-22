@@ -222,6 +222,7 @@ Workflow definitions live in [.github/workflows/staging.yml](./.github/workflows
 ## Documentation map
 
 - [CONTEXT.md](./CONTEXT.md) defines the domain vocabulary and planned product concepts.
+- [docs/frontend-experience.md](./docs/frontend-experience.md) records the agreed public and registrant frontend journeys represented by the mock.
 - [docs/adr](./docs/adr/) records accepted architecture and product decisions.
 - [docs/operations.md](./docs/operations.md) covers runtime operations and log data handling.
 - [AGENTS.md](./AGENTS.md) gives repository-specific guidance to coding agents.
