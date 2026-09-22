@@ -73,6 +73,8 @@ const en = {
     places: "places left",
     opens: "Opens",
     closes: "Closes",
+    waitlist: "Waitlist available",
+    notFound: "Competition not found",
   },
   detail: {
     back: "All competitions",
@@ -109,6 +111,8 @@ const en = {
     status: "Status",
     selectHeat: "Select a heat to see its entries and results.",
     qualified: "Qualified",
+    roundStarts: "Round starts at",
+    notFound: "Event not found",
   },
   resultsPage: {
     eyebrow: "Across every meeting",
@@ -257,6 +261,8 @@ const fr: typeof en = {
     places: "places restantes",
     opens: "Ouverture",
     closes: "Clôture",
+    waitlist: "Liste d'attente disponible",
+    notFound: "Compétition introuvable",
   },
   detail: {
     back: "Toutes les compétitions",
@@ -294,6 +300,8 @@ const fr: typeof en = {
     status: "Statut",
     selectHeat: "Choisissez une série pour afficher les engagés et résultats.",
     qualified: "Qualifié",
+    roundStarts: "Le tour commence à",
+    notFound: "Épreuve introuvable",
   },
   resultsPage: {
     eyebrow: "Tous les meetings",
@@ -441,6 +449,8 @@ const nl: typeof en = {
     places: "plaatsen over",
     opens: "Opent",
     closes: "Sluit",
+    waitlist: "Wachtlijst beschikbaar",
+    notFound: "Wedstrijd niet gevonden",
   },
   detail: {
     back: "Alle wedstrijden",
@@ -477,6 +487,8 @@ const nl: typeof en = {
     status: "Status",
     selectHeat: "Kies een reeks om deelnemers en resultaten te bekijken.",
     qualified: "Gekwalificeerd",
+    roundStarts: "Ronde begint om",
+    notFound: "Onderdeel niet gevonden",
   },
   resultsPage: {
     eyebrow: "Alle meetings",
@@ -554,9 +566,13 @@ const nl: typeof en = {
 };
 
 export const frontendI18n = i18n.createInstance();
+export const frontendLanguageStorageKey = "competition-manager.frontend-language";
+
+const storedLanguage =
+  typeof window === "undefined" ? null : window.localStorage.getItem(frontendLanguageStorageKey);
 
 void frontendI18n.use(initReactI18next).init({
-  lng: "en",
+  lng: storedLanguage ?? "en",
   fallbackLng: "en",
   defaultNS: "frontend",
   resources: {

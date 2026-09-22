@@ -58,7 +58,7 @@ import {
   buttonVariants,
   cn,
 } from "@repo/ui";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -89,13 +89,13 @@ import {
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { languageLocales } from "@/lib/frontend-i18n";
+import { frontendLanguageStorageKey, languageLocales } from "@/lib/frontend-i18n";
 
 type SessionContextValue = { signedIn: boolean; setSignedIn: (value: boolean) => void };
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function MockSessionProvider({ children }: { children: ReactNode }) {
-  const [signedIn, setSignedIn] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
   return (
     <SessionContext.Provider value={{ signedIn, setSignedIn }}>{children}</SessionContext.Provider>
   );
@@ -110,85 +110,85 @@ function useMockSession() {
 const competitions = [
   {
     id: "brussels-open",
-    day: "24",
-    month: "MAY",
     date: "2027-05-24",
     title: "Brussels Open",
     organization: "Royal Brussels Athletics",
     place: "Stade des Trois Tilleuls, Forest",
     scope: "Sprints · Jumps · Middle distance",
     status: "open",
-    note: "Closes 20 May",
+    registrationNote: { type: "closes", date: "2027-05-20" },
+    registrationOpens: "2027-05-01",
+    registrationCloses: "2027-05-20",
     price: "€6",
     featured: true,
   },
   {
     id: "antwerp-night",
-    day: "07",
-    month: "JUN",
     date: "2027-06-07",
     title: "Antwerp Track Night",
     organization: "Antwerp Athletics",
     place: "Sportcentrum Deurne, Antwerp",
     scope: "Track · Middle distance",
     status: "open",
-    note: "42 places left",
+    registrationNote: { type: "places", count: 42 },
+    registrationOpens: "2027-05-10",
+    registrationCloses: "2027-06-03",
     price: "€8",
     featured: false,
   },
   {
     id: "liege-summer",
-    day: "15",
-    month: "JUN",
     date: "2027-06-15",
     title: "Liège Summer Meeting",
     organization: "RFCL Athlétisme",
     place: "Naimette-Xhovémont, Liège",
     scope: "Track · Field",
     status: "soon",
-    note: "Opens 24 May",
+    registrationNote: { type: "opens", date: "2027-05-24" },
+    registrationOpens: "2027-05-24",
+    registrationCloses: "2027-06-10",
     price: "€5",
     featured: false,
   },
   {
     id: "junior-cup",
-    day: "29",
-    month: "JUN",
     date: "2027-06-29",
     title: "Charleroi Junior Cup",
     organization: "Cercle Athlétique Charleroi",
     place: "Stade Jonet, Charleroi",
     scope: "U14 · U16 · U18",
     status: "open",
-    note: "Closes 25 June",
+    registrationNote: { type: "closes", date: "2027-06-25" },
+    registrationOpens: "2027-06-01",
+    registrationCloses: "2027-06-25",
     price: "€4",
     featured: false,
   },
   {
     id: "flanders-relay",
-    day: "05",
-    month: "JUL",
     date: "2027-07-05",
     title: "Flanders Relay Cup",
     organization: "KAAG Atletiek",
     place: "Blaarmeersen, Ghent",
     scope: "Relay · Club teams",
     status: "closed",
-    note: "Waitlist available",
+    registrationNote: { type: "waitlist" },
+    registrationOpens: "2027-06-01",
+    registrationCloses: "2027-06-28",
     price: "€12",
     featured: false,
   },
   {
     id: "namur-classic",
-    day: "12",
-    month: "JUL",
     date: "2027-07-12",
     title: "Namur Athletics Classic",
     organization: "SMAC Namur",
     place: "ADEPS Jambes, Namur",
     scope: "Track · Throws",
     status: "open",
-    note: "Closes 8 July",
+    registrationNote: { type: "closes", date: "2027-07-08" },
+    registrationOpens: "2027-06-07",
+    registrationCloses: "2027-07-08",
     price: "€5",
     featured: false,
   },
@@ -196,6 +196,7 @@ const competitions = [
 
 const schedule = [
   {
+    eventId: "women-long-jump",
     time: "13:30",
     discipline: "Women · Long jump",
     round: "Final",
@@ -204,6 +205,7 @@ const schedule = [
     state: "finished",
   },
   {
+    eventId: "women-100m",
     time: "14:20",
     discipline: "Women · 100 m",
     round: "Heats",
@@ -212,6 +214,7 @@ const schedule = [
     state: "live",
   },
   {
+    eventId: "men-100m",
     time: "14:55",
     discipline: "Men · 100 m",
     round: "Heats",
@@ -220,6 +223,7 @@ const schedule = [
     state: "next",
   },
   {
+    eventId: "women-800m",
     time: "15:40",
     discipline: "Women · 800 m",
     round: "Final",
@@ -228,6 +232,7 @@ const schedule = [
     state: "scheduled",
   },
   {
+    eventId: "men-high-jump",
     time: "16:15",
     discipline: "Men · High jump",
     round: "Final",
@@ -236,12 +241,63 @@ const schedule = [
     state: "scheduled",
   },
   {
+    eventId: "women-100m",
     time: "17:45",
     discipline: "Women · 100 m",
     round: "Final",
     athletes: 8,
     groups: 1,
     state: "scheduled",
+  },
+] as const;
+
+const registrationAthletes = [
+  {
+    id: "mila",
+    name: "Mila Morgan",
+    initials: "MM",
+    meta: "U18 · RBA · 104589",
+    detail: "U18 · Royal Brussels Athletics",
+  },
+  {
+    id: "noah",
+    name: "Noah Morgan",
+    initials: "NM",
+    meta: "U20 · RBA · 108244",
+    detail: "U20 · Royal Brussels Athletics",
+  },
+] as const;
+
+const registrationEvents = [
+  {
+    id: "100m",
+    name: "Women · 100 m",
+    price: 6,
+    date: "2027-05-24",
+    round: "Heats",
+    time: "14:20",
+    personalBest: "12.08",
+    personalBestDate: "2027-04-12",
+  },
+  {
+    id: "long-jump",
+    name: "Women · Long jump",
+    price: 6,
+    date: "2027-05-24",
+    round: "Final",
+    time: "13:30",
+    personalBest: "5.42 m",
+    personalBestDate: "2027-05-04",
+  },
+  {
+    id: "200m",
+    name: "Women · 200 m",
+    price: 6,
+    date: "2027-05-24",
+    round: "Heats",
+    time: "16:30",
+    personalBest: "25.14",
+    personalBestDate: "2027-04-26",
   },
 ] as const;
 
@@ -314,6 +370,42 @@ const athletes = [
   },
 ] as const;
 
+function dateFromIso(value: string) {
+  return new Date(`${value}T12:00:00Z`);
+}
+
+function formatDate(
+  value: string,
+  locale: string,
+  options: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" },
+) {
+  return new Intl.DateTimeFormat(locale, { timeZone: "UTC", ...options }).format(
+    dateFromIso(value),
+  );
+}
+
+function formatDateRange(start: string, end: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).formatRange(dateFromIso(start), dateFromIso(end));
+}
+
+function useFrontendLocale() {
+  const { i18n } = useTranslation();
+  return localeFor(i18n.resolvedLanguage ?? i18n.language);
+}
+
+function competitionFromId(competitionId: string | undefined) {
+  return competitions.find((competition) => competition.id === competitionId);
+}
+
+function scheduleEventFromId(eventId: string | undefined) {
+  return schedule.find((item) => item.eventId === eventId);
+}
+
 function Mark({ children }: { children?: ReactNode }) {
   return (
     <span
@@ -353,7 +445,10 @@ function LanguageMenu() {
         ].map((language) => (
           <DropdownMenuItem
             key={language.code}
-            onClick={() => void i18n.changeLanguage(language.code)}
+            onClick={() => {
+              window.localStorage.setItem(frontendLanguageStorageKey, language.code);
+              void i18n.changeLanguage(language.code);
+            }}
           >
             {language.label}
             {i18n.language.startsWith(language.code) && <Check className="ml-auto" />}
@@ -425,7 +520,7 @@ function SiteHeader() {
                 render={
                   <Button
                     variant="ghost"
-                    className="h-10 rounded-full px-1.5"
+                    className="h-11 rounded-full px-1.5 md:h-10"
                     aria-label="Open profile menu"
                   />
                 }
@@ -440,17 +535,22 @@ function SiteHeader() {
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>alex.morgan@example.be</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem render={<Link to="/profile" />}>
+                  <DropdownMenuItem className="min-h-11 md:min-h-7" render={<Link to="/profile" />}>
                     <UserRound /> {t("nav.profile")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSignedIn(false)}>
+                  <DropdownMenuItem
+                    className="min-h-11 md:min-h-7"
+                    onClick={() => setSignedIn(false)}
+                  >
                     <LogOut /> {t("nav.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => setSignedIn(true)}>{t("nav.signIn")}</Button>
+            <Button className="min-h-11 md:min-h-8" onClick={() => setSignedIn(true)}>
+              {t("nav.signIn")}
+            </Button>
           )}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
@@ -549,7 +649,7 @@ function SignInRequired({ destination }: { destination: string }) {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-background text-foreground min-h-screen">
+    <div className="bg-background text-foreground selection:bg-primary selection:text-primary-foreground min-h-screen max-md:[&_[data-slot=select-trigger]]:min-h-11 max-md:[&_[role=tab]]:min-h-11 max-md:[&_button]:min-h-11 max-md:[&_button[aria-label]]:min-w-11 max-md:[&_input]:min-h-11">
       <SiteHeader />
       {children}
       <Footer />
@@ -557,12 +657,49 @@ export function SiteShell({ children }: { children: ReactNode }) {
   );
 }
 
-function StatusBadge({ status }: { status: "open" | "soon" | "closed" }) {
+function StatusBadge({
+  status,
+  opensAt,
+}: {
+  status: "open" | "soon" | "closed";
+  opensAt?: string;
+}) {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
   if (status === "open")
     return <Badge className="bg-accent text-accent-foreground">{t("common.open")}</Badge>;
-  if (status === "soon") return <Badge variant="secondary">{t("competitions.opens")} 24 May</Badge>;
+  if (status === "soon")
+    return (
+      <Badge variant="secondary">
+        {t("competitions.opens")}{" "}
+        {opensAt && formatDate(opensAt, locale, { day: "numeric", month: "short" })}
+      </Badge>
+    );
   return <Badge variant="outline">{t("common.closed")}</Badge>;
+}
+
+function CompetitionRegistrationNote({
+  note,
+}: {
+  note: (typeof competitions)[number]["registrationNote"];
+}) {
+  const { t } = useTranslation();
+  const locale = useFrontendLocale();
+
+  if (note.type === "places")
+    return (
+      <>
+        {note.count} {t("competitions.places")}
+      </>
+    );
+  if (note.type === "waitlist") return <>{t("competitions.waitlist")}</>;
+
+  return (
+    <>
+      {t(note.type === "opens" ? "competitions.opens" : "competitions.closes")}{" "}
+      {"date" in note && formatDate(note.date, locale, { day: "numeric", month: "short" })}
+    </>
+  );
 }
 
 function LivePip() {
@@ -585,13 +722,13 @@ function LiveRail() {
             {t("home.liveTitle")}
           </span>
         </div>
-        <div className="live-ticker min-w-0 overflow-hidden px-4 py-3">
-          <div className="flex min-w-max items-center gap-8 text-sm">
+        <div className="min-w-0 overflow-hidden px-4 py-3">
+          <div className="flex items-center gap-8 text-sm">
             <span>
               <b>Brussels Indoor</b> · Women 60 m final · L. Peeters{" "}
               <strong className="font-mono">7.31</strong>
             </span>
-            <span>
+            <span className="hidden lg:inline">
               <b>Liège Throws</b> · Men shot put · T. Diallo{" "}
               <strong className="font-mono">17.42 m</strong>
             </span>
@@ -640,6 +777,7 @@ function CompetitionCard({
   compact?: boolean;
 }) {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
   return (
     <Card
       className={cn(
@@ -649,13 +787,15 @@ function CompetitionCard({
     >
       <CardHeader className="grid grid-cols-[58px_1fr_auto] gap-4">
         <div className="bg-secondary flex h-16 flex-col items-center justify-center rounded-lg font-mono leading-none">
-          <strong className="text-2xl">{competition.day}</strong>
+          <strong className="text-2xl">
+            {formatDate(competition.date, locale, { day: "2-digit" })}
+          </strong>
           <span className="text-muted-foreground mt-1 text-[10px] font-bold tracking-[0.12em]">
-            {competition.month}
+            {formatDate(competition.date, locale, { month: "short" }).toLocaleUpperCase(locale)}
           </span>
         </div>
         <div className="min-w-0">
-          <StatusBadge status={competition.status} />
+          <StatusBadge status={competition.status} opensAt={competition.registrationOpens} />
           <CardTitle className="mt-2 text-lg">{competition.title}</CardTitle>
           <CardDescription>{competition.organization}</CardDescription>
         </div>
@@ -677,7 +817,9 @@ function CompetitionCard({
       </CardContent>
       <CardFooter className="justify-between gap-3">
         <div>
-          <span className="text-muted-foreground block text-xs">{competition.note}</span>
+          <span className="text-muted-foreground block text-xs">
+            <CompetitionRegistrationNote note={competition.registrationNote} />
+          </span>
           <strong className="text-sm">
             {t("common.from")} {competition.price}/{t("common.event")}
           </strong>
@@ -685,9 +827,12 @@ function CompetitionCard({
         <Link
           to="/competitions/$competitionId"
           params={{ competitionId: competition.id }}
-          className={buttonVariants({
-            variant: competition.status === "open" ? "default" : "outline",
-          })}
+          className={cn(
+            buttonVariants({
+              variant: competition.status === "open" ? "default" : "outline",
+            }),
+            "min-h-11 md:min-h-8",
+          )}
         >
           {competition.status === "open" ? t("common.register") : t("common.details")}
           <ArrowRight />
@@ -699,7 +844,7 @@ function CompetitionCard({
 
 const latestResults = [
   {
-    date: "18 MAY",
+    date: "2027-05-18",
     title: "Brussels Indoor",
     organization: "CABW",
     winner: "Louise Peeters",
@@ -707,7 +852,7 @@ const latestResults = [
     mark: "7.31",
   },
   {
-    date: "17 MAY",
+    date: "2027-05-17",
     title: "Liège Throws",
     organization: "RFCL",
     winner: "Thomas Diallo",
@@ -715,7 +860,7 @@ const latestResults = [
     mark: "17.42 m",
   },
   {
-    date: "11 MAY",
+    date: "2027-05-11",
     title: "Ghent Spring Meet",
     organization: "KAAG",
     winner: "Amélie Dubois",
@@ -726,12 +871,17 @@ const latestResults = [
 
 export function HomePage() {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
   return (
     <SiteShell>
       <LiveRail />
       <main>
-        <section className="competition-hero border-b">
-          <div className="mx-auto grid max-w-[1240px] gap-10 px-4 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:px-6 lg:py-20">
+        <section className="bg-background relative overflow-hidden border-b">
+          <div
+            aria-hidden="true"
+            className="border-primary/20 ring-primary/5 pointer-events-none absolute -right-24 -bottom-52 size-[520px] rounded-full border ring-[42px]"
+          />
+          <div className="relative mx-auto grid max-w-[1240px] gap-10 px-4 py-14 lg:grid-cols-[1.2fr_0.8fr] lg:px-6 lg:py-20">
             <div>
               <p className="text-primary mb-4 text-xs font-bold tracking-[0.18em] uppercase">
                 {t("home.eyebrow")}
@@ -755,7 +905,7 @@ export function HomePage() {
                 </Link>
               </div>
             </div>
-            <Card className="timing-card bg-card/90 self-end">
+            <Card className="bg-card/90 self-end shadow-xl">
               <CardHeader>
                 <div className="text-chart-5 flex items-center gap-2 text-xs font-bold tracking-[0.14em] uppercase">
                   <LivePip /> Brussels Indoor
@@ -827,7 +977,9 @@ export function HomePage() {
                     index === 0 && "md:pl-0",
                   )}
                 >
-                  <span className="text-muted-foreground font-mono text-xs">{result.date}</span>
+                  <span className="text-muted-foreground font-mono text-xs uppercase">
+                    {formatDate(result.date, locale, { day: "numeric", month: "short" })}
+                  </span>
                   <h3 className="mt-3 text-lg font-semibold">{result.title}</h3>
                   <p className="text-muted-foreground text-sm">{result.organization}</p>
                   <div className="mt-5 flex items-end justify-between gap-3">
@@ -900,8 +1052,10 @@ export function CompetitionsPage() {
   );
 }
 
-function CompetitionHeading() {
+function CompetitionHeading({ competition }: { competition: (typeof competitions)[number] }) {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
+  const hasRegistration = competition.id === "brussels-open";
   return (
     <div className="bg-card border-b">
       <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
@@ -914,36 +1068,38 @@ function CompetitionHeading() {
         </Link>
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <StatusBadge status="open" />
+            <StatusBadge status={competition.status} opensAt={competition.registrationOpens} />
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">
-              Brussels Open
+              {competition.title}
             </h1>
             <p className="text-muted-foreground mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               <span className="flex items-center gap-2">
                 <CalendarDays className="size-4" />
-                24 May 2027
+                {formatDate(competition.date, locale)}
               </span>
               <span className="flex items-center gap-2">
                 <MapPin className="size-4" />
-                Stade des Trois Tilleuls, Forest
+                {competition.place}
               </span>
               <span className="flex items-center gap-2">
                 <Flag className="size-4" />
-                Royal Brussels Athletics
+                {competition.organization}
               </span>
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Link
-              to="/registrations/$registrationId"
-              params={{ registrationId: "registration-1" }}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "min-h-11 w-full sm:w-auto",
-              )}
-            >
-              {t("detail.manage")}
-            </Link>
+            {hasRegistration && (
+              <Link
+                to="/registrations/$registrationId"
+                params={{ registrationId: "registration-1" }}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "min-h-11 w-full sm:w-auto",
+                )}
+              >
+                {t("detail.manage")}
+              </Link>
+            )}
             <Link
               to="/register"
               className={cn(buttonVariants({ size: "lg" }), "min-h-11 w-full sm:w-auto")}
@@ -960,10 +1116,31 @@ function CompetitionHeading() {
 
 export function CompetitionDetailPage() {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
+  const { competitionId } = useParams({ strict: false });
+  const competition = competitionFromId(competitionId ?? "brussels-open");
+
+  if (!competition) {
+    return (
+      <SiteShell>
+        <main className="mx-auto max-w-[760px] px-4 py-16 lg:px-6">
+          <h1 className="text-3xl font-semibold">{t("competitions.notFound")}</h1>
+          <Link
+            to="/competitions"
+            className={cn(buttonVariants({ variant: "outline" }), "mt-6 min-h-11")}
+          >
+            <ArrowLeft /> {t("detail.back")}
+          </Link>
+        </main>
+      </SiteShell>
+    );
+  }
+
+  const hasRegistration = competition.id === "brussels-open";
   return (
     <SiteShell>
       <main>
-        <CompetitionHeading />
+        <CompetitionHeading competition={competition} />
         <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
           <Tabs defaultValue="schedule">
             <TabsList
@@ -977,7 +1154,7 @@ export function CompetitionDetailPage() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
-              <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+              <div className={cn("grid gap-5", hasRegistration && "lg:grid-cols-[1fr_360px]")}>
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-xl">{t("detail.about")}</CardTitle>
@@ -988,18 +1165,25 @@ export function CompetitionDetailPage() {
                       Electronic timing is available for all track events.
                     </p>
                     <div className="grid gap-5 border-t pt-6 sm:grid-cols-2">
-                      <Info label={t("detail.registrationWindow")} value="1–20 May 2027" />
+                      <Info
+                        label={t("detail.registrationWindow")}
+                        value={formatDateRange(
+                          competition.registrationOpens,
+                          competition.registrationCloses,
+                          locale,
+                        )}
+                      />
                       <Info label={t("detail.eligibility")} value="U18, U23 and Senior" />
                       <Info label={t("detail.pricing")} value="€6 per event" />
                       <Info label={t("detail.contact")} value="meeting@rba.be" />
                     </div>
                   </CardContent>
                 </Card>
-                <RegistrationSummary />
+                {hasRegistration && <RegistrationSummary />}
               </div>
             </TabsContent>
             <TabsContent value="schedule">
-              <div className="grid gap-5 lg:grid-cols-[1fr_290px]">
+              <div className={cn("grid gap-5", hasRegistration && "lg:grid-cols-[1fr_290px]")}>
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-xl">{t("detail.scheduleTitle")}</CardTitle>
@@ -1017,7 +1201,7 @@ export function CompetitionDetailPage() {
                         <Link
                           key={`${item.time}-${item.discipline}-${item.round}`}
                           to="/competitions/$competitionId/events/$eventId"
-                          params={{ competitionId: "brussels-open", eventId: "women-100m" }}
+                          params={{ competitionId: competition.id, eventId: item.eventId }}
                           className="group hover:bg-muted/55 grid grid-cols-[64px_1fr_auto] items-center gap-4 px-4 py-4"
                         >
                           <time className="font-mono text-lg font-semibold">{item.time}</time>
@@ -1050,7 +1234,7 @@ export function CompetitionDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <RegistrationSummary />
+                {hasRegistration && <RegistrationSummary />}
               </div>
             </TabsContent>
             <TabsContent value="participants">
@@ -1065,6 +1249,9 @@ export function CompetitionDetailPage() {
                   </CardAction>
                 </CardHeader>
                 <CardContent className="px-0">
+                  <p className="text-muted-foreground border-y px-4 py-2 text-xs sm:hidden">
+                    {t("common.scrollHint")}
+                  </p>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -1086,7 +1273,10 @@ export function CompetitionDetailPage() {
                           <TableCell>
                             <Link
                               to="/competitions/$competitionId/events/$eventId"
-                              params={{ competitionId: "brussels-open", eventId: "women-100m" }}
+                              params={{
+                                competitionId: competition.id,
+                                eventId: "women-100m",
+                              }}
                               className="text-primary hover:underline"
                             >
                               Women · 100 m
@@ -1146,7 +1336,7 @@ function RegistrationSummary() {
         <Link
           to="/registrations/$registrationId"
           params={{ registrationId: "registration-1" }}
-          className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+          className={cn(buttonVariants({ variant: "outline" }), "min-h-11 w-full md:min-h-8")}
         >
           {t("detail.manage")}
           <ArrowRight />
@@ -1158,7 +1348,29 @@ function RegistrationSummary() {
 
 export function EventDetailPage() {
   const { t } = useTranslation();
-  const [heat, setHeat] = useState("2");
+  const { competitionId, eventId } = useParams({ strict: false });
+  const competition = competitionFromId(competitionId ?? "brussels-open");
+  const event = scheduleEventFromId(eventId ?? "women-100m");
+  const [heat, setHeat] = useState(event && event.groups > 1 ? "2" : "1");
+
+  if (!competition || !event) {
+    return (
+      <SiteShell>
+        <main className="mx-auto max-w-[760px] px-4 py-16 lg:px-6">
+          <h1 className="text-3xl font-semibold">{t("eventPage.notFound")}</h1>
+          <Link
+            to="/competitions"
+            className={cn(buttonVariants({ variant: "outline" }), "mt-6 min-h-11")}
+          >
+            <ArrowLeft /> {t("detail.back")}
+          </Link>
+        </main>
+      </SiteShell>
+    );
+  }
+
+  const isLive = event.state === "live";
+  const heatNumbers = Array.from({ length: event.groups }, (_, index) => String(index + 1));
   return (
     <SiteShell>
       <main>
@@ -1166,7 +1378,7 @@ export function EventDetailPage() {
           <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
             <Link
               to="/competitions/$competitionId"
-              params={{ competitionId: "brussels-open" }}
+              params={{ competitionId: competition.id }}
               className="text-muted-foreground hover:text-foreground mb-5 inline-flex items-center gap-2 text-sm"
             >
               <ArrowLeft className="size-4" />
@@ -1174,26 +1386,27 @@ export function EventDetailPage() {
             </Link>
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
               <div>
-                <div className="flex gap-2">
-                  <Badge className="bg-chart-5 text-white">
-                    <LivePip />
-                    {t("common.live")}
-                  </Badge>
-                  <Badge variant="outline">{t("common.provisional")}</Badge>
-                </div>
+                {isLive && (
+                  <div className="flex gap-2">
+                    <Badge className="bg-chart-5 text-white">
+                      <LivePip />
+                      {t("common.live")}
+                    </Badge>
+                    <Badge variant="outline">{t("common.provisional")}</Badge>
+                  </div>
+                )}
                 <h1 className="mt-3 text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">
-                  Women · 100 m
+                  {event.discipline}
                 </h1>
                 <p className="text-muted-foreground mt-3">
-                  Brussels Open · Heats · Round starts at{" "}
-                  <strong className="text-foreground font-mono">14:20</strong>
+                  {competition.title} · {event.round} · {t("eventPage.roundStarts")}{" "}
+                  <strong className="text-foreground font-mono">{event.time}</strong>
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:flex">
-                <Button variant="outline" className="min-h-11 sm:min-h-8">
-                  Final · 17:45
+              <div className="flex">
+                <Button className="min-h-11 sm:min-h-8">
+                  {event.round} · {event.time}
                 </Button>
-                <Button className="min-h-11 sm:min-h-8">Heats · 14:20</Button>
               </div>
             </div>
           </div>
@@ -1201,28 +1414,31 @@ export function EventDetailPage() {
         <div className="mx-auto grid max-w-[1240px] gap-6 px-4 py-8 lg:grid-cols-[220px_1fr] lg:px-6">
           <aside>
             <p className="text-muted-foreground mb-2 text-xs font-bold tracking-[0.15em] uppercase">
-              {t("eventPage.heats")}
+              {event.groups > 1 ? t("eventPage.heats") : t("eventPage.rounds")}
             </p>
             <div className="space-y-2">
-              {["1", "2", "3"].map((h) => (
+              {heatNumbers.map((h) => (
                 <Button
                   key={h}
                   variant={heat === h ? "default" : "outline"}
                   className="min-h-11 w-full justify-between"
                   onClick={() => setHeat(h)}
                 >
-                  {t("common.heat")} {h}
+                  {event.groups > 1 ? `${t("common.heat")} ${h}` : event.round}
                   <span className="font-mono">8 {t("detail.athletes")}</span>
                 </Button>
               ))}
             </div>
             <Alert className="mt-4">
               <Clock3 />
-              <AlertTitle>14:20</AlertTitle>
-              <AlertDescription>{t("eventPage.heatNote")}</AlertDescription>
+              <AlertTitle>{event.time}</AlertTitle>
+              {event.groups > 1 && <AlertDescription>{t("eventPage.heatNote")}</AlertDescription>}
             </Alert>
           </aside>
-          <Tabs defaultValue="results" className="min-w-0">
+          <Tabs
+            defaultValue={isLive || event.state === "finished" ? "results" : "entries"}
+            className="min-w-0"
+          >
             <TabsList className="mb-5">
               <TabsTrigger value="results" className="min-h-11 sm:min-h-8">
                 {t("eventPage.liveResults")}
@@ -1235,7 +1451,8 @@ export function EventDetailPage() {
               <Card className="min-w-0">
                 <CardHeader>
                   <CardTitle>
-                    {t("common.heat")} {heat} · {t("eventPage.liveResults")}
+                    {event.groups > 1 ? `${t("common.heat")} ${heat}` : event.round} ·{" "}
+                    {t("eventPage.liveResults")}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2">
                     <Wind className="size-4" />
@@ -1260,7 +1477,8 @@ export function EventDetailPage() {
               <Card className="min-w-0">
                 <CardHeader>
                   <CardTitle>
-                    {t("common.heat")} {heat} · {t("common.entries")}
+                    {event.groups > 1 ? `${t("common.heat")} ${heat}` : event.round} ·{" "}
+                    {t("common.entries")}
                   </CardTitle>
                   <CardDescription>{t("eventPage.selectHeat")}</CardDescription>
                 </CardHeader>
@@ -1441,7 +1659,10 @@ function LiveMeeting({
           <Link
             to="/competitions/$competitionId/events/$eventId"
             params={{ competitionId: "brussels-open", eventId: "women-100m" }}
-            className={buttonVariants({ variant: primary ? "default" : "outline" })}
+            className={cn(
+              buttonVariants({ variant: primary ? "default" : "outline" }),
+              "min-h-11 md:min-h-8",
+            )}
           >
             {t("home.followLive")}
             <ArrowRight />
@@ -1505,13 +1726,15 @@ export function RegistrationsPage() {
             <div className="space-y-4">
               <RegistrationCard
                 competition="Brussels Open"
-                date="24 May 2027"
+                date="2027-05-24"
+                changesClose="2027-05-20"
                 athlete="Mila Morgan"
                 events="100 m · Long jump"
               />
               <RegistrationCard
                 competition="Antwerp Track Night"
-                date="7 June 2027"
+                date="2027-06-07"
+                changesClose="2027-06-03"
                 athlete="Noah Morgan"
                 events="800 m · 1500 m"
                 pending
@@ -1524,7 +1747,8 @@ export function RegistrationsPage() {
             </h2>
             <RegistrationCard
               competition="Ghent Spring Meet"
-              date="11 May 2027"
+              date="2027-05-11"
+              changesClose="2027-05-07"
               athlete="Mila Morgan"
               events="200 m · Long jump"
               past
@@ -1539,6 +1763,7 @@ export function RegistrationsPage() {
 function RegistrationCard({
   competition,
   date,
+  changesClose,
   athlete,
   events,
   pending = false,
@@ -1546,12 +1771,14 @@ function RegistrationCard({
 }: {
   competition: string;
   date: string;
+  changesClose: string;
   athlete: string;
   events: string;
   pending?: boolean;
   past?: boolean;
 }) {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
   return (
     <Card>
       <CardHeader className="grid grid-cols-[48px_minmax(0,1fr)] gap-3 sm:grid-cols-[48px_1fr_auto]">
@@ -1561,7 +1788,7 @@ function RegistrationCard({
         <div>
           <CardTitle>{athlete}</CardTitle>
           <CardDescription>
-            {competition} · {date}
+            {competition} · {formatDate(date, locale)}
           </CardDescription>
         </div>
         <div className="col-span-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-self-end">
@@ -1587,7 +1814,10 @@ function RegistrationCard({
         </div>
       </CardContent>
       <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-muted-foreground text-xs">{t("registrations.deadline")} 20 May</span>
+        <span className="text-muted-foreground text-xs">
+          {t("registrations.deadline")}{" "}
+          {formatDate(changesClose, locale, { day: "numeric", month: "short" })}
+        </span>
         <Link
           to="/registrations/$registrationId"
           params={{ registrationId: "registration-1" }}
@@ -1603,6 +1833,7 @@ function RegistrationCard({
 
 export function RegistrationDetailPage() {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
   const { signedIn } = useMockSession();
   if (!signedIn) return <SignInRequired destination={t("nav.registrations")} />;
   return (
@@ -1623,7 +1854,9 @@ export function RegistrationDetailPage() {
                 {t("registrations.confirmed")}
               </Badge>
               <h1 className="mt-3 text-4xl font-semibold tracking-[-.05em]">Mila Morgan</h1>
-              <p className="text-muted-foreground mt-2">Brussels Open · 24 May 2027</p>
+              <p className="text-muted-foreground mt-2">
+                Brussels Open · {formatDate("2027-05-24", locale)}
+              </p>
             </div>
             <Button>
               <Plus />
@@ -1634,7 +1867,9 @@ export function RegistrationDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>{t("registrations.entries")}</CardTitle>
-                <CardDescription>{t("registrations.deadline")} 20 May 2027, 23:59</CardDescription>
+                <CardDescription>
+                  {t("registrations.deadline")} {formatDate("2027-05-20", locale)}, 23:59
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <EntryRow event="Women · 100 m" pb="12.08" />
@@ -1768,7 +2003,8 @@ export function RegistrationWizardPage() {
           <CardContent>
             {step === 0 && <AthleteStep value={athlete} setValue={setAthlete} />}{" "}
             {step === 1 && <EventsStep selected={selected} setSelected={setSelected} />}{" "}
-            {step === 2 && <BestsStep />} {step === 3 && <ReviewStep />}
+            {step === 2 && <BestsStep selected={selected} />}{" "}
+            {step === 3 && <ReviewStep athleteId={athlete} selected={selected} />}
           </CardContent>
           <CardFooter className="justify-between">
             {step > 0 ? (
@@ -1780,7 +2016,11 @@ export function RegistrationWizardPage() {
               <span />
             )}
             {step < 3 ? (
-              <Button className="min-h-11 sm:min-h-8" onClick={next}>
+              <Button
+                className="min-h-11 sm:min-h-8"
+                disabled={step === 1 && selected.length === 0}
+                onClick={next}
+              >
                 {t("register.continue")}
                 <ArrowRight />
               </Button>
@@ -1810,10 +2050,7 @@ function AthleteStep({ value, setValue }: { value: string; setValue: (v: string)
       onValueChange={(v) => setValue(String(v))}
       className="grid gap-3 sm:grid-cols-2"
     >
-      {[
-        { id: "mila", name: "Mila Morgan", meta: "U18 · RBA · 104589" },
-        { id: "noah", name: "Noah Morgan", meta: "U20 · RBA · 108244" },
-      ].map((a) => (
+      {registrationAthletes.map((a) => (
         <Label
           key={a.id}
           className={cn(
@@ -1847,14 +2084,10 @@ function EventsStep({
   setSelected: (v: string[]) => void;
 }) {
   const { t } = useTranslation();
-  const events = [
-    { id: "100m", name: "Women · 100 m", price: "€6", note: "24 May · Heats 14:20" },
-    { id: "long-jump", name: "Women · Long jump", price: "€6", note: "24 May · Final 13:30" },
-    { id: "200m", name: "Women · 200 m", price: "€6", note: "24 May · Heats 16:30" },
-  ];
+  const locale = useFrontendLocale();
   return (
     <div className="space-y-3">
-      {events.map((event) => {
+      {registrationEvents.map((event) => {
         const checked = selected.includes(event.id);
         return (
           <Label
@@ -1874,10 +2107,13 @@ function EventsStep({
             />
             <span>
               <strong className="block">{event.name}</strong>
-              <small className="text-muted-foreground">{event.note}</small>
+              <small className="text-muted-foreground">
+                {formatDate(event.date, locale, { day: "numeric", month: "short" })} · {event.round}{" "}
+                {event.time}
+              </small>
             </span>
             <span className="col-start-2 text-left sm:col-start-3 sm:text-right">
-              <b className="block">{event.price}</b>
+              <b className="block">€{event.price}</b>
               <small className="text-accent-foreground">{t("register.eligible")}</small>
             </span>
           </Label>
@@ -1886,75 +2122,84 @@ function EventsStep({
     </div>
   );
 }
-function BestsStep() {
+function BestsStep({ selected }: { selected: string[] }) {
   const { t } = useTranslation();
+  const locale = useFrontendLocale();
+  const selectedEvents = registrationEvents.filter((event) => selected.includes(event.id));
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
-        <Label>
-          Women · 100 m
-          <span className="mt-2 block">
-            <Input defaultValue="12.08" />
-          </span>
-        </Label>
-        <Info label={t("common.personalBest")} value="12.08 · 12 Apr 2027" />
-      </div>
-      <Separator />
-      <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
-        <Label>
-          Women · Long jump
-          <span className="mt-2 block">
-            <Input defaultValue="5.42" />
-          </span>
-        </Label>
-        <Info label={t("common.personalBest")} value="5.42 m · 4 May 2027" />
-      </div>
+      {selectedEvents.map((event, index) => (
+        <div key={event.id}>
+          {index > 0 && <Separator className="mb-4" />}
+          <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
+            <Label>
+              {event.name}
+              <span className="mt-2 block">
+                <Input defaultValue={event.personalBest.replace(" m", "")} />
+              </span>
+            </Label>
+            <Info
+              label={t("common.personalBest")}
+              value={`${event.personalBest} · ${formatDate(event.personalBestDate, locale)}`}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
-function ReviewStep() {
-  const { t } = useTranslation();
+function ReviewStep({ athleteId, selected }: { athleteId: string; selected: string[] }) {
+  const { t, i18n } = useTranslation();
+  const athlete =
+    registrationAthletes.find((registrationAthlete) => registrationAthlete.id === athleteId) ??
+    registrationAthletes[0];
+  const selectedEvents = registrationEvents.filter((event) => selected.includes(event.id));
+  const subtotal = selectedEvents.reduce((total, event) => total + event.price, 0);
+  const paymentFee = 0.4;
+  const currency = new Intl.NumberFormat(localeFor(i18n.resolvedLanguage ?? i18n.language), {
+    style: "currency",
+    currency: "EUR",
+  });
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
       <div className="rounded-xl border p-4">
         <div className="flex items-center gap-3">
           <Avatar>
-            <AvatarFallback>MM</AvatarFallback>
+            <AvatarFallback>{athlete.initials}</AvatarFallback>
           </Avatar>
           <div>
-            <strong>Mila Morgan</strong>
-            <p className="text-muted-foreground text-sm">U18 · Royal Brussels Athletics</p>
+            <strong>{athlete.name}</strong>
+            <p className="text-muted-foreground text-sm">{athlete.detail}</p>
           </div>
         </div>
         <Separator className="my-4" />
         <div className="space-y-3">
-          <div className="flex justify-between">
-            <span>
-              Women · 100 m <small className="text-muted-foreground">PB 12.08</small>
-            </span>
-            <b>€6</b>
-          </div>
-          <div className="flex justify-between">
-            <span>
-              Women · Long jump <small className="text-muted-foreground">PB 5.42 m</small>
-            </span>
-            <b>€6</b>
-          </div>
+          {selectedEvents.map((event) => (
+            <div key={event.id} className="flex justify-between gap-3">
+              <span>
+                {event.name}{" "}
+                <small className="text-muted-foreground">PB {event.personalBest}</small>
+              </span>
+              <b>{currency.format(event.price)}</b>
+            </div>
+          ))}
         </div>
       </div>
       <div className="bg-muted rounded-xl p-4 text-sm">
         <div className="flex justify-between">
-          <span>2 {t("common.events")}</span>
-          <span>€12.00</span>
+          <span>
+            {selectedEvents.length} {t("common.events")}
+          </span>
+          <span>{currency.format(subtotal)}</span>
         </div>
         <div className="mt-2 flex justify-between">
           <span>{t("register.fee")}</span>
-          <span>€0.40</span>
+          <span>{currency.format(paymentFee)}</span>
         </div>
         <Separator className="my-3" />
         <div className="flex justify-between text-base font-semibold">
           <span>{t("register.total")}</span>
-          <span>€12.40</span>
+          <span>{currency.format(subtotal + paymentFee)}</span>
         </div>
         <p className="text-muted-foreground mt-4 flex gap-2 text-xs">
           <LockKeyhole className="size-4" />
@@ -2002,7 +2247,10 @@ export function ProfilePage() {
                 <Label>{t("profile.language")}</Label>
                 <Select
                   value={i18n.language.slice(0, 2)}
-                  onValueChange={(value) => void i18n.changeLanguage(String(value))}
+                  onValueChange={(value) => {
+                    window.localStorage.setItem(frontendLanguageStorageKey, String(value));
+                    void i18n.changeLanguage(String(value));
+                  }}
                 >
                   <SelectTrigger className="mt-2 h-10 w-full">
                     <SelectValue />
