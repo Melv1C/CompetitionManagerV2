@@ -72,6 +72,32 @@ test("dynamic competition and event routes use their route data", async ({ page 
   await expect(page.getByText(/Antwerp Track Night · Final/)).toBeVisible();
 });
 
+for (const viewport of [
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+  { width: 430, height: 932 },
+  { width: 1440, height: 900 },
+]) {
+  test(`schedule links preserve the selected round at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`${E2E_URLS.frontend}/competitions/brussels-open`);
+    await page.getByRole("tab", { name: "Schedule" }).click();
+
+    await page.locator('a[href$="/events/women-100m-final"]').click();
+
+    await expect(page).toHaveURL(
+      `${E2E_URLS.frontend}/competitions/brussels-open/events/women-100m-final`,
+    );
+    await expect(page.getByRole("heading", { name: "Women · 100 m" })).toBeVisible();
+    await expect(page.getByText(/Brussels Open · Final · Round starts/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Final · 17:45" })).toBeVisible();
+
+    if (viewport.width < 600) {
+      await expectMobilePageToFit(page);
+    }
+  });
+}
+
 test("registration review follows the selected athlete and events", async ({ page }) => {
   await page.goto(`${E2E_URLS.frontend}/register`);
   await page.getByRole("button", { name: "Sign in", exact: true }).last().click();

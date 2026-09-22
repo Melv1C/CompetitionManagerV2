@@ -241,7 +241,7 @@ const schedule = [
     state: "scheduled",
   },
   {
-    eventId: "women-100m",
+    eventId: "women-100m-final",
     time: "17:45",
     discipline: "Women · 100 m",
     round: "Final",
