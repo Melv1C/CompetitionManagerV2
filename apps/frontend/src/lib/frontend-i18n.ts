@@ -10,6 +10,9 @@ const en = {
     signIn: "Sign in",
     signOut: "Sign out",
     menu: "Menu",
+    changeLanguage: "Change language",
+    primaryNavigation: "Primary navigation",
+    openProfileMenu: "Open profile menu",
   },
   auth: {
     required: "Sign in to continue",
@@ -223,6 +226,9 @@ const fr: typeof en = {
     signIn: "Se connecter",
     signOut: "Se déconnecter",
     menu: "Menu",
+    changeLanguage: "Changer de langue",
+    primaryNavigation: "Navigation principale",
+    openProfileMenu: "Ouvrir le menu du profil",
   },
   auth: {
     required: "Connectez-vous pour continuer",
@@ -437,6 +443,9 @@ const nl: typeof en = {
     signIn: "Aanmelden",
     signOut: "Afmelden",
     menu: "Menu",
+    changeLanguage: "Taal wijzigen",
+    primaryNavigation: "Hoofdnavigatie",
+    openProfileMenu: "Profielmenu openen",
   },
   auth: {
     required: "Meld je aan om verder te gaan",

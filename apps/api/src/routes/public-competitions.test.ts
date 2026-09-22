@@ -106,6 +106,53 @@ describe("public Competition routes", () => {
     );
   });
 
+  it("continues cursor pagination across lifecycle groups without duplicates", async () => {
+    const inProgress = {
+      ...summaryRecord,
+      id: "10000000-0000-4000-8000-000000000002",
+      lifecycleState: "IN_PROGRESS",
+    };
+    const publishedOne = summaryRecord;
+    const publishedTwo = {
+      ...summaryRecord,
+      id: "10000000-0000-4000-8000-000000000003",
+    };
+    competitionFindMany.mockReset();
+    competitionFindMany
+      .mockResolvedValueOnce([inProgress])
+      .mockResolvedValueOnce([publishedOne, publishedTwo])
+      .mockResolvedValueOnce([publishedTwo]);
+
+    const app = await createTestApp();
+    const firstResponse = await app.request("/?limit=2");
+    const firstPage = (await firstResponse.json()) as {
+      competitions: Array<{ id: string }>;
+      nextCursor: string | null;
+    };
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstPage.competitions.map(({ id }) => id)).toEqual([inProgress.id, publishedOne.id]);
+    expect(firstPage.nextCursor).not.toBeNull();
+    expect(JSON.parse(Buffer.from(firstPage.nextCursor!, "base64url").toString("utf8"))).toEqual({
+      lifecycleState: "PUBLISHED",
+      startsAt: publishedOne.startsAt.toISOString(),
+      id: publishedOne.id,
+    });
+
+    const secondResponse = await app.request(
+      `/?limit=2&cursor=${encodeURIComponent(firstPage.nextCursor!)}`,
+    );
+    const secondPage = (await secondResponse.json()) as {
+      competitions: Array<{ id: string }>;
+      nextCursor: string | null;
+    };
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondPage.competitions.map(({ id }) => id)).toEqual([publishedTwo.id]);
+    expect(secondPage.nextCursor).toBeNull();
+    expect(competitionFindMany).toHaveBeenCalledTimes(3);
+  });
+
   it("rejects an invalid cursor", async () => {
     const app = await createTestApp();
     const response = await app.request("/?cursor=not-a-cursor");
@@ -135,6 +182,14 @@ describe("public Competition routes", () => {
             },
           ],
           rounds: [
+            {
+              id: "50000000-0000-4000-8000-000000000002",
+              sequence: 2,
+              label: "Reserve final",
+              scheduledStartAt: null,
+              status: "NOT_STARTED",
+              _count: { startGroups: 0 },
+            },
             {
               id: ids.round,
               sequence: 1,
@@ -174,7 +229,19 @@ describe("public Competition routes", () => {
     const response = await app.request(`/${ids.competition}`);
 
     expect(response.status).toBe(200);
-    const body = (await response.json()) as { competition: { pricingTiers: unknown[] } };
+    const body = (await response.json()) as {
+      competition: { events: Array<{ rounds: unknown[] }>; pricingTiers: unknown[] };
+    };
+    expect(body.competition.events[0]?.rounds).toEqual([
+      {
+        id: ids.round,
+        sequence: 1,
+        label: "Final",
+        scheduledStartAt: "2027-05-24T14:20:00.000Z",
+        status: "NOT_STARTED",
+        startGroupCount: 2,
+      },
+    ]);
     expect(body.competition.pricingTiers).toEqual([
       {
         name: "Standard",

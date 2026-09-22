@@ -211,6 +211,12 @@ const primaryClub = await prisma.club.findUniqueOrThrow({
   where: { provider_externalId: { provider: "E2E", externalId: "BRU" } },
 });
 
+// These records are owned entirely by the E2E fixture. Recreate them so rerunning the seed cannot
+// preserve stale nested data from an earlier fixture version.
+await prisma.competition.deleteMany({
+  where: { id: { in: [publicCompetitionId, draftCompetitionId] } },
+});
+
 await prisma.competition.upsert({
   where: { id: publicCompetitionId },
   create: {

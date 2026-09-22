@@ -65,6 +65,7 @@ const detailInclude = {
         },
       },
       rounds: {
+        where: { scheduledStartAt: { not: null } },
         include: { _count: { select: { startGroups: true } } },
         orderBy: [{ scheduledStartAt: "asc" as const }, { sequence: "asc" as const }],
       },
@@ -264,14 +265,20 @@ function serializeDetail(record: DetailRecord) {
       translations: event.translations,
       discipline: event.discipline,
       eligibility: event.eligibility.map(({ athleteCategory }) => athleteCategory),
-      rounds: event.rounds.map((round) => ({
-        id: round.id,
-        sequence: round.sequence,
-        label: round.label,
-        scheduledStartAt: round.scheduledStartAt?.toISOString(),
-        status: round.status,
-        startGroupCount: round._count.startGroups,
-      })),
+      rounds: event.rounds.flatMap((round) =>
+        round.scheduledStartAt
+          ? [
+              {
+                id: round.id,
+                sequence: round.sequence,
+                label: round.label,
+                scheduledStartAt: round.scheduledStartAt.toISOString(),
+                status: round.status,
+                startGroupCount: round._count.startGroups,
+              },
+            ]
+          : [],
+      ),
     })),
     pricingTiers: record.pricingTiers.map((tier) => ({
       name: tier.name,

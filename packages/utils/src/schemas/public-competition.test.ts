@@ -47,6 +47,21 @@ describe("public Competition contracts", () => {
     ).toBe(false);
   });
 
+  it("keeps legacy catalog records public when their translations are missing", () => {
+    const discipline = {
+      id: "9cee488f-21e7-4185-8099-cb60857504dd",
+      code: "100M",
+      measurement: "TIME",
+      translations: [],
+    };
+
+    expect(
+      PublicCompetitionSummary$.parse({ ...summary, disciplines: [discipline] }),
+    ).toMatchObject({
+      disciplines: [discipline],
+    });
+  });
+
   it("coerces and bounds collection query parameters", () => {
     expect(PublicCompetitionListQuery$.parse({ q: " Brussels ", limit: "3" })).toEqual({
       q: "Brussels",

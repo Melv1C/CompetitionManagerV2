@@ -77,12 +77,12 @@ export const PublicDiscipline$ = DisciplineSchema.pick({
 }).extend({
   id: Uuid$,
   measurement: DisciplineMeasurementSchema,
-  translations: z.array(PublicDisciplineTranslation$).min(1),
+  translations: z.array(PublicDisciplineTranslation$),
 });
 
 export const PublicAthleteCategory$ = AthleteCategorySchema.pick({ id: true, code: true }).extend({
   id: Uuid$,
-  translations: z.array(PublicAthleteCategoryTranslation$).min(1),
+  translations: z.array(PublicAthleteCategoryTranslation$),
 });
 
 const PublicCompetitionBase$ = CompetitionSchema.pick({

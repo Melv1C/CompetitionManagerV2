@@ -399,7 +399,7 @@ export function CompetitionDetailPage() {
       <main>
         <CompetitionHeading competition={competition.data} />
         <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-6">
-          <Tabs defaultValue="schedule">
+          <Tabs defaultValue="overview">
             <TabsList variant="line" className="mb-8 w-full justify-start border-b pb-3">
               <TabsTrigger value="overview">{t("detail.overview")}</TabsTrigger>
               <TabsTrigger value="schedule">{t("detail.schedule")}</TabsTrigger>

@@ -38,7 +38,7 @@ function Mark() {
 }
 
 function LanguageMenu() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const current = (i18n.language.slice(0, 2) || "en").toUpperCase();
   return (
     <DropdownMenu>
@@ -48,7 +48,7 @@ function LanguageMenu() {
             variant="ghost"
             size="sm"
             className="h-11 px-2.5 md:h-7"
-            aria-label="Change language"
+            aria-label={t("nav.changeLanguage")}
           />
         }
       >
@@ -113,7 +113,7 @@ function SiteHeader() {
         <Brand />
         <nav
           className="hidden h-full flex-1 items-center justify-center gap-1 md:flex"
-          aria-label="Primary navigation"
+          aria-label={t("nav.primaryNavigation")}
         >
           {links.map((link) => (
             <Link
@@ -138,7 +138,7 @@ function SiteHeader() {
                   <Button
                     variant="ghost"
                     className="h-11 rounded-full px-1.5 md:h-10"
-                    aria-label="Open profile menu"
+                    aria-label={t("nav.openProfileMenu")}
                   />
                 }
               >
