@@ -19,7 +19,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:validate": "APP_ENV=development prisma validate",
     "seed-e2e": "bun ./scripts/seed-e2e.ts",
-    "start": "bun run prisma:migrate:deploy && bun src/index.ts",
+    "start": "bun run prisma:migrate:deploy && bun run sync-json-data && bun src/index.ts",
     "sync-json-data": "bun ./scripts/sync-json-data.ts",
     "test": "vitest run"
   },

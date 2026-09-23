@@ -117,7 +117,6 @@ await Promise.all([
     where: { id: "30000000-0000-4000-8000-000000000001" },
     create: {
       id: "30000000-0000-4000-8000-000000000001",
-      athleticsSeasonId: season.id,
       provider: "E2E",
       code: "SEN-M",
       gender: "M",
@@ -137,7 +136,6 @@ await Promise.all([
     create: {
       id: "30000000-0000-4000-8000-000000000099",
       organizationId: secondary.id,
-      athleticsSeasonId: season.id,
       provider: "E2E",
       code: "PRIVATE-U18",
       gender: "X",
@@ -158,7 +156,6 @@ await Promise.all([
     where: { id: "30000000-0000-4000-8000-000000000002" },
     create: {
       id: "30000000-0000-4000-8000-000000000002",
-      athleticsSeasonId: season.id,
       provider: "E2E",
       code: "SEN-W",
       gender: "F",

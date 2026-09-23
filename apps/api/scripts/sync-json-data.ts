@@ -1,88 +1,115 @@
-import { prisma } from "@/lib/prisma";
-
 import "varlock/auto-load";
+import { prismaWithoutLog as prisma } from "../src/lib/prisma";
+import { ageBands, disciplines } from "./catalogue-data";
 
-// import data from "./data/something.json" with { type: "json" };
+async function syncCatalogue() {
+  for (const endingYear of [2026, 2027, 2028]) {
+    const code = `${endingYear - 1}-${endingYear}`;
+    await prisma.athleticsSeason.upsert({
+      where: { provider_code: { provider: "LRBA", code } },
+      create: {
+        provider: "LRBA",
+        code,
+        startsOn: new Date(`${endingYear - 1}-11-01T00:00:00Z`),
+        endsOn: new Date(`${endingYear}-10-31T00:00:00Z`),
+      },
+      update: {},
+    });
+  }
 
-type PrismaDelegate = {
-  findFirst(args: { where: Record<string, unknown> }): Promise<unknown>;
-  update(args: { where: Record<string, unknown>; data: Record<string, unknown> }): Promise<unknown>;
-  create(args: { data: Record<string, unknown> }): Promise<unknown>;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function syncJsonData(
-  data: unknown[],
-  prismaInstance: PrismaDelegate,
-  uniqueFields: string[],
-): Promise<void> {
-  let successCount = 0;
-  let failureCount = 0;
-  console.log(`→ Starting sync of ${data.length} records...`);
-
-  for (let i = 0; i < data.length; i++) {
-    const line = data[i];
-    try {
-      if (typeof line !== "object" || line === null) {
-        throw new Error(`Invalid record format: expected object but got ${typeof line}`);
-      }
-
-      const record = line as Record<string, unknown>;
-
-      for (const field of uniqueFields) {
-        if (!(field in record)) {
-          throw new Error(`Missing unique field "${field}" in record: ${JSON.stringify(record)}`);
-        }
-      }
-
-      const where = uniqueFields.reduce(
-        (acc, field) => {
-          acc[field] = record[field];
-          return acc;
-        },
-        {} as Record<string, unknown>,
-      );
-
-      const existing = await prismaInstance.findFirst({ where });
-
-      if (existing) {
-        await prismaInstance.update({
-          where: { id: (existing as Record<string, unknown>).id },
-          data: record,
-        });
-        console.log(
-          `  • [${i + 1}/${data.length}] Updated record with ${uniqueFields.map((f) => `${f}: ${String(record[f])}`).join(", ")}`,
-        );
-      } else {
-        await prismaInstance.create({ data: record });
-        console.log(
-          `  + [${i + 1}/${data.length}] Created new record with ${uniqueFields.map((f) => `${f}: ${String(record[f])}`).join(", ")}`,
-        );
-      }
-      successCount++;
-    } catch (error) {
-      failureCount++;
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error(`    ✗ [${i + 1}/${data.length}] Failed to sync record: ${errorMessage}`);
+  for (const item of disciplines) {
+    const existing = await prisma.discipline.findFirst({
+      where: { organizationId: null, code: item.code },
+    });
+    if (existing && existing.measurement !== item.measurement) {
+      throw new Error(`Discipline ${item.code} has a different measurement; create a new code`);
+    }
+    const discipline =
+      existing ??
+      (await prisma.discipline.create({
+        data: { code: item.code, measurement: item.measurement },
+      }));
+    for (const locale of ["EN", "FR", "NL"] as const) {
+      await prisma.disciplineTranslation.createMany({
+        data: [{ disciplineId: discipline.id, locale, name: item.names[locale] }],
+        skipDuplicates: true,
+      });
     }
   }
-  console.log(`→ Sync complete: ${successCount} succeeded, ${failureCount} failed.`);
+
+  const categories = [
+    ...ageBands.flatMap(([band, , , en, fr, nl]) => [
+      {
+        code: `${band}-M`,
+        gender: "M",
+        names: { EN: `${en} men`, FR: `${fr} hommes`, NL: `${nl} mannen` },
+      },
+      {
+        code: `${band}-F`,
+        gender: "F",
+        names: { EN: `${en} women`, FR: `${fr} femmes`, NL: `${nl} vrouwen` },
+      },
+    ]),
+    ...Array.from({ length: 14 }, (_, index) => 35 + index * 5).flatMap((min) => [
+      {
+        code: `M${min}`,
+        gender: "M",
+        names: {
+          EN: `Masters men ${min}–${min + 4}`,
+          FR: `Masters hommes ${min}–${min + 4}`,
+          NL: `Masters mannen ${min}–${min + 4}`,
+        },
+      },
+      {
+        code: `W${min}`,
+        gender: "F",
+        names: {
+          EN: `Masters women ${min}–${min + 4}`,
+          FR: `Masters femmes ${min}–${min + 4}`,
+          NL: `Masters vrouwen ${min}–${min + 4}`,
+        },
+      },
+    ]),
+  ];
+
+  for (const item of categories) {
+    const existing = await prisma.athleteCategory.findFirst({
+      where: { organizationId: null, code: item.code },
+    });
+    if (existing && existing.gender !== item.gender) {
+      throw new Error(`Athlete Category ${item.code} has a different gender`);
+    }
+    const category =
+      existing ??
+      (await prisma.athleteCategory.create({
+        data: {
+          provider: "LRBA",
+          code: item.code,
+          gender: item.gender,
+        },
+      }));
+    for (const locale of ["EN", "FR", "NL"] as const) {
+      await prisma.athleteCategoryTranslation.createMany({
+        data: [
+          {
+            athleteCategoryId: category.id,
+            locale,
+            name: item.names[locale],
+            abbreviation: item.code,
+          },
+        ],
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  console.log(
+    `Belgian Athletics catalogue ready: ${disciplines.length} Disciplines, ${categories.length} Athlete Categories`,
+  );
 }
 
-async function main(): Promise<void> {
-  console.log("🌱 Syncing JSON data...");
-
-  // await syncJsonData(data, prisma.something, ["id"]);
-
-  console.log("✅ JSON data sync complete!");
+try {
+  await syncCatalogue();
+} finally {
+  await prisma.$disconnect();
 }
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error("❌ Sync failed:", error.message);
-    process.exit(1);
-  })
-  .finally(() => {
-    prisma.$disconnect();
-  });

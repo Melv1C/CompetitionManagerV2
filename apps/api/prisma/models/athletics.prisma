@@ -7,10 +7,9 @@ model AthleticsSeason {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  athleteSeasons    AthleteSeason[]
-  athleteCategories AthleteCategory[]
-  competitions      Competition[]
-  athleteImports    AthleteImportBatch[]
+  athleteSeasons AthleteSeason[]
+  competitions   Competition[]
+  athleteImports AthleteImportBatch[]
 
   @@unique([provider, code])
   @@index([startsOn, endsOn])
@@ -69,28 +68,25 @@ model DisciplineTranslation {
 }
 
 model AthleteCategory {
-  id                String           @id @default(uuid()) @db.Uuid
-  organizationId    String?
-  organization      Organization?    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  athleticsSeasonId String?          @db.Uuid
-  athleticsSeason   AthleticsSeason? @relation(fields: [athleticsSeasonId], references: [id], onDelete: Restrict)
-  provider          String?
-  code              String
-  gender            String
-  minimumAge        Int?
-  maximumAge        Int?
-  active            Boolean          @default(true)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  provider       String?
+  code           String
+  gender         String
+  minimumAge     Int?
+  maximumAge     Int?
+  active         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   translations     AthleteCategoryTranslation[]
   eventEligibility CompetitionEventEligibility[]
   eventEntries     EventEntry[]
   relayEntries     RelayEntry[]
 
-  @@unique([organizationId, athleticsSeasonId, code])
+  @@unique([organizationId, code])
   @@index([organizationId, active])
-  @@index([athleticsSeasonId])
   @@map("athlete_category")
 }
 

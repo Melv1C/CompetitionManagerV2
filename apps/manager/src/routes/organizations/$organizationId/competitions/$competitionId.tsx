@@ -11,7 +11,7 @@ export const Route = createFileRoute("/organizations/$organizationId/competition
 function CompetitionEditorPage() {
   const { organizationId, competitionId } = Route.useParams();
   const competition = useCompetition(organizationId, competitionId);
-  const catalog = useCompetitionCatalog(organizationId, competition.data?.athleticsSeasonId);
+  const catalog = useCompetitionCatalog(organizationId);
 
   if (competition.isPending || catalog.isPending) {
     return (

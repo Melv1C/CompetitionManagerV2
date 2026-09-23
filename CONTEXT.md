@@ -75,7 +75,7 @@ A scheduled collection of track-and-field events owned and operated by one Organ
 _Avoid_: Generic competition, tournament
 
 **Discipline**:
-A reusable athletics definition, such as 100 metres or long jump, that may be offered by many Athletics Competitions. A Discipline belongs either to the platform catalog or to one Organization.
+A reusable athletics definition, such as 100 metres or long jump, that may be offered by many Athletics Competitions. Differences in hurdle height or spacing and implement weight distinguish separate Disciplines; each belongs either to the platform catalog or to one Organization.
 _Avoid_: Competition Event, scheduled event
 
 **Competition Event**:
@@ -83,11 +83,15 @@ A scheduled offering of one Discipline within an Athletics Competition. A Compet
 _Avoid_: Athletics Competition, Round, Event Entry
 
 **Competition Event Eligibility**:
-The set of athlete categories allowed to enter one Competition Event. Eligible categories share the event's operation unless the Organization creates separate Competition Events.
+The set of Athlete Categories allowed to enter one Competition Event; an Athlete keeps their assigned category when entering an Event that also admits older groups. Eligible categories share the event's operation unless the Organization creates separate Competition Events.
 _Avoid_: Event Entry, athlete category snapshot
 
+**Age Band**:
+A Belgian Athletics age classification calculated from an Athlete's birth date and a reference date, such as BEN, PUP, MIN, or Masters 35 to 39. Age Bands are reused across Athletics Seasons.
+_Avoid_: Athlete Category, Competition Event Eligibility
+
 **Athlete Category**:
-A standard or Organization-specific classification used to determine eligibility and rankings for an Athlete in a season. Registrations and results retain a snapshot of the applicable category.
+A reusable standard or Organization-specific classification used for Competition Event eligibility and rankings, independent of any one Athletics Season. A standard Belgian Athletics category combines an Age Band and gender, such as BEN M or BEN F; entries and results preserve the assigned category.
 _Avoid_: Competition Event Eligibility, Club, age entered as free text
 
 **Competition Venue**:
