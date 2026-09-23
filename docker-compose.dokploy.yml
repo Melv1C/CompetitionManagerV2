@@ -1,0 +1,78 @@
+services:
+  api:
+    image: ${DOCKERHUB_USERNAME}/competition-manager-v2-api:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV}
+      API_PORT: "3000"
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      LOKI_HOST: ${LOKI_HOST}
+      MY_APP_API_URL: ${MY_APP_API_URL}
+      MY_APP_FRONTEND_URL: ${MY_APP_FRONTEND_URL}
+      MY_APP_MANAGER_URL: ${MY_APP_MANAGER_URL}
+      MY_APP_ADMIN_URL: ${MY_APP_ADMIN_URL}
+    expose:
+      - "3000"
+    networks:
+      - dokploy-network
+
+  worker:
+    image: ${DOCKERHUB_USERNAME}/competition-manager-v2-worker:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    networks:
+      - dokploy-network
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/competition-manager-v2-frontend:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      MY_APP_API_URL: ${MY_APP_API_URL}
+      MY_APP_FRONTEND_URL: ${MY_APP_FRONTEND_URL}
+      MY_APP_MANAGER_URL: ${MY_APP_MANAGER_URL}
+      MY_APP_ADMIN_URL: ${MY_APP_ADMIN_URL}
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+
+  manager:
+    image: ${DOCKERHUB_USERNAME}/competition-manager-v2-manager:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      MY_APP_API_URL: ${MY_APP_API_URL}
+      MY_APP_FRONTEND_URL: ${MY_APP_FRONTEND_URL}
+      MY_APP_MANAGER_URL: ${MY_APP_MANAGER_URL}
+      MY_APP_ADMIN_URL: ${MY_APP_ADMIN_URL}
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+
+  admin:
+    image: ${DOCKERHUB_USERNAME}/competition-manager-v2-admin:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      MY_APP_API_URL: ${MY_APP_API_URL}
+      MY_APP_FRONTEND_URL: ${MY_APP_FRONTEND_URL}
+      MY_APP_MANAGER_URL: ${MY_APP_MANAGER_URL}
+      MY_APP_ADMIN_URL: ${MY_APP_ADMIN_URL}
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

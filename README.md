@@ -195,17 +195,17 @@ Platform administrators upload the established LRBA tab-separated `.csv` export 
 
 See [docs/operations.md](./docs/operations.md) for logging, health, metrics, and shutdown behavior.
 
-Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Each application has a Dockerfile under its `apps/<name>` directory.
+Deployments use GitHub Actions, Docker Hub, and [Dokploy](https://dokploy.com/). Each application has a Dockerfile under its `apps/<name>` directory. [docker-compose.dokploy.yml](./docker-compose.dokploy.yml) runs the five published images as one Dokploy Compose service. Staging and production each have their own Dokploy PostgreSQL and Redis services. The databases have persistent volumes and no public ports.
 
 ### Staging
 
-A push to `main`, or a manual staging workflow dispatch, runs CI and builds all five images with `APP_ENV=staging`. It pushes `:staging` and commit-SHA tags, then triggers each Dokploy staging application.
+A push to `main`, or a manual staging workflow dispatch, runs CI and builds all five images with `APP_ENV=staging`. It pushes `:staging` and commit-SHA tags, then triggers the staging Dokploy Compose deployment.
 
-Configure `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DOKPLOY_DOMAIN`, `DOKPLOY_API_KEY`, and `DOKPLOY_STAGING_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID` as GitHub secrets.
+Configure `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DOKPLOY_DOMAIN`, `DOKPLOY_API_KEY`, and `DOKPLOY_STAGING_COMPOSE_ID` as GitHub secrets. The image repositories must be public unless Dokploy has registry credentials for private pulls.
 
 ### Production
 
-A tag matching `admin@*`, `api@*`, `frontend@*`, `manager@*`, or `worker@*` builds and deploys that application. Production images receive `:latest` and version tags. Web applications build with `APP_ENV=production`; the API and worker read runtime values from Dokploy.
+A tag matching `admin@*`, `api@*`, `frontend@*`, `manager@*`, or `worker@*` builds that application's image and redeploys the production Compose service. Production images receive `:latest` and version tags. The production workflow can also be started manually with `app: all` to build all five images for the first deployment. Web applications build with `APP_ENV=production`; all five containers read runtime values from Dokploy.
 
 Production releases use [Changesets](https://github.com/changesets/changesets):
 
@@ -215,7 +215,9 @@ bun run release:version
 bun run release:push
 ```
 
-Configure the same Docker Hub and Dokploy credentials as staging, plus `DOKPLOY_PROD_{ADMIN,API,FRONTEND,MANAGER,WORKER}_APP_ID`.
+Configure the same Docker Hub and Dokploy credentials as staging, plus `DOKPLOY_PROD_COMPOSE_ID`.
+
+In Dokploy, set the Compose source to this GitHub repository's `main` branch and the Compose path to `./docker-compose.dokploy.yml`. Set `DOCKERHUB_USERNAME`, `IMAGE_TAG` (`staging` or `latest`), `APP_ENV`, `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `LOKI_HOST`, and the four `MY_APP_*_URL` values in the Compose environment. Route the frontend, API, manager, and admin domains to the matching Compose services on ports 80, 3000, 80, and 80 respectively. The Compose file attaches all containers to Dokploy's shared network to reach the managed PostgreSQL and Redis services.
 
 Workflow definitions live in [.github/workflows/staging.yml](./.github/workflows/staging.yml) and [.github/workflows/production.yml](./.github/workflows/production.yml).
 
