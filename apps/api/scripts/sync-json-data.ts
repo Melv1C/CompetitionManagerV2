@@ -2,6 +2,17 @@ import "varlock/auto-load";
 import { prismaWithoutLog as prisma } from "../src/lib/prisma";
 import { ageBands, disciplines } from "./catalogue-data";
 
+// Keep the established E2E fixture IDs for these public records. Existing installations
+// retain their IDs because the sync always looks up by code first.
+const stableDisciplineIds: Record<string, string> = {
+  "100M": "20000000-0000-4000-8000-000000000001",
+  "4X100M": "20000000-0000-4000-8000-000000000002",
+};
+const stableCategoryIds: Record<string, string> = {
+  "SEN-M": "30000000-0000-4000-8000-000000000001",
+  "SEN-F": "30000000-0000-4000-8000-000000000002",
+};
+
 async function syncCatalogue() {
   for (const endingYear of [2026, 2027, 2028]) {
     const code = `${endingYear - 1}-${endingYear}`;
@@ -27,7 +38,11 @@ async function syncCatalogue() {
     const discipline =
       existing ??
       (await prisma.discipline.create({
-        data: { code: item.code, measurement: item.measurement },
+        data: {
+          id: stableDisciplineIds[item.code],
+          code: item.code,
+          measurement: item.measurement,
+        },
       }));
     for (const locale of ["EN", "FR", "NL"] as const) {
       await prisma.disciplineTranslation.createMany({
@@ -83,6 +98,7 @@ async function syncCatalogue() {
       existing ??
       (await prisma.athleteCategory.create({
         data: {
+          id: stableCategoryIds[item.code],
           provider: "LRBA",
           code: item.code,
           gender: item.gender,

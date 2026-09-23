@@ -120,7 +120,7 @@ await Promise.all([
       provider: "E2E",
       code: "SEN-M",
       gender: "M",
-      minimumAge: 20,
+      minimumAge: 23,
       translations: {
         create: [
           { locale: "EN", name: "Senior men", abbreviation: "SEN M" },
@@ -157,9 +157,9 @@ await Promise.all([
     create: {
       id: "30000000-0000-4000-8000-000000000002",
       provider: "E2E",
-      code: "SEN-W",
+      code: "SEN-F",
       gender: "F",
-      minimumAge: 20,
+      minimumAge: 23,
       translations: {
         create: [
           { locale: "EN", name: "Senior women", abbreviation: "SEN W" },
