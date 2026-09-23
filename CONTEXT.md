@@ -83,7 +83,7 @@ A scheduled offering of one Discipline within an Athletics Competition. A Compet
 _Avoid_: Athletics Competition, Round, Event Entry
 
 **Competition Event Eligibility**:
-The set of Athlete Categories allowed to enter one Competition Event; an Athlete keeps their assigned category when entering an Event that also admits older groups. Eligible categories share the event's operation unless the Organization creates separate Competition Events.
+The set of Athlete Categories allowed to enter one Competition Event. An Athlete may enter only when their assigned Athlete Category is explicitly listed; their category does not change on entry.
 _Avoid_: Event Entry, athlete category snapshot
 
 **Age Band**:

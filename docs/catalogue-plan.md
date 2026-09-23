@@ -22,7 +22,7 @@ This document records the agreed decisions and the first implementation of the D
 - Review category definitions against the relevant Belgian Athletics, LBFA, and Atletiek Vlaanderen sources rather than copying the 46 legacy rows without review.
 - In this product, U23 and Senior are mutually exclusive categories. A 22-year-old Athlete is U23.
 - Non-Masters age groups follow birth year within the Athletics Season. Masters bands begin on their respective birthdays.
-- Competition Event eligibility explicitly lists every admitted Athlete Category. A U23 Athlete may enter an Event that also admits Seniors when U23 is listed, and remains U23 on the entry.
+- Competition Event eligibility explicitly lists every admitted Athlete Category. A U23 Athlete may enter only when U23 is listed, and remains U23 on the entry.
 
 The proposed age bands are KAN 6 to 7, BEN 8 to 9, PUP 10 to 11, MIN 12 to 13, CAD 14 to 15, SCO 16 to 17, JUN 18 to 19, ESP/U23 20 to 22, and SEN from 23 until Masters begins. Athletes younger than six have no category. The legacy function assigned younger children to KAN, but current federation lists start KAN at six. Masters use five-year bands beginning on the actual 35th birthday. Non-Masters age is calculated from the Athletics Season's ending year and birth year; the LRBA season changes on November 1 in V2.
 
@@ -30,7 +30,7 @@ The proposed age bands are KAN 6 to 7, BEN 8 to 9, PUP 10 to 11, MIN 12 to 13, C
 
 - `getAgeBand` and `getAthleteCategoryCode` calculate the standard category from birth and reference dates. The calculation uses the November 1 season boundary and actual Masters birthdays. Registration flows can call this function when they are implemented.
 - Athlete Categories no longer belong to a season. Existing category IDs and Event/Entry references survive the migration. If old season-specific rows share a code, later rows receive a legacy-suffixed code to preserve their distinct history.
-- `bun --filter api run sync-json-data` provisions three LRBA seasons (2025–2028), the 46 standard gender-specific categories, and an initial set of translated Disciplines. API startup runs the command after migrations. It only fills missing records and translations; it never changes a referenced Discipline's measurement or names.
+- `bun --filter api run sync-catalogue` provisions three LRBA seasons (2025–2028), the 46 standard gender-specific categories, and an initial set of translated Disciplines. API startup runs the command after migrations. It only fills missing records and translations; it never changes a referenced Discipline's measurement or names.
 - The first Discipline set covers common track races, specified hurdles and steeple, jumps, throwing weights, and five relay distances. Combined Events, race walking, and rarer races remain future catalogue review items. The catalogue does not claim to encode category-specific Event eligibility; managers choose eligible categories on each Event.
 - Managers can add an Organization Discipline while editing a Competition Event. The code and name should contain any defining equipment specification. A translation in the Competition locale is required; a fallback translation is labelled in other locales.
 

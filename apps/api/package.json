@@ -19,8 +19,8 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:validate": "APP_ENV=development prisma validate",
     "seed-e2e": "bun ./scripts/seed-e2e.ts",
-    "start": "bun run prisma:migrate:deploy && bun run sync-json-data && bun src/index.ts",
-    "sync-json-data": "bun ./scripts/sync-json-data.ts",
+    "start": "bun run prisma:migrate:deploy && bun run sync-catalogue && bun src/index.ts",
+    "sync-catalogue": "bun ./scripts/sync-catalogue.ts",
     "test": "vitest run"
   },
   "dependencies": {

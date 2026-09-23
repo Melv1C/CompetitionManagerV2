@@ -7,6 +7,11 @@ const disciplineFirst = vi.fn();
 const disciplineCreate = vi.fn();
 const categories = vi.fn();
 const clubs = vi.fn();
+const updateCompetition = vi.fn();
+const findCompetition = vi.fn();
+const transaction = vi.fn(async (callback: (tx: unknown) => Promise<unknown>) =>
+  callback({ competition: { updateMany: updateCompetition, findFirst: findCompetition } }),
+);
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -14,6 +19,8 @@ vi.mock("@/lib/prisma", () => ({
     discipline: { findMany: disciplines, findFirst: disciplineFirst, create: disciplineCreate },
     athleteCategory: { findMany: categories },
     club: { findMany: clubs },
+    competition: { findFirst: findCompetition },
+    $transaction: transaction,
   },
 }));
 vi.mock("@/middlewares/use-organization-permission", () => ({
@@ -25,7 +32,24 @@ const organizationId = "10000000-0000-4000-8000-000000000001";
 
 async function testApp() {
   const { managerCompetitionsRoutes } = await import("./manager-competitions");
-  return new Hono().route("/", managerCompetitionsRoutes);
+  return new Hono()
+    .use("*", async (c, next) => {
+      c.set("user", {
+        id: "A".repeat(32),
+        name: "Test User",
+        email: "test@example.com",
+        emailVerified: true,
+        image: null,
+        createdAt: new Date("2026-09-23T00:00:00.000Z"),
+        updatedAt: new Date("2026-09-23T00:00:00.000Z"),
+        role: "user",
+        banned: false,
+        banReason: null,
+        banExpires: null,
+      });
+      await next();
+    })
+    .route("/", managerCompetitionsRoutes);
 }
 
 describe("manager Competition catalogue", () => {
@@ -94,5 +118,22 @@ describe("manager Competition catalogue", () => {
     });
     expect(response.status).toBe(409);
     expect(disciplineCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns a route error from a mounted Competition Event mutation", async () => {
+    updateCompetition.mockResolvedValue({ count: 0 });
+    findCompetition.mockResolvedValue(null);
+    const app = await testApp();
+    const response = await app.request(
+      `/${organizationId}/competitions/20000000-0000-4000-8000-000000000001/events/30000000-0000-4000-8000-000000000001`,
+      {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ expectedUpdatedAt: "2026-09-23T00:00:00.000Z" }),
+      },
+    );
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Competition not found" });
+    expect(transaction).toHaveBeenCalledOnce();
   });
 });

@@ -2,7 +2,7 @@
 
 ## Belgian Athletics catalogue
 
-After database migrations, API startup runs `bun --filter api run sync-json-data`. This idempotent command provisions the initial LRBA seasons, Disciplines, and reusable Athlete Categories, filling missing translations without replacing existing Discipline specifications. Run the same command after deploying a new catalogue revision. Platform Disciplines have English, French, and Dutch names. Organization Disciplines require one translation and show its locale when used as a fallback.
+After database migrations, API startup runs `bun --filter api run sync-catalogue`. This idempotent command provisions the initial LRBA seasons, Disciplines, and reusable Athlete Categories, filling missing translations without replacing existing Discipline specifications. Run the same command after deploying a new catalogue revision. Platform Disciplines have English, French, and Dutch names. Organization Disciplines require one translation and show its locale when used as a fallback.
 
 The initial catalogue is a curated subset of the January 2026 LBFA specifications. Event eligibility remains an explicit manager choice. Keep old Discipline IDs when specifications change; deactivate an old entry and add a new code and ID for the replacement.
 
