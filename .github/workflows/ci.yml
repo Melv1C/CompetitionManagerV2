@@ -58,6 +58,28 @@ jobs:
           docker compose -f docker-compose.db.yml config --quiet
           docker compose -f docker-compose.e2e.yml config --quiet
 
+      - name: Validate Dokploy Compose URL mapping
+        env:
+          APP_ENV: staging
+          DOCKERHUB_USERNAME: example
+          IMAGE_TAG: staging
+          DATABASE_URL: postgresql://example:example@postgres:5432/example
+          REDIS_URL: redis://redis:6379
+          BETTER_AUTH_SECRET: example-secret
+          LOKI_HOST: http://loki:3100
+          MY_APP_API_URL: https://api.example.com
+          MY_APP_FRONTEND_URL: https://example.com
+          MY_APP_MANAGER_URL: https://manager.example.com
+          MY_APP_ADMIN_URL: https://admin.example.com
+        run: |
+          docker compose -f docker-compose.dokploy.yml config --format json | jq -e '
+            .services.api.environment as $env |
+            $env.API_URL == "https://api.example.com" and
+            $env.FRONTEND_URL == "https://example.com" and
+            $env.MANAGER_URL == "https://manager.example.com" and
+            $env.ADMIN_URL == "https://admin.example.com"
+          '
+
       - name: Prisma Validate
         run: bun run prisma:validate
 
