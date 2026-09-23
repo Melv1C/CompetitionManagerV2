@@ -6,7 +6,10 @@ The monorepo uses [Bun](https://bun.sh/) and [Turborepo](https://turbo.build/rep
 
 ## Current implementation
 
-- The public frontend supports email/password sign-up, sign-in, and API health display.
+- The public frontend supports email/password sign-up and sign-in. Its home discovery cards,
+  Competition calendar, Competition overview, schedule, and public pricing use API-backed published
+  Competition data. Registration, participant, Event detail, and result journeys remain prototypes
+  backed by mock data.
 - The Organization manager requires a signed-in, email-verified User with at least one Organization Membership. Owners and Organization Staff can create resumable Competition Drafts, configure their Venue, contact, registration schedule, pricing, Events, eligibility, Rounds, and Start Groups, then publish a complete Competition.
 - The platform-admin application manages Users and Organizations, previews and queues LRBA Athlete Directory Imports, and embeds Prisma Studio for authorized database access.
 - The PostgreSQL schema models the Competition, athlete, registration, pricing, result, interchange, payment, settlement, and audit domains. Competition setup and publication are implemented; registration, payment, result, and interchange workflows remain planned.

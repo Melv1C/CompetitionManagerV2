@@ -1,6 +1,9 @@
 # Public frontend experience
 
-This document records the agreed frontend direction. The current implementation in `apps/frontend` is a frontend-only prototype with mock data. It does not connect competition, registration, payment, or result screens to the API.
+This document records the agreed frontend direction. Competition discovery, the Competition
+calendar, overview, schedule, and public pricing read published Competition data from the API.
+Participant, Event detail, registration, payment, and result screens remain a frontend-only
+prototype with mock data.
 
 ## Audience and navigation
 

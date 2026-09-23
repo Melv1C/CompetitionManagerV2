@@ -199,4 +199,286 @@ await Promise.all([
   }),
 ]);
 
+const publicCompetitionId = "60000000-0000-4000-8000-000000000001";
+const draftCompetitionId = "60000000-0000-4000-8000-000000000002";
+const standardTierId = "70000000-0000-4000-8000-000000000001";
+const partnerTierId = "70000000-0000-4000-8000-000000000002";
+const sprintEventId = "80000000-0000-4000-8000-000000000001";
+const relayEventId = "80000000-0000-4000-8000-000000000002";
+const sprintRoundId = "90000000-0000-4000-8000-000000000001";
+const relayRoundId = "90000000-0000-4000-8000-000000000002";
+const primaryClub = await prisma.club.findUniqueOrThrow({
+  where: { provider_externalId: { provider: "E2E", externalId: "BRU" } },
+});
+
+// These records are owned entirely by the E2E fixture. Recreate them so rerunning the seed cannot
+// preserve stale nested data from an earlier fixture version.
+await prisma.competition.deleteMany({
+  where: { id: { in: [publicCompetitionId, draftCompetitionId] } },
+});
+
+await prisma.competition.upsert({
+  where: { id: publicCompetitionId },
+  create: {
+    id: publicCompetitionId,
+    organizationId: primary.id,
+    athleticsSeasonId: season.id,
+    primaryLocale: "EN",
+    lifecycleState: "PUBLISHED",
+    registrationState: "OPEN",
+    startsAt: new Date("2030-05-24T11:00:00.000Z"),
+    endsAt: new Date("2030-05-24T19:00:00.000Z"),
+    timeZone: "Europe/Brussels",
+    registrationOpensAt: new Date("2030-05-01T07:00:00.000Z"),
+    registrationClosesAt: new Date("2030-05-20T21:59:00.000Z"),
+    contactName: "E2E Meeting Team",
+    contactEmail: "meeting.e2e@example.com",
+    contactPhone: "+32 2 555 01 01",
+    publishedAt: new Date("2026-09-22T00:00:00.000Z"),
+  },
+  update: {
+    lifecycleState: "PUBLISHED",
+    registrationState: "OPEN",
+    startsAt: new Date("2030-05-24T11:00:00.000Z"),
+    endsAt: new Date("2030-05-24T19:00:00.000Z"),
+  },
+});
+
+await Promise.all([
+  prisma.competitionTranslation.upsert({
+    where: { competitionId_locale: { competitionId: publicCompetitionId, locale: "EN" } },
+    create: {
+      competitionId: publicCompetitionId,
+      locale: "EN",
+      name: "E2E Brussels Open",
+      description: "A multilingual afternoon of sprint and relay racing in Brussels.",
+    },
+    update: {
+      name: "E2E Brussels Open",
+      description: "A multilingual afternoon of sprint and relay racing in Brussels.",
+    },
+  }),
+  prisma.competitionTranslation.upsert({
+    where: { competitionId_locale: { competitionId: publicCompetitionId, locale: "FR" } },
+    create: {
+      competitionId: publicCompetitionId,
+      locale: "FR",
+      name: "Open de Bruxelles E2E",
+      description: "Un après-midi multilingue de sprint et de relais à Bruxelles.",
+    },
+    update: { name: "Open de Bruxelles E2E" },
+  }),
+  prisma.competitionVenue.upsert({
+    where: { competitionId: publicCompetitionId },
+    create: {
+      competitionId: publicCompetitionId,
+      name: "King Baudouin Stadium",
+      addressLine1: "Marathonlaan 135",
+      postalCode: "1020",
+      city: "Brussels",
+      region: "Brussels",
+      countryCode: "BE",
+    },
+    update: { name: "King Baudouin Stadium", city: "Brussels" },
+  }),
+]);
+
+await Promise.all([
+  prisma.competitionPricingTier.upsert({
+    where: { id: standardTierId },
+    create: {
+      id: standardTierId,
+      competitionId: publicCompetitionId,
+      name: "Standard",
+      isDefault: true,
+    },
+    update: { name: "Standard", isDefault: true },
+  }),
+  prisma.competitionPricingTier.upsert({
+    where: { id: partnerTierId },
+    create: {
+      id: partnerTierId,
+      competitionId: publicCompetitionId,
+      name: "Partner clubs",
+      isDefault: false,
+    },
+    update: { name: "Partner clubs", isDefault: false },
+  }),
+  prisma.competitionEvent.upsert({
+    where: { id: sprintEventId },
+    create: {
+      id: sprintEventId,
+      competitionId: publicCompetitionId,
+      disciplineId: "20000000-0000-4000-8000-000000000001",
+      kind: "INDIVIDUAL",
+      registerable: true,
+    },
+    update: { active: true, registerable: true },
+  }),
+  prisma.competitionEvent.upsert({
+    where: { id: relayEventId },
+    create: {
+      id: relayEventId,
+      competitionId: publicCompetitionId,
+      disciplineId: "20000000-0000-4000-8000-000000000002",
+      kind: "RELAY",
+      relayLegCount: 4,
+      registerable: false,
+    },
+    update: { active: true, registerable: false },
+  }),
+]);
+
+await Promise.all([
+  prisma.competitionPricingTierClub.upsert({
+    where: {
+      competitionId_clubId: { competitionId: publicCompetitionId, clubId: primaryClub.id },
+    },
+    create: {
+      competitionId: publicCompetitionId,
+      pricingTierId: partnerTierId,
+      clubId: primaryClub.id,
+    },
+    update: { pricingTierId: partnerTierId },
+  }),
+  prisma.competitionEventTranslation.upsert({
+    where: { competitionEventId_locale: { competitionEventId: sprintEventId, locale: "EN" } },
+    create: {
+      competitionEventId: sprintEventId,
+      locale: "EN",
+      name: "Senior 100 metres",
+      description: "Final",
+    },
+    update: { name: "Senior 100 metres" },
+  }),
+  prisma.competitionEventTranslation.upsert({
+    where: { competitionEventId_locale: { competitionEventId: sprintEventId, locale: "FR" } },
+    create: {
+      competitionEventId: sprintEventId,
+      locale: "FR",
+      name: "100 mètres seniors",
+      description: "Finale",
+    },
+    update: { name: "100 mètres seniors" },
+  }),
+  prisma.competitionEventTranslation.upsert({
+    where: { competitionEventId_locale: { competitionEventId: relayEventId, locale: "EN" } },
+    create: {
+      competitionEventId: relayEventId,
+      locale: "EN",
+      name: "4 × 100 metres relay",
+      description: null,
+    },
+    update: { name: "4 × 100 metres relay" },
+  }),
+  prisma.competitionEventEligibility.upsert({
+    where: {
+      competitionEventId_athleteCategoryId: {
+        competitionEventId: sprintEventId,
+        athleteCategoryId: "30000000-0000-4000-8000-000000000001",
+      },
+    },
+    create: {
+      competitionEventId: sprintEventId,
+      athleteCategoryId: "30000000-0000-4000-8000-000000000001",
+    },
+    update: {},
+  }),
+  prisma.competitionEventEligibility.upsert({
+    where: {
+      competitionEventId_athleteCategoryId: {
+        competitionEventId: relayEventId,
+        athleteCategoryId: "30000000-0000-4000-8000-000000000002",
+      },
+    },
+    create: {
+      competitionEventId: relayEventId,
+      athleteCategoryId: "30000000-0000-4000-8000-000000000002",
+    },
+    update: {},
+  }),
+]);
+
+await Promise.all([
+  prisma.competitionEventPrice.upsert({
+    where: {
+      competitionEventId_pricingTierId: {
+        competitionEventId: sprintEventId,
+        pricingTierId: standardTierId,
+      },
+    },
+    create: {
+      competitionId: publicCompetitionId,
+      competitionEventId: sprintEventId,
+      pricingTierId: standardTierId,
+      priceCents: 600,
+    },
+    update: { priceCents: 600 },
+  }),
+  prisma.competitionEventPrice.upsert({
+    where: {
+      competitionEventId_pricingTierId: {
+        competitionEventId: sprintEventId,
+        pricingTierId: partnerTierId,
+      },
+    },
+    create: {
+      competitionId: publicCompetitionId,
+      competitionEventId: sprintEventId,
+      pricingTierId: partnerTierId,
+      priceCents: 400,
+    },
+    update: { priceCents: 400 },
+  }),
+  prisma.round.upsert({
+    where: { id: sprintRoundId },
+    create: {
+      id: sprintRoundId,
+      competitionEventId: sprintEventId,
+      sequence: 1,
+      label: "Final",
+      scheduledStartAt: new Date("2030-05-24T12:20:00.000Z"),
+    },
+    update: { scheduledStartAt: new Date("2030-05-24T12:20:00.000Z") },
+  }),
+  prisma.round.upsert({
+    where: { id: relayRoundId },
+    create: {
+      id: relayRoundId,
+      competitionEventId: relayEventId,
+      sequence: 1,
+      label: "Final",
+      scheduledStartAt: new Date("2030-05-24T15:00:00.000Z"),
+    },
+    update: { scheduledStartAt: new Date("2030-05-24T15:00:00.000Z") },
+  }),
+]);
+
+await Promise.all([
+  prisma.startGroup.upsert({
+    where: { roundId_sequence: { roundId: sprintRoundId, sequence: 1 } },
+    create: { roundId: sprintRoundId, sequence: 1, label: "Heat 1" },
+    update: { label: "Heat 1" },
+  }),
+  prisma.startGroup.upsert({
+    where: { roundId_sequence: { roundId: sprintRoundId, sequence: 2 } },
+    create: { roundId: sprintRoundId, sequence: 2, label: "Heat 2" },
+    update: { label: "Heat 2" },
+  }),
+]);
+
+await prisma.competition.upsert({
+  where: { id: draftCompetitionId },
+  create: {
+    id: draftCompetitionId,
+    organizationId: primary.id,
+    athleticsSeasonId: season.id,
+    primaryLocale: "EN",
+    translations: {
+      create: { locale: "EN", name: "Private E2E Draft", description: "Not public." },
+    },
+  },
+  update: { lifecycleState: "DRAFT" },
+});
+
 await prisma.$disconnect();

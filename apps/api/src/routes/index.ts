@@ -10,6 +10,7 @@ import { athleteImportsRoutes } from "./athlete-imports";
 import { healthRoutes } from "./health";
 import { managerCompetitionsRoutes } from "./manager-competitions";
 import { organizationsRoutes } from "./organizations";
+import { publicCompetitionsRoutes } from "./public-competitions";
 
 export const routes = new Hono()
   .use(useAuth)
@@ -28,6 +29,7 @@ export const routes = new Hono()
   // Add routes with logging middleware applied here
   .route("/health", healthRoutes)
   .route("/athlete-imports", athleteImportsRoutes)
+  .route("/competitions", publicCompetitionsRoutes)
   .route("/manager/organizations", managerCompetitionsRoutes)
   .route("/organizations", organizationsRoutes)
 

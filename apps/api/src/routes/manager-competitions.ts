@@ -120,8 +120,16 @@ function getReadiness(competition: CompetitionRecord) {
     ) {
       missing.add(`${eventName} needs a name in the primary locale.`);
     }
+    if (event.discipline.translations.length === 0) {
+      missing.add(`${eventName} needs a Discipline translation.`);
+    }
     if (event.eligibility.length === 0) {
       missing.add(`${eventName} needs at least one eligible Athlete Category.`);
+    }
+    if (
+      event.eligibility.some(({ athleteCategory }) => athleteCategory.translations.length === 0)
+    ) {
+      missing.add(`${eventName} needs translations for every eligible Athlete Category.`);
     }
     if (event.kind === "RELAY" && !event.relayLegCount) {
       missing.add(`${eventName} needs a relay leg count.`);
