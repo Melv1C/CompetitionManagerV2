@@ -146,7 +146,7 @@ test.describe("manager competition setup", () => {
     });
     expect(foreignCategory.status()).toBe(400);
     await expect(foreignCategory.json()).resolves.toMatchObject({
-      error: "Athlete Category is not available to this Organization and Athletics Season",
+      error: "Athlete Category is not available to this Organization",
     });
   });
 
