@@ -227,6 +227,7 @@ Workflow definitions live in [.github/workflows/staging.yml](./.github/workflows
 ## Documentation map
 
 - [CONTEXT.md](./CONTEXT.md) defines the domain vocabulary and planned product concepts.
+- [docs/catalogue-plan.md](./docs/catalogue-plan.md) records the first Belgian Athletics Discipline and Athlete Category catalogue and its remaining review items.
 - [docs/frontend-experience.md](./docs/frontend-experience.md) records the agreed public and registrant frontend journeys represented by the mock.
 - [docs/adr](./docs/adr/) records accepted architecture and product decisions.
 - [docs/operations.md](./docs/operations.md) covers runtime operations and log data handling.

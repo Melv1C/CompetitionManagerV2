@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 
 import type {
   Competition,
+  CreateOrganizationDiscipline,
   CreateCompetition,
   UpdateCompetitionDetails,
   UpdateCompetitionPricing,
@@ -26,21 +27,33 @@ export const competitionKeys = {
   list: (organizationId: string) => ["competitions", organizationId] as const,
   detail: (organizationId: string, competitionId: string) =>
     ["competition", organizationId, competitionId] as const,
-  catalog: (organizationId: string, seasonId?: string) =>
-    ["competition-catalog", organizationId, seasonId] as const,
+  catalog: (organizationId: string) => ["competition-catalog", organizationId] as const,
 };
 
-export function useCompetitionCatalog(organizationId: string, seasonId?: string) {
+export function useCompetitionCatalog(organizationId: string) {
   return useQuery({
-    queryKey: competitionKeys.catalog(organizationId, seasonId),
+    queryKey: competitionKeys.catalog(organizationId),
     queryFn: async () => {
-      const response = await organizationsApi.catalog.$get({
-        param: { organizationId },
-        query: { seasonId },
-      });
+      const response = await organizationsApi.catalog.$get({ param: { organizationId } });
       if (!response.ok) return throwResponseError(response, "Failed to load Competition catalog");
       return response.json();
     },
+  });
+}
+
+export function useCreateOrganizationDiscipline(organizationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateOrganizationDiscipline) => {
+      const response = await organizationsApi.catalog.disciplines.$post({
+        param: { organizationId },
+        json: input,
+      });
+      if (!response.ok) return throwResponseError(response, "Failed to create Discipline");
+      return response.json();
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["competition-catalog", organizationId] }),
   });
 }
 

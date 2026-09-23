@@ -26,6 +26,21 @@ export function selectTranslation<T extends PublicTranslation>(
   );
 }
 
+export function disciplineLabel(
+  discipline: {
+    code: string;
+    translations: Array<PublicTranslation & { abbreviation?: string | null }>;
+  },
+  language: string,
+  primaryLocale: AppLocale,
+  preferAbbreviation = false,
+) {
+  const translation = selectTranslation(discipline.translations, language, primaryLocale);
+  if (!translation) return discipline.code;
+  const label = (preferAbbreviation && translation.abbreviation) || translation.name;
+  return translation.locale === appLocale(language) ? label : `${label} (${translation.locale})`;
+}
+
 export function formatCompetitionDate(
   value: string,
   language: string,

@@ -173,9 +173,9 @@ function translatedName(
   item: { code: string; translations: Array<{ locale: string; name: string }> },
   locale: string,
 ) {
-  return (
-    item.translations.find((translation) => translation.locale === locale)?.name ??
-    item.translations[0]?.name ??
-    item.code
-  );
+  const exact = item.translations.find((translation) => translation.locale === locale);
+  if (exact) return exact.name;
+  const fallback =
+    item.translations.find((translation) => translation.locale === "EN") ?? item.translations[0];
+  return fallback ? `${fallback.name} (${fallback.locale})` : item.code;
 }

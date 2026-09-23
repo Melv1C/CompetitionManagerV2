@@ -1,4 +1,5 @@
 import type {
+  CreateOrganizationDiscipline,
   CreateCompetition,
   UpdateCompetitionDetails,
   UpdateCompetitionPricing,
@@ -9,6 +10,7 @@ import type { InferResponseType } from "hono/client";
 import type { apiClient } from "@/lib/api-client";
 
 export type {
+  CreateOrganizationDiscipline,
   CreateCompetition,
   UpdateCompetitionDetails,
   UpdateCompetitionPricing,

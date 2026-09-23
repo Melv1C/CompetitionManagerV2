@@ -1,4 +1,5 @@
 export * from "./base";
+export * from "./catalogue";
 export * from "./athlete-import";
 export * from "./competition";
 export * from "./env";

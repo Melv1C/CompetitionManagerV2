@@ -57,7 +57,7 @@ test.describe("manager competition setup", () => {
       startGroup: true,
     });
     await addEvent(page, {
-      discipline: "4 × 100 metres",
+      discipline: "4 × 100 metres relay",
       name: "4 × 100 metres relay",
       category: "Senior women",
       roundStart: "2027-06-12T16:00",
@@ -146,7 +146,7 @@ test.describe("manager competition setup", () => {
     });
     expect(foreignCategory.status()).toBe(400);
     await expect(foreignCategory.json()).resolves.toMatchObject({
-      error: "Athlete Category is not available to this Organization and Athletics Season",
+      error: "Athlete Category is not available to this Organization",
     });
   });
 
