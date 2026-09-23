@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import {
   CompetitionCard,
   CompetitionCardSkeleton,
-  selectTranslation,
+  disciplineLabel,
   usePublicCompetitions,
 } from "@/features/competitions";
 import { PageIntro, SiteShell } from "@/features/layout";
@@ -95,8 +95,7 @@ export function CompetitionsPage() {
                 <SelectItem value={allDisciplines}>{t("competitions.allDisciplines")}</SelectItem>
                 {disciplines.map((discipline) => (
                   <SelectItem key={discipline.id} value={discipline.id}>
-                    {selectTranslation(discipline.translations, language, "EN")?.name ??
-                      discipline.code}
+                    {disciplineLabel(discipline, language, "EN")}
                   </SelectItem>
                 ))}
               </SelectContent>

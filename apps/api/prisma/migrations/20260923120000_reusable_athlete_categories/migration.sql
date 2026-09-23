@@ -20,19 +20,3 @@ ALTER TABLE "athlete_category" DROP COLUMN "athleticsSeasonId";
 
 CREATE UNIQUE INDEX "athlete_category_organizationId_code_key" ON "athlete_category"("organizationId", "code");
 CREATE UNIQUE INDEX "athlete_category_platform_code" ON "athlete_category"("code") WHERE "organizationId" IS NULL;
-
--- Older platform rows could also reuse Discipline codes because nullable Organization IDs
--- did not participate in the original unique constraint.
-WITH duplicates AS (
-  SELECT "id", row_number() OVER (
-    PARTITION BY "organizationId", "code"
-    ORDER BY "createdAt", "id"
-  ) AS position
-  FROM "discipline"
-)
-UPDATE "discipline" discipline
-SET "code" = discipline."code" || '~' || discipline."id"::text
-FROM duplicates
-WHERE discipline."id" = duplicates."id" AND duplicates.position > 1;
-
-CREATE UNIQUE INDEX "discipline_platform_code" ON "discipline"("code") WHERE "organizationId" IS NULL;

@@ -12,7 +12,11 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, MapPin, Trophy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { formatCompetitionDate, selectTranslation } from "@/features/competitions/format";
+import {
+  disciplineLabel,
+  formatCompetitionDate,
+  selectTranslation,
+} from "@/features/competitions/format";
 import type { PublicCompetitionSummary } from "@/features/competitions/types";
 
 function RegistrationBadge({ competition }: { competition: PublicCompetitionSummary }) {
@@ -47,14 +51,9 @@ export function CompetitionCard({ competition }: { competition: PublicCompetitio
     language,
     competition.primaryLocale,
   );
-  const disciplineNames = competition.disciplines.map((discipline) => {
-    const selected = selectTranslation(
-      discipline.translations,
-      language,
-      competition.primaryLocale,
-    );
-    return selected?.abbreviation || selected?.name || discipline.code;
-  });
+  const disciplineNames = competition.disciplines.map((discipline) =>
+    disciplineLabel(discipline, language, competition.primaryLocale, true),
+  );
   const place = [competition.venue.name, competition.venue.city].filter(Boolean).join(", ");
 
   return (
