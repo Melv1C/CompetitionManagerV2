@@ -100,7 +100,7 @@ describe("organization administration", () => {
     });
   });
 
-  it("searches regular users who can own an organization", async () => {
+  it("searches verified regular users who can own an organization", async () => {
     findUsers.mockResolvedValue([
       { id: "U".repeat(32), name: "Morgan Owner", email: "owner@example.com" },
     ]);
@@ -118,6 +118,72 @@ describe("organization administration", () => {
         take: 25,
       }),
     );
+  });
+
+  it("always includes the current admin even when the regular-user list is full", async () => {
+    findUsers.mockResolvedValue(
+      Array.from({ length: 25 }, (_, index) => ({
+        id: `${index}`.padStart(32, "U"),
+        name: `Regular User ${index}`,
+        email: `user${index}@example.com`,
+      })),
+    );
+    const app = await createTestApp();
+
+    const response = await app.request("/owner-candidates");
+    const body = (await response.json()) as {
+      users: Array<{ id: string; name: string; email: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.users).toHaveLength(26);
+    expect(body.users).toContainEqual({ id: admin.id, name: admin.name, email: admin.email });
+  });
+
+  it("allows the current platform administrator to own the organization", async () => {
+    findUnique.mockResolvedValue(admin);
+    createOrganization.mockResolvedValue({
+      id: "O".repeat(32),
+      name: "Brussels Athletics",
+      slug: "brussels-athletics",
+      logo: null,
+      createdAt: new Date("2026-09-18T12:00:00.000Z"),
+    });
+    const app = await createTestApp();
+
+    const response = await app.request("/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Brussels Athletics",
+        slug: "brussels-athletics",
+        ownerId: admin.id,
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      organization: { owner: { id: admin.id, email: admin.email } },
+    });
+  });
+
+  it("does not allow an administrator to assign another admin as owner", async () => {
+    const otherAdmin = { ...admin, id: "B".repeat(32) };
+    findUnique.mockResolvedValue(otherAdmin);
+    const app = await createTestApp();
+
+    const response = await app.request("/", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Brussels Athletics",
+        slug: "brussels-athletics",
+        ownerId: otherAdmin.id,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(createOrganization).not.toHaveBeenCalled();
   });
 
   it("rejects an unverified user as organization owner", async () => {

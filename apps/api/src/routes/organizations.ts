@@ -27,6 +27,7 @@ export const organizationsRoutes = new Hono()
   .use("*", isAdmin)
   .get("/owner-candidates", zValidator("query", OrganizationOwnerCandidatesQuery$), async (c) => {
     const { search } = c.req.valid("query");
+    const currentUser = c.get("user")!;
     const users = await prisma.user.findMany({
       where: {
         role: "user",
@@ -44,8 +45,19 @@ export const organizationsRoutes = new Hono()
       take: 25,
       select: { id: true, name: true, email: true },
     });
+    const normalizedSearch = search?.toLowerCase();
+    const currentUserMatchesSearch =
+      !normalizedSearch ||
+      currentUser.name.toLowerCase().includes(normalizedSearch) ||
+      currentUser.email.toLowerCase().includes(normalizedSearch);
+    const candidates = [
+      ...users,
+      ...(currentUser.emailVerified && currentUserMatchesSearch
+        ? [{ id: currentUser.id, name: currentUser.name, email: currentUser.email }]
+        : []),
+    ].sort((left, right) => left.name.localeCompare(right.name));
 
-    return c.json(OrganizationOwnerCandidatesResponse$.parse({ users }));
+    return c.json(OrganizationOwnerCandidatesResponse$.parse({ users: candidates }));
   })
   .get("/", async (c) => {
     const records = await prisma.organization.findMany({
@@ -83,6 +95,7 @@ export const organizationsRoutes = new Hono()
   })
   .post("/", zValidator("json", CreateOrganization$), async (c) => {
     const { name, slug, logo, ownerId } = c.req.valid("json");
+    const currentUser = c.get("user")!;
     const [owner, existingOrganization] = await Promise.all([
       prisma.user.findUnique({
         where: { id: ownerId },
@@ -98,8 +111,11 @@ export const organizationsRoutes = new Hono()
       return c.json({ error: "Selected owner was not found" }, 404);
     }
 
-    if (owner.role === "admin") {
-      return c.json({ error: "Platform administrators cannot own organizations" }, 400);
+    if (owner.role === "admin" && owner.id !== currentUser.id) {
+      return c.json(
+        { error: "You can only assign yourself as a platform administrator owner" },
+        400,
+      );
     }
 
     if (!owner.emailVerified) {

@@ -186,7 +186,7 @@ bun --filter api add-admin -- "Admin User" admin@example.com your-secure-passwor
 
 The script creates the account through Better Auth, assigns the `admin` role, and marks the email as verified. If the email already exists, it exits without changing that account.
 
-Platform administrators create Organizations and assign an eligible verified User as owner. Users cannot create Organizations themselves.
+Platform administrators create Organizations and assign themselves or another verified regular User as owner. Other platform administrators are not eligible owners. Users cannot create Organizations themselves.
 
 ## Background jobs
 

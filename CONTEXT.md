@@ -57,16 +57,16 @@ An accepted, Organization-scoped relationship between a User and an Organization
 _Avoid_: User account, Club affiliation, Platform Administrator
 
 **Organization Owner**:
-An Organization member with complete authority over the Organization, its membership, and its competitions.
-_Avoid_: Platform admin, superadmin
+An Organization member with complete authority over the Organization, its membership, and its competitions. A Platform Administrator may also be an Organization Owner.
+_Avoid_: superadmin
 
 **Organization Staff**:
 An Organization member whose assigned permissions authorize specific competition operations. Registration creation, management, transfer, and override are separate permissions inherited by the Organization Owner.
 _Avoid_: Registrant, Platform Administrator, all Organization members
 
 **Platform Administrator**:
-A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator is outside every Organization's membership and role model and cannot impersonate Users in the initial product.
-_Avoid_: Organization Owner, Competition Manager
+A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator may hold an Organization Owner membership for an Organization they create and cannot impersonate Users in the initial product.
+_Avoid_: Competition Manager
 
 ## Competition
 
