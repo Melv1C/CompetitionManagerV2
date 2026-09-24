@@ -304,5 +304,4 @@ describe("organization administration", () => {
     expect(response.status).toBe(403);
     expect(findMany).not.toHaveBeenCalled();
   });
-
 });
