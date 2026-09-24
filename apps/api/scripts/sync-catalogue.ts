@@ -124,8 +124,17 @@ async function syncCatalogue() {
   );
 }
 
+let exitCode = 0;
+
 try {
   await syncCatalogue();
+} catch (error) {
+  console.error("Belgian Athletics catalogue sync failed:", error);
+  exitCode = 1;
 } finally {
   await prisma.$disconnect();
 }
+
+// The Prisma PostgreSQL adapter can leave Bun's event loop alive after disconnect.
+// This is a startup prerequisite, so it must exit before the API server command runs.
+process.exit(exitCode);
