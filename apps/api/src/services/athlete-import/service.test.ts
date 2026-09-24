@@ -144,6 +144,39 @@ describe("athlete import service", () => {
     expect(dispatchPersisted).toBe(true);
   });
 
+  it("uses an extended transaction timeout for chunked import staging", async () => {
+    const db = createDatabaseMock();
+    const previewBatch = {
+      id: "batch-1",
+      state: "PREVIEW",
+      checksum: "checksum-1",
+      provider: "LRBA",
+      seasonCode: season.code,
+      workerJobId: null,
+    };
+    db.athleteImportBatch.findUnique.mockResolvedValueOnce(previewBatch);
+    db.$transaction.mockImplementation(async (callback) => callback(db));
+    const rows = Array.from({ length: 751 }, (_, index) => ({
+      ...row,
+      sourceRow: index + 2,
+      license: String(1_234_567 + index),
+    }));
+    const service = createAthleteImportService({
+      db: db as never,
+      createWorkerJobId: () => "athlete-import-dispatch-1",
+    });
+
+    await service.confirm({
+      batchId: previewBatch.id,
+      checksum: previewBatch.checksum,
+      rows,
+      enqueue: vi.fn().mockResolvedValue("athlete-import-dispatch-1"),
+    });
+
+    expect(db.athleteImportRow.createMany).toHaveBeenCalledTimes(2);
+    expect(db.$transaction).toHaveBeenCalledWith(expect.any(Function), { timeout: 60_000 });
+  });
+
   it("re-enqueues every queued batch with its persisted job ID", async () => {
     const db = createDatabaseMock();
     db.athleteImportBatch.findMany.mockResolvedValue([

@@ -15,6 +15,7 @@ import {
 
 const QUERY_CHUNK_SIZE = 5_000;
 const INSERT_CHUNK_SIZE = 750;
+const STAGING_TRANSACTION_TIMEOUT_MS = 60_000;
 const STAGING_RETENTION_MS = 24 * 60 * 60 * 1_000;
 
 type AthleteImportDatabase = typeof prisma;
@@ -305,39 +306,42 @@ export function createAthleteImportService({
     const stagingExpiresAt = new Date(confirmedAt.getTime() + STAGING_RETENTION_MS);
     const workerJobId = createWorkerJobId();
 
-    await db.$transaction(async (transaction) => {
-      await transaction.athleteImportRow.deleteMany({ where: { importBatchId: batch.id } });
-      await transaction.athleteImportClub.deleteMany({ where: { importBatchId: batch.id } });
-      for (const rowChunk of chunks(input.rows, INSERT_CHUNK_SIZE)) {
-        await transaction.athleteImportRow.createMany({
-          data: rowChunk.map((row) => ({
-            importBatchId: batch.id,
-            sourceRow: row.sourceRow,
-            license: row.license,
-            bib: row.bib,
-            firstName: row.firstName,
-            lastName: row.lastName,
-            gender: row.gender,
-            birthDate: new Date(`${row.birthDate}T00:00:00.000Z`),
-            clubExternalId: row.clubExternalId,
-            clubAbbreviation: row.clubAbbreviation,
-          })),
+    await db.$transaction(
+      async (transaction) => {
+        await transaction.athleteImportRow.deleteMany({ where: { importBatchId: batch.id } });
+        await transaction.athleteImportClub.deleteMany({ where: { importBatchId: batch.id } });
+        for (const rowChunk of chunks(input.rows, INSERT_CHUNK_SIZE)) {
+          await transaction.athleteImportRow.createMany({
+            data: rowChunk.map((row) => ({
+              importBatchId: batch.id,
+              sourceRow: row.sourceRow,
+              license: row.license,
+              bib: row.bib,
+              firstName: row.firstName,
+              lastName: row.lastName,
+              gender: row.gender,
+              birthDate: new Date(`${row.birthDate}T00:00:00.000Z`),
+              clubExternalId: row.clubExternalId,
+              clubAbbreviation: row.clubAbbreviation,
+            })),
+          });
+        }
+        await transaction.athleteImportClub.createMany({
+          data: clubs.map((club) => ({ importBatchId: batch.id, ...club })),
         });
-      }
-      await transaction.athleteImportClub.createMany({
-        data: clubs.map((club) => ({ importBatchId: batch.id, ...club })),
-      });
-      await transaction.athleteImportBatch.update({
-        where: { id: batch.id },
-        data: {
-          state: "QUEUED",
-          confirmedAt,
-          stagingExpiresAt,
-          errorMessage: null,
-          workerJobId,
-        },
-      });
-    });
+        await transaction.athleteImportBatch.update({
+          where: { id: batch.id },
+          data: {
+            state: "QUEUED",
+            confirmedAt,
+            stagingExpiresAt,
+            errorMessage: null,
+            workerJobId,
+          },
+        });
+      },
+      { timeout: STAGING_TRANSACTION_TIMEOUT_MS },
+    );
 
     await dispatchQueuedBatch({ id: batch.id, state: "QUEUED", workerJobId }, input.enqueue);
     return getBatch(batch.id);
