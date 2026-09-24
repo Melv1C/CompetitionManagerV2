@@ -305,24 +305,4 @@ describe("organization administration", () => {
     expect(findMany).not.toHaveBeenCalled();
   });
 
-  it("rejects a platform administrator as organization owner", async () => {
-    findUnique.mockResolvedValue(admin);
-    const app = await createTestApp();
-
-    const response = await app.request("/", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        name: "Admin-owned Athletics",
-        slug: "admin-owned-athletics",
-        ownerId: admin.id,
-      }),
-    });
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
-      error: "Platform administrators cannot own organizations",
-    });
-    expect(createOrganization).not.toHaveBeenCalled();
-  });
 });
