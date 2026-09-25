@@ -100,7 +100,7 @@ describe("organization administration", () => {
     });
   });
 
-  it("searches verified regular users who can own an organization", async () => {
+  it("searches verified users who can own an organization", async () => {
     findUsers.mockResolvedValue([
       { id: "U".repeat(32), name: "Morgan Owner", email: "owner@example.com" },
     ]);
@@ -114,13 +114,14 @@ describe("organization administration", () => {
     });
     expect(findUsers).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ role: "user", emailVerified: true }),
+        where: expect.objectContaining({ emailVerified: true }),
         take: 25,
       }),
     );
+    expect(findUsers.mock.calls[0]?.[0].where).not.toHaveProperty("role");
   });
 
-  it("always includes the current admin even when the regular-user list is full", async () => {
+  it("always includes the current admin even when the first 25 users fill the result", async () => {
     findUsers.mockResolvedValue(
       Array.from({ length: 25 }, (_, index) => ({
         id: `${index}`.padStart(32, "U"),
@@ -167,9 +168,16 @@ describe("organization administration", () => {
     });
   });
 
-  it("does not allow an administrator to assign another admin as owner", async () => {
+  it("allows an administrator to assign another admin as owner", async () => {
     const otherAdmin = { ...admin, id: "B".repeat(32) };
     findUnique.mockResolvedValue(otherAdmin);
+    createOrganization.mockResolvedValue({
+      id: "O".repeat(32),
+      name: "Brussels Athletics",
+      slug: "brussels-athletics",
+      logo: null,
+      createdAt: new Date("2026-09-18T12:00:00.000Z"),
+    });
     const app = await createTestApp();
 
     const response = await app.request("/", {
@@ -182,8 +190,15 @@ describe("organization administration", () => {
       }),
     });
 
-    expect(response.status).toBe(400);
-    expect(createOrganization).not.toHaveBeenCalled();
+    expect(response.status).toBe(201);
+    expect(createOrganization).toHaveBeenCalledWith({
+      body: {
+        name: "Brussels Athletics",
+        slug: "brussels-athletics",
+        logo: undefined,
+        userId: otherAdmin.id,
+      },
+    });
   });
 
   it("rejects an unverified user as organization owner", async () => {

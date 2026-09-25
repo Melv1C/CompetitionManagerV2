@@ -65,7 +65,7 @@ An Organization member whose assigned permissions authorize specific competition
 _Avoid_: Registrant, Platform Administrator, all Organization members
 
 **Platform Administrator**:
-A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator may hold an Organization Owner membership for an Organization they create and cannot impersonate Users in the initial product.
+A trusted operator of the Competition Manager SaaS who creates and manages Organizations, manages or suspends Users, transfers Organization ownership, inspects system health, and reviews platform audit history. A Platform Administrator may also hold an Organization Owner membership and cannot impersonate Users in the initial product.
 _Avoid_: Competition Manager
 
 ## Competition

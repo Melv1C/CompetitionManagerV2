@@ -30,7 +30,6 @@ export const organizationsRoutes = new Hono()
     const currentUser = c.get("user")!;
     const users = await prisma.user.findMany({
       where: {
-        role: "user",
         emailVerified: true,
         ...(search
           ? {
@@ -50,12 +49,17 @@ export const organizationsRoutes = new Hono()
       !normalizedSearch ||
       currentUser.name.toLowerCase().includes(normalizedSearch) ||
       currentUser.email.toLowerCase().includes(normalizedSearch);
-    const candidates = [
-      ...users,
-      ...(currentUser.emailVerified && currentUserMatchesSearch
-        ? [{ id: currentUser.id, name: currentUser.name, email: currentUser.email }]
-        : []),
-    ].sort((left, right) => left.name.localeCompare(right.name));
+    const candidatesById = new Map(users.map((user) => [user.id, user]));
+    if (currentUser.emailVerified && currentUserMatchesSearch) {
+      candidatesById.set(currentUser.id, {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+      });
+    }
+    const candidates = [...candidatesById.values()].sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
 
     return c.json(OrganizationOwnerCandidatesResponse$.parse({ users: candidates }));
   })
@@ -95,11 +99,10 @@ export const organizationsRoutes = new Hono()
   })
   .post("/", zValidator("json", CreateOrganization$), async (c) => {
     const { name, slug, logo, ownerId } = c.req.valid("json");
-    const currentUser = c.get("user")!;
     const [owner, existingOrganization] = await Promise.all([
       prisma.user.findUnique({
         where: { id: ownerId },
-        select: { id: true, name: true, email: true, emailVerified: true, role: true },
+        select: { id: true, name: true, email: true, emailVerified: true },
       }),
       prisma.organization.findUnique({
         where: { slug },
@@ -109,13 +112,6 @@ export const organizationsRoutes = new Hono()
 
     if (!owner) {
       return c.json({ error: "Selected owner was not found" }, 404);
-    }
-
-    if (owner.role === "admin" && owner.id !== currentUser.id) {
-      return c.json(
-        { error: "You can only assign yourself as a platform administrator owner" },
-        400,
-      );
     }
 
     if (!owner.emailVerified) {
