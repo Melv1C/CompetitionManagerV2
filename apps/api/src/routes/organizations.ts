@@ -29,7 +29,6 @@ export const organizationsRoutes = new Hono()
     const { search } = c.req.valid("query");
     const users = await prisma.user.findMany({
       where: {
-        role: "user",
         emailVerified: true,
         ...(search
           ? {
@@ -86,7 +85,7 @@ export const organizationsRoutes = new Hono()
     const [owner, existingOrganization] = await Promise.all([
       prisma.user.findUnique({
         where: { id: ownerId },
-        select: { id: true, name: true, email: true, emailVerified: true, role: true },
+        select: { id: true, name: true, email: true, emailVerified: true },
       }),
       prisma.organization.findUnique({
         where: { slug },
@@ -96,10 +95,6 @@ export const organizationsRoutes = new Hono()
 
     if (!owner) {
       return c.json({ error: "Selected owner was not found" }, 404);
-    }
-
-    if (owner.role === "admin") {
-      return c.json({ error: "Platform administrators cannot own organizations" }, 400);
     }
 
     if (!owner.emailVerified) {
