@@ -27,7 +27,6 @@ export const organizationsRoutes = new Hono()
   .use("*", isAdmin)
   .get("/owner-candidates", zValidator("query", OrganizationOwnerCandidatesQuery$), async (c) => {
     const { search } = c.req.valid("query");
-    const currentUser = c.get("user")!;
     const users = await prisma.user.findMany({
       where: {
         emailVerified: true,
@@ -44,24 +43,8 @@ export const organizationsRoutes = new Hono()
       take: 25,
       select: { id: true, name: true, email: true },
     });
-    const normalizedSearch = search?.toLowerCase();
-    const currentUserMatchesSearch =
-      !normalizedSearch ||
-      currentUser.name.toLowerCase().includes(normalizedSearch) ||
-      currentUser.email.toLowerCase().includes(normalizedSearch);
-    const candidatesById = new Map(users.map((user) => [user.id, user]));
-    if (currentUser.emailVerified && currentUserMatchesSearch) {
-      candidatesById.set(currentUser.id, {
-        id: currentUser.id,
-        name: currentUser.name,
-        email: currentUser.email,
-      });
-    }
-    const candidates = [...candidatesById.values()].sort((left, right) =>
-      left.name.localeCompare(right.name),
-    );
 
-    return c.json(OrganizationOwnerCandidatesResponse$.parse({ users: candidates }));
+    return c.json(OrganizationOwnerCandidatesResponse$.parse({ users }));
   })
   .get("/", async (c) => {
     const records = await prisma.organization.findMany({

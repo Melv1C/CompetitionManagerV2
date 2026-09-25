@@ -121,24 +121,15 @@ describe("organization administration", () => {
     expect(findUsers.mock.calls[0]?.[0].where).not.toHaveProperty("role");
   });
 
-  it("always includes the current admin even when the first 25 users fill the result", async () => {
-    findUsers.mockResolvedValue(
-      Array.from({ length: 25 }, (_, index) => ({
-        id: `${index}`.padStart(32, "U"),
-        name: `Regular User ${index}`,
-        email: `user${index}@example.com`,
-      })),
-    );
+  it("includes other admins returned by the owner-candidate query", async () => {
+    const otherAdmin = { id: "B".repeat(32), name: "Other Admin", email: "other@example.com" };
+    findUsers.mockResolvedValue([otherAdmin]);
     const app = await createTestApp();
 
     const response = await app.request("/owner-candidates");
-    const body = (await response.json()) as {
-      users: Array<{ id: string; name: string; email: string }>;
-    };
 
     expect(response.status).toBe(200);
-    expect(body.users).toHaveLength(26);
-    expect(body.users).toContainEqual({ id: admin.id, name: admin.name, email: admin.email });
+    await expect(response.json()).resolves.toEqual({ users: [otherAdmin] });
   });
 
   it("allows the current platform administrator to own the organization", async () => {
